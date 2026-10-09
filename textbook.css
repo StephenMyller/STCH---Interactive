@@ -105,3 +105,31 @@ span.theoremendmark::after {
         box-sizing: border-box;
     }
 }
+
+
+
+/* Medium-sized screens: two columns */
+@media screen and (min-width: 801px) {
+    div.bodyandsidetoc {
+        grid-template-columns:
+            clamp(20rem, 22vw, 26rem)
+            minmax(0, 1fr);
+    }
+}
+
+/* Wide screens: reserve space for Gentzen */
+@media screen and (min-width: 1750px) {
+    div.bodyandsidetoc {
+        grid-template-columns:
+            minmax(20rem, 1fr)
+            minmax(0, 46rem)
+            minmax(0, 42rem);
+    }
+
+    main.bodycontainer {
+        grid-column: 2;
+        max-width: 46rem;
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
