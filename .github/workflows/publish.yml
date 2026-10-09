@@ -52,19 +52,28 @@ jobs:
         run: test -f index.html
 
 
+
       - name: Enable interactive derivations
         run: |
           for page in ./*.html; do
-            # Load CSS independently of JavaScript
+
+            # Load Gentzen stylesheet
             if ! grep -q 'href="gentzen-panel.css"' "$page"; then
               sed -i 's@</head>@<link rel="stylesheet" href="gentzen-panel.css"></head>@' "$page"
             fi
 
-            # Load interactive JavaScript
+            # Load Gentzen JavaScript
             if ! grep -q 'src="gentzen.js"' "$page"; then
               sed -i 's@</body>@<script defer src="gentzen.js"></script></body>@' "$page"
             fi
+
+            # Load light/dark theme switch
+            if ! grep -q 'src="theme.js"' "$page"; then
+              sed -i 's@</head>@<script src="theme.js"></script></head>@' "$page"
+            fi
+
           done
+
 
       - name: Prepare website files
         run: |
