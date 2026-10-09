@@ -11,21 +11,34 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: textbook-pages
+  cancel-in-progress: true
+
 jobs:
   publish:
     runs-on: ubuntu-latest
-
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Get LaTeX files
+      - name: Get project files
         uses: actions/checkout@v4
-        
 
+      - name: Restore generated HTML
+        id: html-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            *.html
+            lwarp*.css
+            *-images/
+            lateximages/
+          key: lwarp-html-v1-${{ hashFiles('**/*.tex', '**/*.sty', '**/*.cls', '**/*.bib', '**/*.bst') }}
 
-      - name: Convert LaTeX to HTML
+      - name: Convert LaTeX (only when needed)
+        if: steps.html-cache.outputs.cache-hit != 'true'
         uses: xu-cheng/texlive-action@v3
         with:
           os: alpine
@@ -35,15 +48,16 @@ jobs:
             lwarpmk html
             test -f index.html
 
+      - name: Check website exists
+        run: test -f index.html
 
-
-          
       - name: Enable interactive derivations
         run: |
-          for page in *.html; do
-            sed -i 's@</body>@<script defer src="gentzen.js"></script></body>@' "$page"
+          for page in ./*.html; do
+            if ! grep -q 'src="gentzen.js"' "$page"; then
+              sed -i 's@</body>@<script defer src="gentzen.js"></script></body>@' "$page"
+            fi
           done
-
 
       - name: Prepare website files
         run: |
@@ -52,7 +66,7 @@ jobs:
             find . -maxdepth 1 -type f -iname "*.$ext" \
               -exec cp -t site -- {} +
           done
-          for dir in *-images images; do
+          for dir in *-images images lateximages; do
             if [ -d "$dir" ]; then
               cp -r "$dir" site/
             fi
