@@ -1,69 +1,159 @@
-/* Wide: three columns, the third always reserved */
-@media screen and (min-width: 1500px) {
+/* Prose typography: justify paragraphs, not navigational text or formulas. */
+main.bodycontainer section.textbody p {
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
+}
+main.bodycontainer section.textbody .titlepage p,
+main.bodycontainer section.textbody .center p,
+main.bodycontainer section.textbody .flushleft p,
+main.bodycontainer section.textbody .flushright p {
+  text-align: initial;
+  hyphens: none;
+}
+
+/* Wide screens: a stable three-column grid, even when the proof is hidden. */
+@media screen and (min-width: 1600px) {
   div.bodyandsidetoc {
     display: grid;
-    grid-template-columns: minmax(18rem, 20%) minmax(0, 1fr) minmax(0, 1fr);
-    align-items: start;
+    grid-template-columns: clamp(18rem, 20vw, 22rem) minmax(0, 1fr) minmax(0, 1fr);
+    align-items: stretch;
   }
-  div.sidetoccontainer { grid-column: 1; grid-row: 1; }
-  main.bodycontainer {
-    grid-column: 2;
+  div.bodyandsidetoc > div.sidetoccontainer {
+    grid-column: 1;
     grid-row: 1;
+    float: none;
     width: 100%;
-    min-width: 0;
-    max-width: none;
-    margin: 0;
-    padding: 2rem 1.5rem;
-  }
-  .gentzen-panel {
-    grid-column: 3;
-    grid-row: 1;
     position: sticky;
     top: 0;
     height: 100vh;
   }
+  div.bodyandsidetoc > main.bodycontainer {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: stretch;
+    float: none;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin: 0;
+    padding: 2rem 1.25rem;
+    box-sizing: border-box;
+  }
+  div.bodyandsidetoc > .gentzen-panel {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: stretch;
+    min-height: 100vh;
+    height: 100%;
+    position: relative;
+    top: auto;
+    width: 100%;
+    border-left: 1px solid #d6d2cb;
+    box-shadow: none;
+    padding: 0.01px 1.25rem 1rem;
+  }
+  .gentzen-panel-card {
+    position: sticky;
+    top: 1rem;
+    margin-top: var(--gentzen-anchor, 0px);
+    max-height: calc(100vh - 2rem);
+  }
 }
+
 .gentzen-panel {
-  display: none;
+  visibility: hidden;
+  pointer-events: none;
   min-width: 0;
   box-sizing: border-box;
-  overflow: auto;
-  padding: 1.5rem;
-  border-left: 1px solid #d6d2cb;
   background: #faf9f7;
 }
-.gentzen-panel.is-open { display: block; }
+.gentzen-panel.is-open {
+  visibility: visible;
+  pointer-events: auto;
+}
+.gentzen-panel-card {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  box-sizing: border-box;
+  background: #faf9f7;
+}
 .gentzen-panel-header {
   display: flex;
-  align-items: center;
+  flex: none;
   justify-content: space-between;
+  align-items: center;
   gap: 1rem;
-  padding-bottom: 0.8rem;
-  margin-bottom: 1.5rem;
   border-bottom: 1px solid #d6d2cb;
+  padding: 0.65rem 0;
+  margin-bottom: 1rem;
 }
-.gentzen-panel .formalderivation { overflow-x: auto; padding: 0.5rem 0; }
+.gentzen-panel-content {
+  min-height: 0;
+  overflow: auto;
+  padding: 0.5rem 0.3rem 1rem;
+}
+.gentzen-panel .formalderivation {
+  overflow-x: auto;
+  padding: 0.5rem 0;
+}
 .gentzen-panel .formalderivation[hidden] { display: none; }
-.derivation-trigger { margin: 1.25rem 0; text-align: right; }
+.gentzen-linked-proof { box-shadow: inset 3px 0 #d2cbc2; }
+.derivation-trigger { text-align: right; margin: 0.5rem 0 0.25rem; }
 .derivation-trigger button, .gentzen-close {
   font: inherit;
-  font-size: 0.85rem;
-  padding: 0.45rem 0.7rem;
+  font-size: 0.82rem;
+  padding: 0.35rem 0.65rem;
   background: transparent;
   color: inherit;
-  border: 1px solid #9b958e;
-  border-radius: 0.3rem;
+  border: 1px solid #a9a198;
+  border-radius: 0.25rem;
   cursor: pointer;
 }
 .derivation-trigger button:hover, .gentzen-close:hover { background: #eeeae3; }
-@media screen and (max-width: 1499px) {
+
+/* Medium screens: prose remains readable, right panel becomes a drawer. */
+@media screen and (min-width: 801px) and (max-width: 1599px) {
+  div.bodyandsidetoc {
+    display: grid;
+    grid-template-columns: clamp(18rem, 24vw, 22rem) minmax(0, 1fr);
+  }
+  div.bodyandsidetoc > div.sidetoccontainer { grid-column: 1; grid-row: 1; }
+  div.bodyandsidetoc > main.bodycontainer {
+    grid-column: 2;
+    grid-row: 1;
+    max-width: 52rem;
+    justify-self: center;
+  }
+}
+@media screen and (max-width: 1599px) {
   .gentzen-panel {
     position: fixed;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: min(42rem, 92vw);
     z-index: 1000;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(42rem, 94vw);
+    overflow: auto;
+    padding: 1rem 1.5rem;
     box-shadow: -8px 0 24px #0002;
+    transform: translateX(100%);
+    transition: transform 180ms ease;
   }
+  .gentzen-panel.is-open { transform: translateX(0); }
+  .gentzen-panel-card { max-height: calc(100vh - 2rem); }
+}
+@media screen and (max-width: 800px) {
+  div.bodyandsidetoc { display: block; }
+  div.bodyandsidetoc > div.sidetoccontainer {
+    position: static; float: none; width: 100%; height: auto; max-height: 35vh;
+  }
+  div.bodyandsidetoc > main.bodycontainer {
+    float: none; width: 100%; max-width: none; margin: 0;
+    padding: 1.25rem; box-sizing: border-box;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gentzen-panel { transition: none; }
 }
