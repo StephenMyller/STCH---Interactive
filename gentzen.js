@@ -40,27 +40,38 @@ function setupGentzenPanels() {
   let active = null;
 
 
+
 function alignWithProof() {
   if (!active || window.innerWidth < 1600) return;
 
   const anchor = anchors.get(active);
   if (!anchor) return;
 
-  // Align the tree itself with the top of the prose proof.
+  // Reset positioning before each measurement.
+  panel.style.setProperty('--gentzen-sticky-top', '1rem');
+
   const math = active.querySelector('mjx-container') || active;
 
-  const existingMargin =
-    parseFloat(getComputedStyle(card).marginTop) || 0;
+  // Distance between the tree and its panel card.
+  const inset =
+    math.getBoundingClientRect().top -
+    card.getBoundingClientRect().top;
 
-  const correction =
-    anchor.getBoundingClientRect().top -
-    math.getBoundingClientRect().top;
+  // Place the tree level with the prose proof.
+  const desired =
+    anchor.getBoundingClientRect().top - inset;
+
+  const safeTop = Math.max(
+    16,
+    Math.min(desired, window.innerHeight - 180)
+  );
 
   panel.style.setProperty(
-    '--gentzen-anchor',
-    `${Math.max(0, Math.round(existingMargin + correction))}px`
+    '--gentzen-sticky-top',
+    `${Math.round(safeTop)}px`
   );
 }
+
 
 
   function hidePanel() {
@@ -73,7 +84,8 @@ function alignWithProof() {
     }
     active = null;
     panel.classList.remove('is-open');
-    panel.setAttribute('aria-hidden', 'true');
+    panel.setAttribute('aria-hidden', 'true'); 
+    panel.style.removeProperty('--gentzen-sticky-top');
   }
 
   for (const derivation of derivations) {
@@ -106,7 +118,7 @@ function alignWithProof() {
     button.addEventListener('click', () => {
       if (active === derivation) {
         hidePanel();
-        return;
+        return;  
       }
       hidePanel();
       active = derivation;
@@ -117,7 +129,7 @@ function alignWithProof() {
       panel.classList.add('is-open');
       panel.setAttribute('aria-hidden', 'false');
       content.scrollTop = 0;
-      alignWithProof();
+      requestAnimationFrame(alignWithProof);
     });
   }
 
