@@ -42,6 +42,7 @@ function setupGentzenPanels() {
 
 
 
+
 function alignWithProof() {
   if (!active || window.innerWidth < 1600) return;
 
@@ -73,6 +74,13 @@ function alignWithProof() {
     0,
     proofY - panelY - padding - inset
   );
+
+  panel.style.setProperty(
+    '--gentzen-anchor',
+    `${Math.round(offset)}px`
+  );
+}
+
 
   panel.style.setProperty(
     '--gentzen-anchor',
