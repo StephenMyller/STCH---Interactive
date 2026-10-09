@@ -1,8 +1,4 @@
 /* Lwarp sidecar derivations: keep prose in place and align trees to their proofs. */
-const gentzenStyles = document.createElement('link');
-gentzenStyles.rel = 'stylesheet';
-gentzenStyles.href = 'gentzen-panel.css';
-document.head.appendChild(gentzenStyles);
 
 function setupGentzenPanels() {
    document.querySelector('main.bodycontainer')?.parentElement?.classList.add('bodyandsidetoc');
@@ -146,7 +142,6 @@ function alignWithProof() {
     if (event.key === 'Escape') hidePanel();
   });
   window.addEventListener('resize', alignWithProof);
-  gentzenStyles.addEventListener('load', alignWithProof);
   if ('ResizeObserver' in window) {
     new ResizeObserver(() => alignWithProof()).observe(main);
   }
