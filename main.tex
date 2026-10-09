@@ -11,6 +11,15 @@
 \newenvironment{formalderivation}
     {\begin{BlockClass}{formalderivation}}
     {\end{BlockClass}}
+    
+\newcommand{\bookvspace}[1]{%
+  \vspace{#1}%
+  \warpHTMLonly{%
+    \begin{BlockClass}[height: #1;]{bookvspace}%
+    \end{BlockClass}%
+  }%
+}
+
 
 \usepackage{amsmath, amssymb, amsthm}
 \usepackage{thmtools}
@@ -362,7 +371,7 @@ Let \(A\) and \(B\) be arbitrary classes, and suppose that \(A\) is a proper cla
     \RightLabel{$\forall$-I*}
     \UnaryInfC{$\forall A \forall B(\PC(A) \to A \notin B)$}
 \end{prooftree}
-\end{formalderivation} \vspace{0.5cm}
+\end{formalderivation} \bookvspace{0.5cm}
 
 \begin{proposition}[Subclasshood Is Reflexive]\label{prop:subclasshood-reflexive}
 \[
