@@ -51,9 +51,16 @@ jobs:
       - name: Check website exists
         run: test -f index.html
 
+
       - name: Enable interactive derivations
         run: |
           for page in ./*.html; do
+            # Load CSS independently of JavaScript
+            if ! grep -q 'href="gentzen-panel.css"' "$page"; then
+              sed -i 's@</head>@<link rel="stylesheet" href="gentzen-panel.css"></head>@' "$page"
+            fi
+
+            # Load interactive JavaScript
             if ! grep -q 'src="gentzen.js"' "$page"; then
               sed -i 's@</body>@<script defer src="gentzen.js"></script></body>@' "$page"
             fi
