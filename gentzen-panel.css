@@ -222,3 +222,51 @@ nav.sidetoc p.gentzen-toc-entry a {
     flex: 0 0 auto;
     margin: 0 !important;
 }
+
+
+/* =========================================
+   Night mode refinements
+   ========================================= */
+
+/* Navigation text and links */
+html[data-book-theme="dark"] .sidetoccontainer,
+html[data-book-theme="dark"] .sidetoccontainer p,
+html[data-book-theme="dark"] .sidetoccontainer a,
+html[data-book-theme="dark"] .sidetoccontainer a:visited,
+html[data-book-theme="dark"] .gentzen-toc-toggle {
+    color: #dce0e6 !important;
+}
+
+/* Navigation hover state */
+html[data-book-theme="dark"] .sidetoccontainer a:hover,
+html[data-book-theme="dark"] .gentzen-toc-toggle:hover {
+    color: #ffffff !important;
+}
+
+/* Main prose and headings */
+html[data-book-theme="dark"] main.bodycontainer {
+    color: #dce0e6;
+}
+
+/* Mathematical notation, including Gentzen trees */
+html[data-book-theme="dark"] mjx-container {
+    color: #e8e9ed !important;
+}
+
+/* Gentzen panel text */
+html[data-book-theme="dark"] .gentzen-panel,
+html[data-book-theme="dark"] .gentzen-panel-card {
+    color: #dce0e6;
+}
+
+/* Borders and separators */
+html[data-book-theme="dark"] .gentzen-panel-header,
+html[data-book-theme="dark"] .sidetoccontainer {
+    border-color: #454b55;
+}
+
+/* Subtle hover effect for navigation */
+html[data-book-theme="dark"] nav.sidetoc a:hover {
+    text-decoration: underline;
+    text-decoration-color: #a9caff;
+}
