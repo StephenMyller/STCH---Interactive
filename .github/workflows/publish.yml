@@ -108,7 +108,11 @@ jobs:
                   )
 
               html = pattern.sub(stamp, html)
-              page.write_text(html, encoding="utf-8")
+              
+              temporary = page.with_name(page.name + ".tmp")
+              temporary.write_text(html, encoding="utf-8")
+              temporary.replace(page)
+
           PY
 
 
