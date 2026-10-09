@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Get LaTeX files
         uses: actions/checkout@v4
-
+        
       - name: Install LaTeX and Lwarp
         run: |
           sudo apt-get update
@@ -32,7 +32,10 @@ jobs:
             texlive-fonts-recommended \
             texlive-pictures \
             texlive-extra-utils \
+            texlive-lang-japanese \
             poppler-utils
+          kpsewhich ifptex.sty
+
 
       - name: Convert LaTeX to HTML
         run: |
