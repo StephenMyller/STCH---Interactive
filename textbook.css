@@ -133,3 +133,98 @@ span.theoremendmark::after {
         margin-right: 0;
     }
 }
+
+
+/* Textbook themes */
+
+:root {
+  --book-bg: #eeebe5;
+  --book-nav: #e0ddd5;
+  --book-panel: #e9e6df;
+  --book-ink: #252525;
+  --book-border: #c5beb4;
+  --book-hover: #d8d3cb;
+  --book-link: #284c75;
+  color-scheme: light;
+}
+
+:root[data-book-theme="dark"] {
+  --book-bg: #1c2028;
+  --book-nav: #252b35;
+  --book-panel: #222832;
+  --book-ink: #e5e7eb;
+  --book-border: #414854;
+  --book-hover: #343c48;
+  --book-link: #a9caff;
+  color-scheme: dark;
+}
+
+html body,
+html .pagegrid,
+html main.bodycontainer {
+  background: var(--book-bg);
+  color: var(--book-ink);
+}
+
+html div.sidetoccontainer,
+html div.sidetoctitle {
+  background: var(--book-nav);
+  color: var(--book-ink);
+  border-color: var(--book-border);
+}
+
+html .gentzen-panel,
+html .gentzen-panel-card {
+  background: var(--book-panel);
+  color: var(--book-ink);
+}
+
+html .gentzen-panel-header {
+  border-color: var(--book-border);
+}
+
+html .gentzen-linked-proof {
+  box-shadow: inset 3px 0 var(--book-border);
+}
+
+html a:link,
+html a:visited {
+  color: var(--book-link);
+}
+
+html .gentzen-panel mjx-container {
+  color: var(--book-ink);
+}
+
+html .derivation-trigger button,
+html .gentzen-close {
+  color: var(--book-ink);
+  border-color: var(--book-border);
+}
+
+html .derivation-trigger button:hover,
+html .gentzen-close:hover {
+  background: var(--book-hover);
+}
+
+/* Theme switch */
+
+.book-theme-toggle {
+  position: fixed;
+  top: 0.75rem;
+  right: 1rem;
+  z-index: 2000;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--book-border);
+  border-radius: 6px;
+  background: var(--book-nav);
+  color: var(--book-ink);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.book-theme-toggle:hover {
+  background: var(--book-hover);
+}
+
