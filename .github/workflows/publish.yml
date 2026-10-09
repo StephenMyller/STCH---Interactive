@@ -24,13 +24,17 @@ jobs:
         uses: actions/checkout@v4
         
 
+
       - name: Convert LaTeX to HTML
         uses: xu-cheng/texlive-action@v3
         with:
+          os: alpine
           run: |
+            apk add --no-cache poppler-utils
             pdflatex -interaction=nonstopmode -halt-on-error main.tex
             lwarpmk html
             test -f index.html
+
 
 
           
