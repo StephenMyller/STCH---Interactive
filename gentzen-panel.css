@@ -270,3 +270,16 @@ html[data-book-theme="dark"] nav.sidetoc a:hover {
     text-decoration: underline;
     text-decoration-color: #a9caff;
 }
+
+
+/* Keep the right column's background visible
+   even when no derivation is selected. */
+@media screen and (min-width: 1600px) {
+  .gentzen-panel {
+    visibility: visible;
+  }
+
+  .gentzen-panel:not(.is-open) .gentzen-panel-card {
+    visibility: hidden;
+  }
+}
