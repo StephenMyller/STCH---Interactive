@@ -5,6 +5,8 @@ gentzenStyles.href = 'gentzen-panel.css';
 document.head.appendChild(gentzenStyles);
 
 function setupGentzenPanels() {
+   document.querySelector('main.bodycontainer')?.parentElement?.classList.add('bodyandsidetoc');
+   
   const shell = document.querySelector('div.bodyandsidetoc, div.bodywithoutsidetoc');
   const main = shell?.querySelector('main.bodycontainer');
   const derivations = [...(main?.querySelectorAll('.formalderivation') ?? [])];
