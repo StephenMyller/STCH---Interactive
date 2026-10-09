@@ -37,3 +37,9 @@ span.theoremendmark::after {
     border: 1.5px solid currentColor;
     box-sizing: border-box;
 }
+
+
+/* Headings in your custom defstyle */
+.amsthmbodydefstyle .listmarker {
+    font-weight: bold;
+}
