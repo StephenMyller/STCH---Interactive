@@ -41,34 +41,42 @@ function setupGentzenPanels() {
 
 
 
+
 function alignWithProof() {
   if (!active || window.innerWidth < 1600) return;
 
   const anchor = anchors.get(active);
   if (!anchor) return;
 
-  // Reset positioning before each measurement.
-  panel.style.setProperty('--gentzen-sticky-top', '1rem');
-
   const math = active.querySelector('mjx-container') || active;
 
-  // Distance between the tree and its panel card.
+  // Remove the previous offset before measuring.
+  panel.style.setProperty('--gentzen-anchor', '0px');
+
+  // Measure the distance from the card to the tree.
   const inset =
     math.getBoundingClientRect().top -
     card.getBoundingClientRect().top;
 
-  // Place the tree level with the prose proof.
-  const desired =
-    anchor.getBoundingClientRect().top - inset;
+  // Determine the positions in document coordinates.
+  const panelY =
+    panel.getBoundingClientRect().top + window.scrollY;
 
-  const safeTop = Math.max(
-    16,
-    Math.min(desired, window.innerHeight - 180)
+  const proofY =
+    anchor.getBoundingClientRect().top + window.scrollY;
+
+  const padding =
+    parseFloat(getComputedStyle(panel).paddingTop) || 0;
+
+  // Align the tree itself with the beginning of the proof.
+  const offset = Math.max(
+    0,
+    proofY - panelY - padding - inset
   );
 
   panel.style.setProperty(
-    '--gentzen-sticky-top',
-    `${Math.round(safeTop)}px`
+    '--gentzen-anchor',
+    `${Math.round(offset)}px`
   );
 }
 
