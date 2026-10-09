@@ -47,6 +47,14 @@ jobs:
           lwarpmk html
           test -f index.html
 
+          
+      - name: Enable interactive derivations
+        run: |
+          for page in *.html; do
+            sed -i 's@</body>@<script defer src="gentzen.js"></script></body>@' "$page"
+          done
+
+
       - name: Prepare website files
         run: |
           mkdir -p site
