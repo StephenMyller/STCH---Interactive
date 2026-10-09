@@ -1,0 +1,325 @@
+\documentclass[leqno]{article}
+
+% =================================
+% Core mathematics
+% =================================
+
+\usepackage[utf8]{inputenc}
+
+\usepackage[mathjax]{lwarp}
+
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{thmtools}
+\allowdisplaybreaks
+\usepackage{mathtools}
+
+% ============================================================
+% Page layout and general formatting
+% ============================================================
+
+\usepackage[margin=1.25in]{geometry}
+\usepackage{parskip}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{changepage}
+
+\onehalfspacing
+\pagenumbering{arabic}
+\everymath{\displaystyle}
+
+\setcounter{tocdepth}{5}
+
+% ============================================================
+% Colors and small typographical utilities
+% ============================================================
+
+\usepackage[dvipsnames]{xcolor}
+\usepackage{bm}
+\usepackage{nicefrac}
+\usepackage{verbatim}
+\usepackage{etoolbox}
+\usepackage{setspace}
+
+\usepackage{needspace}
+
+\newcommand{\nbgpara}[2]{%
+    \par
+    \needspace{3\baselineskip}%
+    \addvspace{1.15\baselineskip}%
+    \noindent
+    \textbf{\S#1}\quad
+    \textbf{\textsc{#2.}}\enspace
+    \ignorespaces
+}
+
+\newcommand{\nbgparar}[1]{%
+    \par
+    \needspace{3\baselineskip}%
+    \addvspace{1.15\baselineskip}%
+    \noindent
+    \textbf{\textsc{#1.}}\enspace
+    \ignorespaces
+}
+
+\definecolor{bostonuniversityred}{rgb}{0.8, 0.0, 0.0}
+
+% Long dash.
+\newcommand{\srule}{\text{---}}
+
+% Operator names.
+
+\newcommand{\Set}{\operatorname{Set}}
+\newcommand{\PC}{\operatorname{PC}}
+\newcommand{\Dep}{\operatorname{Dep}}
+\newcommand{\Real}{\operatorname{Real}}
+\newcommand{\Trans}{\operatorname{Trans}}
+% Relations, functions, and basic universes
+\DeclareMathOperator{\Dom}{Dom}
+\DeclareMathOperator{\Ran}{Ran}
+\DeclareMathOperator{\Rel}{Rel}
+\DeclareMathOperator{\Fun}{Fun}
+\DeclareMathOperator{\Inj}{Inj}
+\DeclareMathOperator{\Swell}{Swell}
+\DeclareMathOperator{\Basic}{Basic}
+\DeclareMathOperator{\FV}{FV}
+
+\newcommand{\defequiv}{\mathrel{\equiv_{\mathrm{df}}}}
+
+% ============================================================
+% Section formatting
+% ============================================================
+
+\titleformat*{\subsubsection}{\large\bfseries}
+\titleformat*{\paragraph}{\color{NavyBlue}\bfseries}
+
+\titleformat{\section}
+  {\normalfont\LARGE\bfseries}
+  {\thesection}
+  {1em}
+  {}
+
+% ============================================================
+% Diagrams and proof trees
+% ============================================================
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc}
+
+\usepackage{bussproofs}
+
+\let\oldRightLabel\RightLabel
+\renewcommand{\RightLabel}[1]{\oldRightLabel{\scriptsize #1}}
+
+\newcommand{\pvspace}[1]{%
+    \def\proofSkipAmount{\vskip #1}%
+}
+
+\newcommand{\pvreset}{%
+    \def\proofSkipAmount{\vskip .8ex plus .8ex minus .4ex}%
+}
+
+% ============================================================
+% Hyperlinks
+% ============================================================
+
+\usepackage{hyperref}
+\usepackage{bookmark}
+
+\hypersetup{
+  hidelinks
+}
+
+% ============================================================
+% Shared theorem-style settings
+% ============================================================
+
+\newlength{\theoreminset}
+\setlength{\theoreminset}{1.5em}
+
+\newlength{\theoremabovespace}
+\setlength{\theoremabovespace}{0.2cm}
+
+\newlength{\theorembelowspace}
+\setlength{\theorembelowspace}{0.2cm}
+
+% ============================================================
+% Theorem-like environments
+%
+% Shared numbering, reset at each section:
+% Definition 1.1, Theorem 1.2, Lemma 1.3, etc.
+% ============================================================
+
+\declaretheoremstyle[
+  spaceabove=\theoremabovespace,
+  spacebelow=\theorembelowspace,
+  headfont=\bfseries,
+  bodyfont={\normalfont\leftskip=\theoreminset\rightskip=\theoreminset},
+  headpunct={},
+  headformat={\NAME\ \NUMBER.\NOTE},
+  postheadspace=\newline
+]{defstyle}
+
+\declaretheorem[
+  style=defstyle,
+  name=Theorem,
+  numberwithin=section
+]{theorem}
+
+\declaretheorem[
+  style=defstyle,
+  name=Metatheorem,
+  sibling=theorem
+]{metatheorem}
+
+\declaretheorem[
+  style=defstyle,
+  name=Definition,
+  sibling=theorem
+]{definition}
+
+\declaretheorem[
+  style=defstyle,
+  name=Proposition,
+  sibling=theorem
+]{proposition}
+
+\declaretheorem[
+  style=defstyle,
+  name=Lemma,
+  sibling=theorem
+]{lemma}
+
+\declaretheorem[
+  style=defstyle,
+  name=Corollary,
+  sibling=theorem
+]{corollary}
+
+\declaretheorem[
+  style=defstyle,
+  name=Example,
+  sibling=theorem
+]{example}
+
+\declaretheorem[
+  style=defstyle,
+  name=Remark,
+  sibling=theorem
+]{remark}
+
+\declaretheorem[
+  style=defstyle,
+  name=Principle,
+  sibling=theorem
+]{principle}
+
+\declaretheorem[
+  style=defstyle,
+  name=Exercise,
+  sibling=theorem
+]{exercise}
+
+% ============================================================
+% Axioms
+%
+% Numbered independently as A_1, A_2, ..., A_8.
+% Example heading: A_1   Axiom of Extensionality
+% ============================================================
+
+\declaretheoremstyle[
+  spaceabove=\theoremabovespace,
+  spacebelow=\theorembelowspace,
+  headfont=\bfseries,
+  bodyfont={\normalfont\leftskip=\theoreminset\rightskip=\theoreminset},
+  headpunct={},
+  headformat={\NUMBER\quad\NAME\ \NOTE},
+  notebraces={}{} ,
+  postheadspace=\newline
+]{axiomstyle}
+
+\declaretheorem[
+  style=axiomstyle,
+  name={Axiom of}
+]{axiom}
+
+\renewcommand{\theaxiom}{\ensuremath{A_{\arabic{axiom}}}}
+
+% ============================================================
+% Special one-off Definition 0 environment
+%
+% This does not affect the ordinary theorem/definition counter.
+% ============================================================
+
+\declaretheoremstyle[
+  spaceabove=\theoremabovespace,
+  spacebelow=\theorembelowspace,
+  headfont=\bfseries,
+  bodyfont={\normalfont\leftskip=\theoreminset\rightskip=\theoreminset},
+  headpunct={},
+  headformat={\NAME.},
+  postheadspace=\newline
+]{zerodefstyle}
+
+\declaretheorem[
+  style=zerodefstyle,
+  name={Definition 0 (Informal)},
+  numbered=no
+]{definitionzero}
+
+%============================%
+
+% ============================================================
+% Document title
+% ============================================================
+
+\title{\vspace{-3cm} Set Theory and the Continuum Hypothesis \\ (Smullyan \& Fitting) \\ Gentzen Proofs}
+\date{}
+
+% ============================================================
+% Document
+% ============================================================
+
+\begin{document}
+
+\maketitle
+
+\begin{proposition}[Proper Classes Are Never Members]\label{prop:proper-classes-are-never-members}
+If \(A\) is a proper class, then \(A\) is not a member of any class \(B\).
+
+In symbols:
+\[\forall A \forall B (\PC(A) \to A \notin B)\]
+\end{proposition} \vspace{0.3cm}
+
+\begin{proof}
+
+Let \(A\) and \(B\) be arbitrary classes, and suppose that \(A\) is a proper class. Assume, for a contradiction, that \(A\in B\). Then \(A\) must be a set, contradicting the definition of a proper class. Hence \(A\notin B\). Discharging the assumption that \(A\) is a proper class yields \(\PC(A)\to A\notin B\). Since \(A\) and \(B\) were arbitrary, universal generalization establishes the proposition.
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(A\in B\)}
+    \RightLabel{Set-I}
+    \UnaryInfC{\(\Set(A)\)}
+
+    \AxiomC{}
+    \RightLabel{\(2\)}
+    \UnaryInfC{\(\PC(A)\)}
+    \RightLabel{\(\mathrm{Def.}\)}
+    \dashedLine
+    \UnaryInfC{\(\neg\Set(A)\)}
+
+    \RightLabel{\(\neg\)-E}
+    \BinaryInfC{\(\bot\)}
+    \RightLabel{\(\neg\)-I, \(1\)}
+    \UnaryInfC{\(A \notin B\)}
+    \RightLabel{\(\to\)-I, \(2\)}
+    \UnaryInfC{\(\PC(A)\to A \notin B\)}
+    \RightLabel{$\forall$-I*}
+    \UnaryInfC{$\forall A \forall B(\PC(A) \to A \notin B)$}
+\end{prooftree}
+
+\end{proof}
+
+
+\end{document}
+
