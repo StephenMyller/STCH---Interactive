@@ -1,15 +1,22 @@
 
 @import url("lwarp.css");
 
-div.bodywithoutsidetoc main.bodycontainer {
-    max-width: 52rem;
-    margin: 0 auto;
+/* Main reading column */
+main.bodycontainer {
+    width: 100%;
+    max-width: 55rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 1.5rem;
+    box-sizing: border-box;
 }
 
+/* Text spacing */
 body {
     line-height: 1.5;
 }
 
+/* Title */
 div.titlepage h1 {
     font-size: 2rem;
     line-height: 1.3;
