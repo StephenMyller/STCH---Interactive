@@ -211,13 +211,14 @@ nav.sidetoc p.gentzen-toc-entry a {
 }
 
 
-/* Stable, non-cumulative alignment of Gentzen trees */
-@media screen and (min-width: 1600px) {
-  .gentzen-panel-card {
-    margin-top: 0 !important;
-    top: var(--gentzen-sticky-top, 1rem);
-    max-height: calc(
-      100vh - var(--gentzen-sticky-top, 1rem) - 1rem
-    );
-  }
+/* Center the mathematical tree within its column */
+.gentzen-panel .formalderivation > p {
+    display: flex;
+    justify-content: center;
+    text-align: center !important;
+}
+
+.gentzen-panel .formalderivation > p > mjx-container {
+    flex: 0 0 auto;
+    margin: 0 !important;
 }
