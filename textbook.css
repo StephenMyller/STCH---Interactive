@@ -21,3 +21,19 @@ div.titlepage h1 {
     font-size: 2rem;
     line-height: 1.3;
 }
+
+
+/* QED symbol */
+span.theoremendmark {
+    font-size: 0;
+    line-height: 1;
+}
+
+span.theoremendmark::after {
+    content: "";
+    display: inline-block;
+    width: 0.85rem;
+    height: 0.85rem;
+    border: 1.5px solid currentColor;
+    box-sizing: border-box;
+}
