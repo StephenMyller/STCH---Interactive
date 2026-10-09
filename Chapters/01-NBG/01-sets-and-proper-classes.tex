@@ -1,0 +1,58 @@
+\subsection{Sets and Proper Classes}
+
+\begin{proposition}[Proper Classes Are Never Members]\label{prop:proper-classes-are-never-members}
+If \(A\) is a proper class, then \(A\) is not a member of any class \(B\).
+
+In symbols:
+\[\forall A \forall B (\PC(A) \to A \notin B)\]
+\end{proposition} \vspace{0.3cm}
+
+\begin{proof}
+Let \(A\) and \(B\) be arbitrary classes, and suppose that \(A\) is a proper class. Assume, for a contradiction, that \(A\in B\). Then \(A\) must be a set, contradicting the definition of a proper class. Hence \(A\notin B\). Discharging the assumption that \(A\) is a proper class yields \(\PC(A)\to A\notin B\). Since \(A\) and \(B\) were arbitrary, universal generalization establishes the proposition.
+\end{proof}
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(A\in B\)}
+    \RightLabel{Set-I}
+    \UnaryInfC{\(\Set(A)\)}
+%
+    \AxiomC{}
+    \RightLabel{\(2\)}
+    \UnaryInfC{\(\PC(A)\)}
+    \RightLabel{\(\mathrm{Def.}\)}
+    \dashedLine
+    \UnaryInfC{\(\neg\Set(A)\)}
+%
+    \RightLabel{\(\neg\)-E}
+    \BinaryInfC{\(\bot\)}
+    \RightLabel{\(\neg\)-I, \(1\)}
+    \UnaryInfC{\(A \notin B\)}
+    \RightLabel{\(\to\)-I, \(2\)}
+    \UnaryInfC{\(\PC(A)\to A \notin B\)}
+    \RightLabel{$\forall$-I*}
+    \UnaryInfC{$\forall A \forall B(\PC(A) \to A \notin B)$}
+\end{prooftree}
+\end{formalderivation} \bookvspace{0.5cm}
+
+\begin{proposition}[Subclasshood Is Reflexive]\label{prop:subclasshood-reflexive}
+\[
+\forall x(x\subseteq x).
+\]
+\end{proposition}
+
+\begin{proof}
+Let \(A\) be an arbitrary class. To show that \(A \subseteq A\), we must show that every element of \(A\) is also an element of \(A\). But this is immediate: if \(x \in A\), then \(x \in A\). Hence \(A \subseteq A\). Since $A$ was arbitrary, Proposition \ref{prop:subclasshood-reflexive} follows by Universal Generalization.
+\end{proof}
+
+\begin{formalderivation}
+    \begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(a\in A\)}
+    \RightLabel{\(\subseteq\)-I, \(1\)}
+    \UnaryInfC{\(A\subseteq A\)}
+\end{prooftree}
+\end{formalderivation}
