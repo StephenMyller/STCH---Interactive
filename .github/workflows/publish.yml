@@ -1,71 +1,234 @@
 
+# ================================================================
+# INTERACTIVE SET THEORY TEXTBOOK — AUTOMATIC WEB PUBLICATION
+# ================================================================
+#
+# This workflow converts our LaTeX textbook into a website
+# and publishes that website using GitHub Pages.
+#
+# The overall process:
+#
+#   1. Download the project files from GitHub.
+#   2. Reuse previously generated HTML if the LaTeX is unchanged.
+#   3. Otherwise, compile the LaTeX and generate HTML using Lwarp.
+#   4. Add our custom CSS and JavaScript to the HTML.
+#   5. Collect everything the website needs into one directory.
+#   6. Publish that directory through GitHub Pages.
+#
+# File location: .github/workflows/publish.yml
+# ================================================================
+
+
+# ----------------------------------------------------------------
+# 1. WORKFLOW NAME AND TRIGGERS
+# ----------------------------------------------------------------
+
+# The name displayed in GitHub's Actions tab.
 name: Publish HTML textbook
 
+# "on" specifies which events start this workflow.
 on:
   push:
+    # Run whenever a commit is pushed to either branch.
+    # These are two possible names for the primary branch.
     branches: [main, master]
+
+  # Also allow us to run the workflow manually from GitHub.
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
 
+# ----------------------------------------------------------------
+# 2. PERMISSIONS AND CONCURRENCY
+# ----------------------------------------------------------------
+
+# GitHub Actions does not automatically have unlimited access.
+# We explicitly grant the permissions this workflow needs.
+permissions:
+  contents: read     # Read the repository files.
+  pages: write       # Publish to GitHub Pages.
+  id-token: write    # Authenticate the Pages deployment.
+
+# What happens if two publishing runs overlap?
 concurrency:
+  # All runs with this group name share the same concurrency slot.
   group: textbook-pages
+
+  # Cancel an older unfinished run when a new one starts.
+  # We generally want to publish the newest version.
   cancel-in-progress: true
 
+
+# ----------------------------------------------------------------
+# 3. DEFINE THE PUBLISHING JOB
+# ----------------------------------------------------------------
+
+# A workflow contains one or more jobs.
+# Our workflow has just one, called "publish".
 jobs:
   publish:
+
+    # GitHub provides a temporary computer to execute this job.
+    # Here we request a Linux computer running Ubuntu.
     runs-on: ubuntu-latest
+
+    # Associate the job with our GitHub Pages environment.
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
+    # A job consists of steps, executed in the order listed.
     steps:
+
+      # ==========================================================
+      # STEP 1 — GET THE PROJECT FILES
+      # ==========================================================
+
       - name: Get project files
+
+        # "uses" runs a reusable action written by someone else.
+        # actions/checkout downloads the repository's files
+        # onto the temporary computer.
+        # @v4 specifies the major version of that action.
         uses: actions/checkout@v4
 
+
+      # ==========================================================
+      # STEP 2 — RESTORE PREVIOUSLY GENERATED HTML
+      # ==========================================================
+
+      # Converting LaTeX into HTML takes time.
+      #
+      # Rather than rebuilding the textbook after every change,
+      # we try to reuse the result of an earlier compilation.
+      #
+      # This mechanism is called a CACHE.
+      #
+      # IMPORTANT:
+      # The cache is keyed to LaTeX-related files, not CSS or JS.
+      # Therefore, changing only CSS or JavaScript should not
+      # require us to recompile the entire textbook.
+
       - name: Restore generated HTML
+
+        # An ID allows subsequent steps to refer to this step
+        # and inspect whether a cached version was found.
         id: html-cache
+
         uses: actions/cache@v4
+
         with:
+          # These are the generated files we want to preserve.
           path: |
             *.html
             lwarp*.css
             *-images/
             lateximages/
+
+          # The cache key identifies a particular version.
+          #
+          # hashFiles calculates a fingerprint of the listed
+          # source files. If their contents change, the
+          # fingerprint changes, producing a different key.
+          #
+          # "lwarp-html-v1" is a prefix chosen by us.
+          # We can change it to v2 to invalidate the old cache.
           key: lwarp-html-v1-${{ hashFiles('**/*.tex', '**/*.sty', '**/*.cls', '**/*.bib', '**/*.bst') }}
 
+
+      # ==========================================================
+      # STEP 3 — CONVERT LaTeX TO HTML (IF NECESSARY)
+      # ==========================================================
+
       - name: Convert LaTeX (only when needed)
+
+        # Skip this step if Step 2 successfully found our cache.
+        # Otherwise, compile the textbook from its sources.
         if: steps.html-cache.outputs.cache-hit != 'true'
+
+        # This third-party action supplies a TeX environment.
+        # It runs our commands inside an Alpine Linux container.
         uses: xu-cheng/texlive-action@v3
+
         with:
           os: alpine
+
+          # Commands under "run" are executed in sequence.
+          # The "|" character allows a multiline string.
           run: |
+            # Install tools needed by the LaTeX build.
             apk add --no-cache poppler-utils
+
+            # Compile the LaTeX entry-point document.
+            # Stop the build if LaTeX encounters a fatal error.
             pdflatex -interaction=nonstopmode -halt-on-error main.tex
+
+            # Lwarp converts the LaTeX document to HTML.
             lwarpmk html
+
+            # Verify that the expected main HTML page exists.
+            # "test" fails if index.html is missing.
             test -f index.html
 
+
+      # ==========================================================
+      # STEP 4 — CHECK THAT HTML IS AVAILABLE
+      # ==========================================================
+
+      # This check runs regardless of whether the HTML was
+      # freshly generated or restored from the cache.
       - name: Check website exists
         run: test -f index.html
 
+
+      # ==========================================================
+      # STEP 5 — PREPARE CSS AND JAVASCRIPT REFERENCES
+      # ==========================================================
+
+      # Our textbook uses additional files beyond those
+      # generated by Lwarp:
+      #
+      #   assets/textbook.css      — Main visual styling
+      #   assets/gentzen-panel.css — Styling for proof panels
+      #   assets/gentzen.js        — Interactive derivations
+      #   assets/theme.js          — Theme behavior
+      #
+      # We use a small Python program to update the generated
+      # HTML so that it correctly loads these files.
+      #
+      # This step runs EVERY time, even if the HTML was cached.
+
       - name: Enable and version website assets
+
+        # Make the current Git commit ID available as a variable.
+        # Each commit has a unique SHA identifier.
         env:
           ASSET_VERSION: ${{ github.sha }}
+
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import os
           import re
 
+          # Use the first 12 characters of the commit ID.
+          # This gives us a compact version identifier.
           version = os.environ["ASSET_VERSION"][:12]
 
+          # Process every HTML file in the repository's root.
           for page in Path(".").glob("*.html"):
               html = page.read_text(encoding="utf-8")
 
-              # Upgrade old references in cached HTML.
+              # --------------------------------------------------
+              # A. CORRECT OLD ASSET PATHS
+              # --------------------------------------------------
+
+              # Earlier versions of our HTML sometimes referred
+              # to CSS and JS files at the repository root.
+              #
+              # These files now live in the assets/ directory.
+              # Update any old references, including references
+              # that may still exist in cached HTML.
+
               for old, new in (
                   ("textbook.css", "assets/textbook.css"),
                   ("gentzen-panel.css", "assets/gentzen-panel.css"),
@@ -79,7 +242,20 @@ jobs:
                       f'src="{old}', f'src="{new}'
                   )
 
-              # Ensure custom assets are included.
+              # --------------------------------------------------
+              # B. ENSURE REQUIRED ASSETS ARE INCLUDED
+              # --------------------------------------------------
+
+              # In HTML:
+              #
+              # <link> usually loads a stylesheet.
+              # <script> loads JavaScript.
+              # <head> contains page metadata and resources.
+              # <body> contains the visible page content.
+              #
+              # For each required asset, specify the HTML tag
+              # and where it should be inserted if missing.
+
               assets = (
                   (
                       "assets/gentzen-panel.css",
@@ -99,14 +275,37 @@ jobs:
               )
 
               for name, tag, position in assets:
+
+                  # Search for an existing reference to this file.
+                  # The regular expression also accepts a
+                  # version parameter, such as ?v=12345.
                   existing = re.search(
                       rf'(?:href|src)="{re.escape(name)}(?:\?[^"]*)?"',
                       html,
                   )
+
+                  # Avoid inserting the same asset twice.
                   if not existing:
                       html = html.replace(position, tag + position, 1)
 
-              # Version local CSS and JavaScript references.
+              # --------------------------------------------------
+              # C. ADD VERSION NUMBERS TO CSS AND JS FILES
+              # --------------------------------------------------
+
+              # Browsers often cache stylesheets and scripts.
+              # As a result, users may see an older version
+              # even after GitHub Pages has been updated.
+              #
+              # We solve this using a query parameter:
+              #
+              #   assets/textbook.css?v=abc123
+              #
+              # When the commit changes, the version changes.
+              # Browsers then request the new URL.
+              #
+              # The regular expression below identifies CSS
+              # and JavaScript references in HTML attributes.
+
               pattern = re.compile(
                   r'(?P<prefix>\b(?:href|src)=(?P<q>["\']))'
                   r'(?P<asset>[^"\']+?\.(?:css|js))'
@@ -116,9 +315,13 @@ jobs:
               def stamp(match):
                   asset = match.group("asset")
 
+                  # Only version actual local files.
+                  # Leave references to missing or external
+                  # resources unchanged.
                   if not Path(asset).is_file():
                       return match.group(0)
 
+                  # Rebuild the attribute with a version suffix.
                   return (
                       f'{match.group("prefix")}'
                       f'{asset}?v={version}'
@@ -127,43 +330,96 @@ jobs:
 
               html = pattern.sub(stamp, html)
 
-              # Replace safely even if TeX owns the HTML file.
+              # --------------------------------------------------
+              # D. WRITE THE MODIFIED HTML
+              # --------------------------------------------------
+
+              # Write to a temporary file first, then replace
+              # the original. This also avoids permission
+              # problems with TeX-generated files.
               temporary = page.with_name(page.name + ".tmp")
               temporary.write_text(html, encoding="utf-8")
               temporary.replace(page)
 
           PY
 
+
+      # ==========================================================
+      # STEP 6 — ASSEMBLE THE WEBSITE
+      # ==========================================================
+
+      # So far, files are scattered around our working directory.
+      #
+      # GitHub Pages should receive only the files needed to
+      # display the website, not our entire LaTeX project.
+      #
+      # We therefore create a new directory called "site".
+      # Think of it as the finished, ready-to-publish product.
+
       - name: Prepare website files
         run: |
+          # Create the output directory.
           mkdir -p site
 
-          # Copy generated HTML and root-level assets.
+          # Copy root-level HTML and website resources.
+          # "find" searches for files with these extensions.
+          # "cp" copies them into site/.
           for ext in html css js svg png jpg jpeg gif webp; do
             find . -maxdepth 1 -type f -iname "*.$ext" \
               -exec cp -t site -- {} +
           done
 
-          # Copy generated image directories.
+          # Copy image directories generated by Lwarp.
+          # The test prevents errors if a directory is absent.
           for dir in *-images images lateximages; do
             if [ -d "$dir" ]; then
               cp -r "$dir" site/
             fi
           done
 
-          # Copy custom CSS and JavaScript.
+          # Copy our custom stylesheets and scripts.
+          # "-r" means recursively, including folder contents.
           cp -r assets site/
 
+          # Tell GitHub Pages not to process the files with Jekyll.
+          # Our HTML has already been generated by Lwarp.
           touch site/.nojekyll
 
+
+      # ==========================================================
+      # STEP 7 — CONFIGURE GITHUB PAGES
+      # ==========================================================
+
+      # Set up the environment for a Pages deployment.
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
+
+      # ==========================================================
+      # STEP 8 — UPLOAD THE FINISHED WEBSITE
+      # ==========================================================
+
+      # Package the contents of site/ as a deployment artifact.
+      #
+      # An "artifact" is a bundle of files produced by a job.
+      # Uploading the artifact does not itself publish the site.
       - name: Upload website
         uses: actions/upload-pages-artifact@v4
         with:
           path: site
 
+
+      # ==========================================================
+      # STEP 9 — PUBLISH THE WEBSITE
+      # ==========================================================
+
+      # Deploy the uploaded artifact to GitHub Pages.
+      # This is the step that actually publishes the website.
       - name: Publish website
+
+        # The deployment ID lets the environment definition
+        # above retrieve the finished website's URL.
         id: deployment
+
         uses: actions/deploy-pages@v4
+
