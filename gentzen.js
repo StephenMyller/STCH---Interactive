@@ -82,14 +82,6 @@ function alignWithProof() {
 }
 
 
-  panel.style.setProperty(
-    '--gentzen-anchor',
-    `${Math.round(offset)}px`
-  );
-}
-
-
-
   function hidePanel() {
     if (active) {
       active.hidden = true;
