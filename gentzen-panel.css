@@ -37,7 +37,7 @@ main.bodycontainer section.textbody .flushright p {
     min-width: 0;
     max-width: none;
     margin: 0;
-    padding: 2rem 1.25rem;
+    padding: 2rem 0.75rem 2rem 1.25rem;
     box-sizing: border-box;
   }
   div.pagegrid:has(> div.sidetoccontainer) > .gentzen-panel {
