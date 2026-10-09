@@ -157,3 +157,56 @@ main.bodycontainer section.textbody .flushright p {
 @media (prefers-reduced-motion: reduce) {
   .gentzen-panel { transition: none; }
 }
+
+
+/* Center the Gentzen derivation */
+.gentzen-panel .formalderivation p {
+  text-align: center !important;
+}
+
+.gentzen-panel .formalderivation mjx-container[display="true"] {
+  text-align: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Collapsible table of contents */
+nav.sidetoc p.gentzen-toc-entry {
+  display: flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  padding-left: calc(var(--toc-level, 0) * 0.9rem);
+}
+
+nav.sidetoc p.gentzen-toc-entry[hidden] {
+  display: none !important;
+}
+
+nav.sidetoc p.gentzen-toc-entry a {
+  margin-left: 0 !important;
+  text-indent: 0 !important;
+  display: inline !important;
+  flex: 1;
+}
+
+.gentzen-toc-toggle,
+.gentzen-toc-placeholder {
+  display: inline-block;
+  width: 1.1rem;
+  min-width: 1.1rem;
+  text-align: center;
+  padding: 0;
+}
+
+.gentzen-toc-toggle {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.gentzen-toc-toggle:hover {
+  color: #706052;
+}
+
