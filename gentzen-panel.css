@@ -14,12 +14,12 @@ main.bodycontainer section.textbody .flushright p {
 
 /* Wide screens: a stable three-column grid, even when the proof is hidden. */
 @media screen and (min-width: 1600px) {
-  div.bodyandsidetoc {
+  div.pagegrid:has(> div.sidetoccontainer) {
     display: grid;
     grid-template-columns: clamp(18rem, 20vw, 22rem) minmax(0, 1fr) minmax(0, 1fr);
     align-items: stretch;
   }
-  div.bodyandsidetoc > div.sidetoccontainer {
+  div.pagegrid:has(> div.sidetoccontainer) > div.sidetoccontainer {
     grid-column: 1;
     grid-row: 1;
     float: none;
@@ -28,7 +28,7 @@ main.bodycontainer section.textbody .flushright p {
     top: 0;
     height: 100vh;
   }
-  div.bodyandsidetoc > main.bodycontainer {
+  div.pagegrid:has(> div.sidetoccontainer) > main.bodycontainer {
     grid-column: 2;
     grid-row: 1;
     justify-self: stretch;
@@ -40,7 +40,7 @@ main.bodycontainer section.textbody .flushright p {
     padding: 2rem 1.25rem;
     box-sizing: border-box;
   }
-  div.bodyandsidetoc > .gentzen-panel {
+  div.pagegrid:has(> div.sidetoccontainer) > .gentzen-panel {
     grid-column: 3;
     grid-row: 1;
     align-self: stretch;
@@ -115,12 +115,12 @@ main.bodycontainer section.textbody .flushright p {
 
 /* Medium screens: prose remains readable, right panel becomes a drawer. */
 @media screen and (min-width: 801px) and (max-width: 1599px) {
-  div.bodyandsidetoc {
+  div.pagegrid:has(> div.sidetoccontainer) {
     display: grid;
     grid-template-columns: clamp(18rem, 24vw, 22rem) minmax(0, 1fr);
   }
-  div.bodyandsidetoc > div.sidetoccontainer { grid-column: 1; grid-row: 1; }
-  div.bodyandsidetoc > main.bodycontainer {
+  div.pagegrid:has(> div.sidetoccontainer) > div.sidetoccontainer { grid-column: 1; grid-row: 1; }
+  div.pagegrid:has(> div.sidetoccontainer) > main.bodycontainer {
     grid-column: 2;
     grid-row: 1;
     max-width: 52rem;
@@ -145,11 +145,11 @@ main.bodycontainer section.textbody .flushright p {
   .gentzen-panel-card { max-height: calc(100vh - 2rem); }
 }
 @media screen and (max-width: 800px) {
-  div.bodyandsidetoc { display: block; }
-  div.bodyandsidetoc > div.sidetoccontainer {
+  div.pagegrid:has(> div.sidetoccontainer) { display: block; }
+  div.pagegrid:has(> div.sidetoccontainer) > div.sidetoccontainer {
     position: static; float: none; width: 100%; height: auto; max-height: 35vh;
   }
-  div.bodyandsidetoc > main.bodycontainer {
+  div.pagegrid:has(> div.sidetoccontainer) > main.bodycontainer {
     float: none; width: 100%; max-width: none; margin: 0;
     padding: 1.25rem; box-sizing: border-box;
   }
