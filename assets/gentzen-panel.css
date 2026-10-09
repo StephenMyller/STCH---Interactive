@@ -283,3 +283,12 @@ html[data-book-theme="dark"] nav.sidetoc a:hover {
     visibility: hidden;
   }
 }
+
+
+/* Allow scrolling through long textbook sections */
+@media screen and (min-width: 1600px) {
+  html body {
+    overflow-y: auto !important;
+  }
+}
+
