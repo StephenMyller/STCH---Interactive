@@ -51,9 +51,6 @@ jobs:
       - name: Check website exists
         run: test -f index.html
 
-
-
-
       - name: Enable and version website assets
         env:
           ASSET_VERSION: ${{ github.sha }}
@@ -68,28 +65,48 @@ jobs:
           for page in Path(".").glob("*.html"):
               html = page.read_text(encoding="utf-8")
 
-              # Ensure our custom assets are included.
+              # Upgrade old references in cached HTML.
+              for old, new in (
+                  ("textbook.css", "assets/textbook.css"),
+                  ("gentzen-panel.css", "assets/gentzen-panel.css"),
+                  ("gentzen.js", "assets/gentzen.js"),
+                  ("theme.js", "assets/theme.js"),
+              ):
+                  html = html.replace(
+                      f'href="{old}', f'href="{new}'
+                  )
+                  html = html.replace(
+                      f'src="{old}', f'src="{new}'
+                  )
+
+              # Ensure custom assets are included.
               assets = (
-                  ("gentzen-panel.css",
-                   '<link rel="stylesheet" href="gentzen-panel.css">',
-                   "</head>"),
-                  ("gentzen.js",
-                   '<script defer src="gentzen.js"></script>',
-                   "</body>"),
-                  ("theme.js",
-                   '<script src="theme.js"></script>',
-                   "</head>"),
+                  (
+                      "assets/gentzen-panel.css",
+                      '<link rel="stylesheet" href="assets/gentzen-panel.css">',
+                      "</head>",
+                  ),
+                  (
+                      "assets/gentzen.js",
+                      '<script defer src="assets/gentzen.js"></script>',
+                      "</body>",
+                  ),
+                  (
+                      "assets/theme.js",
+                      '<script src="assets/theme.js"></script>',
+                      "</head>",
+                  ),
               )
 
               for name, tag, position in assets:
                   existing = re.search(
                       rf'(?:href|src)="{re.escape(name)}(?:\?[^"]*)?"',
-                      html
+                      html,
                   )
                   if not existing:
                       html = html.replace(position, tag + position, 1)
 
-              # Refresh version identifiers on every build.
+              # Version local CSS and JavaScript references.
               pattern = re.compile(
                   r'(?P<prefix>\b(?:href|src)=(?P<q>["\']))'
                   r'(?P<asset>[^"\']+?\.(?:css|js))'
@@ -98,6 +115,7 @@ jobs:
 
               def stamp(match):
                   asset = match.group("asset")
+
                   if not Path(asset).is_file():
                       return match.group(0)
 
@@ -108,27 +126,34 @@ jobs:
                   )
 
               html = pattern.sub(stamp, html)
-              
+
+              # Replace safely even if TeX owns the HTML file.
               temporary = page.with_name(page.name + ".tmp")
               temporary.write_text(html, encoding="utf-8")
               temporary.replace(page)
 
           PY
 
-
-
       - name: Prepare website files
         run: |
           mkdir -p site
+
+          # Copy generated HTML and root-level assets.
           for ext in html css js svg png jpg jpeg gif webp; do
             find . -maxdepth 1 -type f -iname "*.$ext" \
               -exec cp -t site -- {} +
           done
+
+          # Copy generated image directories.
           for dir in *-images images lateximages; do
             if [ -d "$dir" ]; then
               cp -r "$dir" site/
             fi
           done
+
+          # Copy custom CSS and JavaScript.
+          cp -r assets site/
+
           touch site/.nojekyll
 
       - name: Configure GitHub Pages

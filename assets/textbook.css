@@ -1,0 +1,230 @@
+
+@import url("../lwarp.css");
+
+/* Main reading column */
+main.bodycontainer {
+    width: 100%;
+    max-width: 55rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 1.5rem;
+    box-sizing: border-box;
+}
+
+/* Text spacing */
+body {
+    line-height: 1.5;
+}
+
+/* Title */
+div.titlepage h1 {
+    font-size: 2rem;
+    line-height: 1.3;
+}
+
+
+/* QED symbol */
+span.theoremendmark {
+    font-size: 0;
+    line-height: 1;
+}
+
+span.theoremendmark::after {
+    content: "";
+    display: inline-block;
+    width: 0.85rem;
+    height: 0.85rem;
+    border: 1.5px solid currentColor;
+    box-sizing: border-box;
+}
+
+
+/* Headings in your custom defstyle */
+.amsthmbodydefstyle .listmarker {
+    font-weight: bold;
+}
+
+
+
+@media screen and (min-width: 801px) {
+
+    /* Two-column layout */
+    div.bodyandsidetoc {
+        display: grid;
+        grid-template-columns: 16rem minmax(0, 1fr);
+        align-items: start;
+    }
+
+    /* Left navigation sidebar */
+    div.sidetoccontainer {
+        float: none;
+        width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        position: sticky;
+        top: 0;
+        overflow-y: auto;
+        margin: 0;
+        box-sizing: border-box;
+        border-radius: 0;
+        border-bottom: none;
+        border-right: 1px solid #d6d2cb;
+        background: #f8f7f4;
+    }
+
+    /* Contents heading */
+    div.sidetoctitle {
+        font-size: 1.1rem;
+        text-align: left;
+        padding: 1rem;
+    }
+
+    /* Navigation entries */
+    nav.sidetoc p {
+        line-height: 1.5;
+        margin: 0.4rem 1rem;
+    }
+
+    nav.sidetoc p a {
+        font-size: 0.95rem;
+        text-decoration: none;
+    }
+
+    nav.sidetoc a:hover {
+        text-decoration: underline;
+    }
+
+    /* Central reading column */
+    main.bodycontainer {
+        float: none;
+        width: 100%;
+        min-width: 0;
+        max-width: 55rem;
+        margin: 0 auto;
+        padding: 2rem;
+        box-sizing: border-box;
+    }
+}
+
+
+
+/* Medium-sized screens: two columns */
+@media screen and (min-width: 801px) {
+    div.bodyandsidetoc {
+        grid-template-columns:
+            clamp(20rem, 22vw, 26rem)
+            minmax(0, 1fr);
+    }
+}
+
+/* Wide screens: reserve space for Gentzen */
+@media screen and (min-width: 1750px) {
+    div.bodyandsidetoc {
+        grid-template-columns:
+            minmax(20rem, 1fr)
+            minmax(0, 46rem)
+            minmax(0, 42rem);
+    }
+
+    main.bodycontainer {
+        grid-column: 2;
+        max-width: 46rem;
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+
+/* Textbook themes */
+
+:root {
+  --book-bg: #eeebe5;
+  --book-nav: #e0ddd5;
+  --book-panel: #e9e6df;
+  --book-ink: #252525;
+  --book-border: #c5beb4;
+  --book-hover: #d8d3cb;
+  --book-link: #284c75;
+  color-scheme: light;
+}
+
+:root[data-book-theme="dark"] {
+  --book-bg: #1c2028;
+  --book-nav: #252b35;
+  --book-panel: #222832;
+  --book-ink: #e5e7eb;
+  --book-border: #414854;
+  --book-hover: #343c48;
+  --book-link: #a9caff;
+  color-scheme: dark;
+}
+
+html body,
+html .pagegrid,
+html main.bodycontainer {
+  background: var(--book-bg);
+  color: var(--book-ink);
+}
+
+html div.sidetoccontainer,
+html div.sidetoctitle {
+  background: var(--book-nav);
+  color: var(--book-ink);
+  border-color: var(--book-border);
+}
+
+html .gentzen-panel,
+html .gentzen-panel-card {
+  background: var(--book-panel);
+  color: var(--book-ink);
+}
+
+html .gentzen-panel-header {
+  border-color: var(--book-border);
+}
+
+html .gentzen-linked-proof {
+  box-shadow: inset 3px 0 var(--book-border);
+}
+
+html a:link,
+html a:visited {
+  color: var(--book-link);
+}
+
+html .gentzen-panel mjx-container {
+  color: var(--book-ink);
+}
+
+html .derivation-trigger button,
+html .gentzen-close {
+  color: var(--book-ink);
+  border-color: var(--book-border);
+}
+
+html .derivation-trigger button:hover,
+html .gentzen-close:hover {
+  background: var(--book-hover);
+}
+
+/* Theme switch */
+
+.book-theme-toggle {
+  position: fixed;
+  top: 0.75rem;
+  right: 1rem;
+  z-index: 2000;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--book-border);
+  border-radius: 6px;
+  background: var(--book-nav);
+  color: var(--book-ink);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.book-theme-toggle:hover {
+  background: var(--book-hover);
+}
+
