@@ -1,0 +1,69 @@
+/* Wide: three columns, the third always reserved */
+@media screen and (min-width: 1500px) {
+  div.bodyandsidetoc {
+    display: grid;
+    grid-template-columns: minmax(18rem, 20%) minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  div.sidetoccontainer { grid-column: 1; grid-row: 1; }
+  main.bodycontainer {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin: 0;
+    padding: 2rem 1.5rem;
+  }
+  .gentzen-panel {
+    grid-column: 3;
+    grid-row: 1;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+}
+.gentzen-panel {
+  display: none;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: auto;
+  padding: 1.5rem;
+  border-left: 1px solid #d6d2cb;
+  background: #faf9f7;
+}
+.gentzen-panel.is-open { display: block; }
+.gentzen-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.8rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #d6d2cb;
+}
+.gentzen-panel .formalderivation { overflow-x: auto; padding: 0.5rem 0; }
+.gentzen-panel .formalderivation[hidden] { display: none; }
+.derivation-trigger { margin: 1.25rem 0; text-align: right; }
+.derivation-trigger button, .gentzen-close {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.7rem;
+  background: transparent;
+  color: inherit;
+  border: 1px solid #9b958e;
+  border-radius: 0.3rem;
+  cursor: pointer;
+}
+.derivation-trigger button:hover, .gentzen-close:hover { background: #eeeae3; }
+@media screen and (max-width: 1499px) {
+  .gentzen-panel {
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: min(42rem, 92vw);
+    z-index: 1000;
+    box-shadow: -8px 0 24px #0002;
+  }
+}

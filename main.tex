@@ -8,6 +8,9 @@
 
 \usepackage[mathjax,HomeHTMLFilename=index]{lwarp}
 \CSSFilename{textbook.css}
+\newenvironment{formalderivation}
+    {\begin{BlockClass}{formalderivation}}
+    {\end{BlockClass}}
 
 \usepackage{amsmath, amssymb, amsthm}
 \usepackage{thmtools}
@@ -325,6 +328,7 @@ In symbols:
 Let \(A\) and \(B\) be arbitrary classes, and suppose that \(A\) is a proper class. Assume, for a contradiction, that \(A\in B\). Then \(A\) must be a set, contradicting the definition of a proper class. Hence \(A\notin B\). Discharging the assumption that \(A\) is a proper class yields \(\PC(A)\to A\notin B\). Since \(A\) and \(B\) were arbitrary, universal generalization establishes the proposition.
 \end{proof}
 
+\begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
     \RightLabel{\(1\)}
@@ -348,6 +352,9 @@ Let \(A\) and \(B\) be arbitrary classes, and suppose that \(A\) is a proper cla
     \RightLabel{$\forall$-I*}
     \UnaryInfC{$\forall A \forall B(\PC(A) \to A \notin B)$}
 \end{prooftree}
+\end{formalderivation}
+
+
 
 \end{document}
 
