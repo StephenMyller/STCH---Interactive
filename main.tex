@@ -365,7 +365,25 @@ Let \(A\) and \(B\) be arbitrary classes, and suppose that \(A\) is a proper cla
 \end{prooftree}
 \end{formalderivation}
 
+\begin{proposition}[Subclasshood Is Reflexive]\label{prop:subclasshood-reflexive}
+\[
+\forall x(x\subseteq x).
+\]
+\end{proposition}
 
+\begin{proof}
+Let \(A\) be an arbitrary class. To show that \(A \subseteq A\), we must show that every element of \(A\) is also an element of \(A\). But this is immediate: if \(x \in A\), then \(x \in A\). Hence \(A \subseteq A\). Since $A$ was arbitrary, Proposition \ref{prop:subclasshood-reflexive} follows by Universal Generalization.
+\end{proof}
+
+\begin{formalderivation}
+    \begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(a\in A\)}
+    \RightLabel{\(\subseteq\)-I, \(1\)}
+    \UnaryInfC{\(A\subseteq A\)}
+\end{prooftree}
+\end{formalderivation}
 
 \end{document}
 
