@@ -39,15 +39,29 @@ function setupGentzenPanels() {
   const anchors = new Map();
   let active = null;
 
-  function alignWithProof() {
-    if (!active) return;
-    const anchor = anchors.get(active);
-    if (!anchor) return;
-    // Desktop: make the header of the derivation line up with its prose proof.
-    // Rectangles are relative to the same viewport, so scrolling cancels out.
-    const offset = anchor.getBoundingClientRect().top - panel.getBoundingClientRect().top;
-    panel.style.setProperty('--gentzen-anchor', `${Math.max(0, offset)}px`);
-  }
+
+function alignWithProof() {
+  if (!active || window.innerWidth < 1600) return;
+
+  const anchor = anchors.get(active);
+  if (!anchor) return;
+
+  // Align the tree itself with the top of the prose proof.
+  const math = active.querySelector('mjx-container') || active;
+
+  const existingMargin =
+    parseFloat(getComputedStyle(card).marginTop) || 0;
+
+  const correction =
+    anchor.getBoundingClientRect().top -
+    math.getBoundingClientRect().top;
+
+  panel.style.setProperty(
+    '--gentzen-anchor',
+    `${Math.max(0, Math.round(existingMargin + correction))}px`
+  );
+}
+
 
   function hidePanel() {
     if (active) {
@@ -126,3 +140,95 @@ document.addEventListener('DOMContentLoaded', () => {
     setupGentzenPanels();
   }
 });
+
+
+/* Collapsible Lwarp table of contents */
+document.addEventListener('DOMContentLoaded', () => {
+  const nav = document.querySelector('nav.sidetoc');
+  if (!nav) return;
+
+  const levels = [
+    'tocpart', 'tocchapter', 'tocsection',
+    'tocsubsection', 'tocsubsubsection',
+    'tocparagraph', 'tocsubparagraph'
+  ];
+
+  const entries = [...nav.querySelectorAll('a')]
+    .map(link => ({
+      link,
+      row: link.closest('p'),
+      level: levels.findIndex(name =>
+        link.classList.contains(name))
+    }))
+    .filter(entry => entry.row && entry.level >= 0);
+
+  const stack = [];
+
+  for (const entry of entries) {
+    while (
+      stack.length &&
+      stack[stack.length - 1].level >= entry.level
+    ) {
+      stack.pop();
+    }
+    entry.parents = [...stack];
+    stack.push(entry);
+  }
+
+  const onThisPage = entry =>
+    new URL(entry.link.href).pathname === location.pathname;
+
+  function refresh() {
+    for (const entry of entries) {
+      entry.row.hidden =
+        entry.parents.some(parent => !parent.expanded);
+
+      if (entry.toggle) {
+        entry.toggle.textContent =
+          entry.expanded ? '▾' : '▸';
+        entry.toggle.setAttribute(
+          'aria-expanded', String(entry.expanded));
+      }
+    }
+  }
+
+  for (const entry of entries) {
+    const children = entries.filter(other =>
+      other.parents.includes(entry));
+
+    entry.row.classList.add('gentzen-toc-entry');
+    entry.row.style.setProperty(
+      '--toc-level', Math.max(0, entry.level - 2));
+
+    entry.expanded =
+      onThisPage(entry) || children.some(onThisPage);
+
+    const control = document.createElement(
+      children.length ? 'button' : 'span'
+    );
+
+    control.className = children.length
+      ? 'gentzen-toc-toggle'
+      : 'gentzen-toc-placeholder';
+
+    if (children.length) {
+      control.type = 'button';
+      control.setAttribute(
+        'aria-label',
+        `Toggle ${entry.link.textContent.trim()}`
+      );
+      control.addEventListener('click', () => {
+        entry.expanded = !entry.expanded;
+        refresh();
+      });
+      entry.toggle = control;
+    } else {
+      control.setAttribute('aria-hidden', 'true');
+    }
+
+    entry.link.before(control);
+  }
+
+  refresh();
+});
+
