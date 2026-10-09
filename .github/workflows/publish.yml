@@ -1,0 +1,67 @@
+
+name: Publish HTML textbook
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Get LaTeX files
+        uses: actions/checkout@v4
+
+      - name: Install LaTeX and Lwarp
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            texlive-latex-extra \
+            texlive-luatex \
+            texlive-fonts-recommended \
+            texlive-pictures \
+            texlive-extra-utils \
+            poppler-utils
+
+      - name: Convert LaTeX to HTML
+        run: |
+          pdflatex -interaction=nonstopmode -halt-on-error main.tex
+          lwarpmk html
+          test -f index.html
+
+      - name: Prepare website files
+        run: |
+          mkdir -p site
+          for ext in html css js svg png jpg jpeg gif webp; do
+            find . -maxdepth 1 -type f -iname "*.$ext" \
+              -exec cp -t site -- {} +
+          done
+          for dir in *-images images; do
+            if [ -d "$dir" ]; then
+              cp -r "$dir" site/
+            fi
+          done
+          touch site/.nojekyll
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload website
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+      - name: Publish website
+        id: deployment
+        uses: actions/deploy-pages@v4
