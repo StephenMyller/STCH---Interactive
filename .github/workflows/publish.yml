@@ -24,28 +24,14 @@ jobs:
         uses: actions/checkout@v4
         
 
-      - name: Install LaTeX and Lwarp
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            texlive-latex-extra \
-            texlive-luatex \
-            texlive-fonts-recommended \
-            texlive-pictures \
-            texlive-extra-utils \
-            texlive-lang-japanese \
-            texlive-science \
-            poppler-utils
-          kpsewhich ifptex.sty
-          kpsewhich bussproofs.sty
-
-
-
       - name: Convert LaTeX to HTML
-        run: |
-          pdflatex -interaction=nonstopmode -halt-on-error main.tex
-          lwarpmk html
-          test -f index.html
+        uses: xu-cheng/texlive-action@v3
+        with:
+          run: |
+            pdflatex -interaction=nonstopmode -halt-on-error main.tex
+            lwarpmk html
+            test -f index.html
+
 
           
       - name: Enable interactive derivations
