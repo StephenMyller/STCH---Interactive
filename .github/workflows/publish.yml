@@ -53,26 +53,64 @@ jobs:
 
 
 
-      - name: Enable interactive derivations
+
+      - name: Enable and version website assets
+        env:
+          ASSET_VERSION: ${{ github.sha }}
         run: |
-          for page in ./*.html; do
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          import re
 
-            # Load Gentzen stylesheet
-            if ! grep -q 'href="gentzen-panel.css"' "$page"; then
-              sed -i 's@</head>@<link rel="stylesheet" href="gentzen-panel.css"></head>@' "$page"
-            fi
+          version = os.environ["ASSET_VERSION"][:12]
 
-            # Load Gentzen JavaScript
-            if ! grep -q 'src="gentzen.js"' "$page"; then
-              sed -i 's@</body>@<script defer src="gentzen.js"></script></body>@' "$page"
-            fi
+          for page in Path(".").glob("*.html"):
+              html = page.read_text(encoding="utf-8")
 
-            # Load light/dark theme switch
-            if ! grep -q 'src="theme.js"' "$page"; then
-              sed -i 's@</head>@<script src="theme.js"></script></head>@' "$page"
-            fi
+              # Ensure our custom assets are included.
+              assets = (
+                  ("gentzen-panel.css",
+                   '<link rel="stylesheet" href="gentzen-panel.css">',
+                   "</head>"),
+                  ("gentzen.js",
+                   '<script defer src="gentzen.js"></script>',
+                   "</body>"),
+                  ("theme.js",
+                   '<script src="theme.js"></script>',
+                   "</head>"),
+              )
 
-          done
+              for name, tag, position in assets:
+                  existing = re.search(
+                      rf'(?:href|src)="{re.escape(name)}(?:\?[^"]*)?"',
+                      html
+                  )
+                  if not existing:
+                      html = html.replace(position, tag + position, 1)
+
+              # Refresh version identifiers on every build.
+              pattern = re.compile(
+                  r'(?P<prefix>\b(?:href|src)=(?P<q>["\']))'
+                  r'(?P<asset>[^"\']+?\.(?:css|js))'
+                  r'(?:\?[^"\']*)?(?P=q)'
+              )
+
+              def stamp(match):
+                  asset = match.group("asset")
+                  if not Path(asset).is_file():
+                      return match.group(0)
+
+                  return (
+                      f'{match.group("prefix")}'
+                      f'{asset}?v={version}'
+                      f'{match.group("q")}'
+                  )
+
+              html = pattern.sub(stamp, html)
+              page.write_text(html, encoding="utf-8")
+          PY
+
 
 
       - name: Prepare website files
