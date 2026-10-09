@@ -49,7 +49,7 @@ function alignWithProof() {
   const anchor = anchors.get(active);
   if (!anchor) return;
 
-  const math = active.querySelector('mjx-container') || active;
+  const math = active.querySelector('p mjx-container') || active;
 
   // Remove the previous offset before measuring.
   panel.style.setProperty('--gentzen-anchor', '0px');
@@ -101,7 +101,7 @@ function alignWithProof() {
     active = null;
     panel.classList.remove('is-open');
     panel.setAttribute('aria-hidden', 'true'); 
-    panel.style.removeProperty('--gentzen-sticky-top');
+    panel.style.removeProperty('--gentzen-anchor');
   }
 
   for (const derivation of derivations) {
