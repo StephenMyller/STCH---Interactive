@@ -228,3 +228,25 @@ html .gentzen-close:hover {
   background: var(--book-hover);
 }
 
+
+/* ================================================================
+   Figure captions
+   ================================================================ */
+
+/* Lwarp makes figure captions bold by default.
+   Use regular weight for the entire caption. */
+figure div.figurecaption {
+  font-weight: normal;
+}
+
+
+/* ================================================================
+   Definition 0 (Informal)
+   ================================================================ */
+
+/* Lwarp renders the heading of our custom zerodefstyle
+   inside a span.listmarker, without preserving its bold weight.
+   Restore boldness to the heading only. */
+div.amsthmbodyzerodefstyle span.listmarker {
+  font-weight: bold;
+}
