@@ -1041,3 +1041,51 @@ html[data-book-theme="dark"] nav.sidetoc a:hover {
     overflow-y: auto !important;
   }
 }
+/* ================================================================
+   14. ILLUSTRATIONS IN THE SHARED CONTEXT PANEL
+   ================================================================ */
+
+/* The currently inactive figure stays in the DOM but is not displayed. */
+.gentzen-panel .sideillustration[hidden] {
+  display: none;
+}
+
+/* Use the complete width of the panel without clipping the caption. */
+.gentzen-panel .sideillustration {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+.gentzen-panel .sideillustration figure,
+.gentzen-panel .sideillustration .figure {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+
+/* Lwarp normally places a TikZ drawing in an <img class="lateximage">. */
+.gentzen-panel .sideillustration img,
+.gentzen-panel .sideillustration svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0.5rem auto;
+}
+
+/* Maintain the legibility of dark ink within TikZ SVGs in Night mode. */
+html[data-book-theme="dark"] .gentzen-panel .sideillustration img.lateximage {
+  background: #f6f4ef;
+  border-radius: 0.2rem;
+}
+
+.gentzen-panel .sideillustration .figurecaption {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.gentzen-panel .sideillustration .figurecaption p {
+  text-align: center;
+}
