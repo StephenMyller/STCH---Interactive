@@ -1,17 +1,19 @@
-/* Lwarp sidecar derivations: keep prose in place and align trees to their proofs. */
+/* Contextual side panel for Gentzen derivations and illustrations. */
 
 function setupGentzenPanels() {
-   document.querySelector('main.bodycontainer')?.parentElement?.classList.add('bodyandsidetoc');
-   
-  const shell = document.querySelector('div.bodyandsidetoc, div.bodywithoutsidetoc');
-  const main = shell?.querySelector('main.bodycontainer');
-  const derivations = [...(main?.querySelectorAll('.formalderivation') ?? [])];
-  if (!shell || !main || derivations.length === 0) return;
+  const main = document.querySelector('main.bodycontainer');
+  const shell = main?.parentElement;
+  if (!shell || !main) return;
+  shell.classList.add('bodyandsidetoc');
+
+  // Preserve the order in which figures and derivations occur in the text.
+  const items = [...main.querySelectorAll('.formalderivation, .sideillustration')];
+  if (items.length === 0) return;
 
   const panel = document.createElement('aside');
   panel.className = 'gentzen-panel';
   panel.id = 'gentzen-panel';
-  panel.setAttribute('aria-label', 'Contextual formal derivation');
+  panel.setAttribute('aria-label', 'Contextual illustrations and derivations');
   panel.setAttribute('aria-hidden', 'true');
 
   const card = document.createElement('div');
@@ -25,6 +27,7 @@ function setupGentzenPanels() {
   close.type = 'button';
   close.textContent = 'Close';
   header.append(title, close);
+
   const content = document.createElement('div');
   content.className = 'gentzen-panel-content';
   card.append(header, content);
@@ -35,115 +38,123 @@ function setupGentzenPanels() {
   const anchors = new Map();
   let active = null;
 
+  const isIllustration = item => item.classList.contains('sideillustration');
+  const itemLabel = item => isIllustration(item) ? 'illustration' : 'formal derivation';
 
+  function alignWithContext() {
+    if (!active || window.innerWidth < 1600) return;
 
+    const anchor = anchors.get(active);
+    if (!anchor) return;
 
+    // Align a figure's image, or a derivation's visible MathJax tree.
+    const visual = isIllustration(active)
+      ? (active.querySelector('img, svg') || active)
+      : (active.querySelector('p mjx-container') || active);
 
-function alignWithProof() {
-  if (!active || window.innerWidth < 1600) return;
+    // Reset before measuring so the previous selection's offset is not reused.
+    panel.style.setProperty('--gentzen-anchor', '0px');
 
-  const anchor = anchors.get(active);
-  if (!anchor) return;
+    const inset =
+      visual.getBoundingClientRect().top -
+      card.getBoundingClientRect().top;
 
-  const math = active.querySelector('p mjx-container') || active;
+    const panelY = panel.getBoundingClientRect().top + window.scrollY;
+    const anchorY = anchor.getBoundingClientRect().top + window.scrollY;
+    const padding = parseFloat(getComputedStyle(panel).paddingTop) || 0;
 
-  // Remove the previous offset before measuring.
-  panel.style.setProperty('--gentzen-anchor', '0px');
-
-  // Measure the distance from the card to the tree.
-  const inset =
-    math.getBoundingClientRect().top -
-    card.getBoundingClientRect().top;
-
-  // Determine the positions in document coordinates.
-  const panelY =
-    panel.getBoundingClientRect().top + window.scrollY;
-
-  const proofY =
-    anchor.getBoundingClientRect().top + window.scrollY;
-
-  const padding =
-    parseFloat(getComputedStyle(panel).paddingTop) || 0;
-
-  // Align the tree itself with the beginning of the proof.
-  const offset = Math.max(
-    0,
-    proofY - panelY - padding - inset
-  );
-
-  panel.style.setProperty(
-    '--gentzen-anchor',
-    `${Math.round(offset)}px`
-  );
-}
-
+    const offset = Math.max(0, anchorY - panelY - padding - inset);
+    panel.style.setProperty('--gentzen-anchor', `${Math.round(offset)}px`);
+  }
 
   function hidePanel() {
     if (active) {
       active.hidden = true;
       const button = buttons.get(active);
-      button.textContent = 'Show formal derivation';
-      button.setAttribute('aria-expanded', 'false');
+      if (button) {
+        button.textContent = `Show ${itemLabel(active)}`;
+        button.setAttribute('aria-expanded', 'false');
+      }
       anchors.get(active)?.classList.remove('gentzen-linked-proof');
     }
     active = null;
     panel.classList.remove('is-open');
-    panel.setAttribute('aria-hidden', 'true'); 
+    panel.setAttribute('aria-hidden', 'true');
     panel.style.removeProperty('--gentzen-anchor');
   }
 
-  for (const derivation of derivations) {
-    // Find the nearest preceding prose proof (allow intervening Lwarp elements).
-    let proof = derivation.previousElementSibling;
-    let checked = 0;
-    while (proof && !proof.matches('.amsthmproof') && checked++ < 6) {
-      if (proof.matches('h1, h2, h3, h4, h5, h6')) break;
-      proof = proof.previousElementSibling;
+  for (const item of items) {
+    const figure = isIllustration(item);
+    let anchor = null;
+    let proof = null;
+
+    if (figure) {
+      // The prose immediately before the figure explains the illustration.
+      const previous = item.previousElementSibling;
+      if (previous?.matches('p')) anchor = previous;
+    } else {
+      // Retain the existing Gentzen behavior: locate the preceding prose proof.
+      proof = item.previousElementSibling;
+      let checked = 0;
+      while (proof && !proof.matches('.amsthmproof') && checked++ < 6) {
+        if (proof.matches('h1, h2, h3, h4, h5, h6')) break;
+        proof = proof.previousElementSibling;
+      }
+      if (!proof?.matches('.amsthmproof')) proof = null;
     }
-    if (!proof?.matches('.amsthmproof')) proof = null;
 
     const trigger = document.createElement('div');
     trigger.className = 'derivation-trigger';
     const button = document.createElement('button');
     button.type = 'button';
-    button.textContent = 'Show formal derivation';
+    button.textContent = `Show ${itemLabel(item)}`;
     button.setAttribute('aria-controls', panel.id);
     button.setAttribute('aria-expanded', 'false');
     trigger.append(button);
-    // Place the control immediately before the prose proof when possible.
-    (proof || derivation).before(trigger);
-    const anchor = proof || trigger;
-    anchors.set(derivation, anchor);
 
-    content.append(derivation);
-    derivation.hidden = true;
-    buttons.set(derivation, button);
+    // For figures, put the button where the HTML figure would have appeared.
+    // For derivations, keep it before the associated prose proof.
+    (figure ? item : (proof || item)).before(trigger);
+    anchor ||= proof || trigger;
+    anchors.set(item, anchor);
+
+    content.append(item);
+    item.hidden = true;
+    buttons.set(item, button);
+
+    if (figure) {
+      // A freshly loaded SVG can change its dimensions after the first frame.
+      for (const img of item.querySelectorAll('img')) {
+        img.addEventListener('load', alignWithContext);
+      }
+    }
 
     button.addEventListener('click', () => {
-      if (active === derivation) {
+      if (active === item) {
         hidePanel();
-        return;  
+        return;
       }
       hidePanel();
-      active = derivation;
-      derivation.hidden = false;
+      active = item;
+      item.hidden = false;
       anchor.classList.add('gentzen-linked-proof');
-      button.textContent = 'Hide formal derivation';
+      title.textContent = figure ? 'Illustration' : 'Formal derivation';
+      button.textContent = `Hide ${itemLabel(item)}`;
       button.setAttribute('aria-expanded', 'true');
       panel.classList.add('is-open');
       panel.setAttribute('aria-hidden', 'false');
       content.scrollTop = 0;
-      requestAnimationFrame(alignWithProof);
+      requestAnimationFrame(alignWithContext);
     });
   }
 
   close.addEventListener('click', hidePanel);
-  document.addEventListener('keydown', (event) => {
+  document.addEventListener('keydown', event => {
     if (event.key === 'Escape') hidePanel();
   });
-  window.addEventListener('resize', alignWithProof);
+  window.addEventListener('resize', alignWithContext);
   if ('ResizeObserver' in window) {
-    new ResizeObserver(() => alignWithProof()).observe(main);
+    new ResizeObserver(() => alignWithContext()).observe(main);
   }
 }
 
@@ -156,8 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-
-/* Collapsible Lwarp table of contents */
+/* Collapsible Lwarp table of contents — unchanged. */
 document.addEventListener('DOMContentLoaded', () => {
   const nav = document.querySelector('nav.sidetoc');
   if (!nav) return;
@@ -246,4 +256,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
   refresh();
 });
-
