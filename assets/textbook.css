@@ -250,3 +250,14 @@ figure div.figurecaption {
 div.amsthmbodyzerodefstyle span.listmarker {
   font-weight: bold;
 }
+
+
+/* ================================================================
+   Prose spacing
+   ================================================================ */
+
+main.bodycontainer section.textbody > p {
+  line-height: 1.6;
+  margin-top: 0;
+  margin-bottom: 1.2em;
+}
