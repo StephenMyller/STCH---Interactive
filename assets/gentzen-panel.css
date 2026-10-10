@@ -1089,3 +1089,58 @@ html[data-book-theme="dark"] .gentzen-panel .sideillustration img.lateximage {
 .gentzen-panel .sideillustration .figurecaption p {
   text-align: center;
 }
+
+/* ===== Illustration / derivation panel content ===== */
+
+.gentzen-panel-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Lwarp figures inside the side panel */
+.gentzen-panel-content figure,
+.gentzen-panel-content .figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Make images/SVGs larger and readable */
+.gentzen-panel-content img,
+.gentzen-panel-content svg {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(100%, 420px);
+  max-height: 70vh;
+  background: #fff;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  box-sizing: border-box;
+}
+
+/* Caption styling */
+.gentzen-panel-content figcaption,
+.gentzen-panel-content .figurecaption,
+.gentzen-panel-content .caption {
+  margin-top: 0.75rem;
+  max-width: 28rem;
+  text-align: center;
+  line-height: 1.45;
+  white-space: normal;
+  font-size: 1rem;
+}
+
+/* Slightly smaller "Figure 1:" label if needed */
+.gentzen-panel-content figcaption .fignumber,
+.gentzen-panel-content .figurecaption .fignumber {
+  font-weight: 600;
+}
+
+/* Night mode: keep the figure on a light card */
+html[data-theme="dark"] .gentzen-panel-content img,
+html[data-theme="dark"] .gentzen-panel-content svg {
+  background: #f7f7f4;
+}
