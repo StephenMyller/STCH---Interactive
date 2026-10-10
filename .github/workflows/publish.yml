@@ -132,7 +132,7 @@ jobs:
           #
           # "lwarp-html-v1" is a prefix chosen by us.
           # We can change it to v2 to invalidate the old cache.
-          key: lwarp-html-v1-${{ hashFiles('**/*.tex', '**/*.sty', '**/*.cls', '**/*.bib', '**/*.bst') }}
+          key: lwarp-html-v2-${{ hashFiles('**/*.tex', '**/*.sty', '**/*.cls', '**/*.bib', '**/*.bst') }}
 
 
       # ==========================================================
