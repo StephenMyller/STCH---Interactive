@@ -1,9 +1,86 @@
-/* Prose typography: justify paragraphs, not navigational text or formulas. */
+
+/* ================================================================
+   INTERACTIVE SET THEORY TEXTBOOK — CUSTOM STYLING
+   ================================================================
+
+   This stylesheet controls:
+
+     1. Typography of the textbook's prose
+     2. Three-column layout on large screens
+     3. Appearance and behavior of Gentzen proof panels
+     4. Responsive layouts for smaller screens
+     5. Centering of mathematical derivations
+     6. Collapsible table of contents
+     7. Dark-mode refinements
+     8. Background visibility and page scrolling
+
+   CSS BASICS
+   ----------
+
+   A CSS rule generally looks like this:
+
+     selector {
+       property: value;
+     }
+
+   The SELECTOR identifies which HTML elements are affected.
+   The DECLARATIONS inside the braces specify their appearance.
+
+   Common selector notation:
+
+     p             All <p> (paragraph) elements
+     .example      Elements with class="example"
+     #example      The element with id="example"
+     A B           B elements anywhere inside A
+     A > B         B elements directly inside A
+     A.class       A elements that also have the given class
+     A:hover       A while the mouse pointer is over it
+     A[hidden]     A elements with the hidden attribute
+
+   IMPORTANT:
+   Rule order is preserved from our existing stylesheet.
+   Later rules can override earlier ones, depending on
+   selector specificity and other CSS cascade rules.
+
+   ================================================================ */
+
+
+/* ================================================================
+   1. PROSE TYPOGRAPHY
+   ================================================================
+
+   Justify ordinary textbook paragraphs, but avoid applying
+   justification to mathematical displays or special layouts.
+
+   Justification aligns text along both the left and right
+   margins, rather than leaving an irregular right edge.
+   ================================================================ */
+
+
+/* Target paragraphs inside the textbook's main text section.
+
+   "main.bodycontainer" means a <main> element with the class
+   "bodycontainer".
+
+   The spaces mean that the subsequent elements are descendants.
+*/
 main.bodycontainer section.textbody p {
   text-align: justify;
+
+  /* Adjust spacing between words to achieve justification. */
   text-justify: inter-word;
+
+  /* Permit automatic word hyphenation where supported.
+     Correct language metadata helps browsers hyphenate. */
   hyphens: auto;
 }
+
+
+/* Exceptions: don't justify paragraphs inside special LaTeX
+   environments such as the title page or centered text.
+
+   Commas separate selectors that share the same declarations.
+*/
 main.bodycontainer section.textbody .titlepage p,
 main.bodycontainer section.textbody .center p,
 main.bodycontainer section.textbody .flushleft p,
@@ -12,157 +89,619 @@ main.bodycontainer section.textbody .flushright p {
   hyphens: none;
 }
 
-/* Wide screens: a stable three-column grid, even when the proof is hidden. */
+
+/* ================================================================
+   2. LARGE SCREENS — THREE-COLUMN LAYOUT
+   ================================================================
+
+   Applies only when the screen is at least 1600 CSS pixels wide.
+
+   Desired arrangement:
+
+     +------------+----------------+----------------+
+     |            |                |                |
+     |  CONTENTS  |    TEXTBOOK    | GENTZEN PANEL  |
+     |            |                |                |
+     +------------+----------------+----------------+
+
+   The three columns remain allocated even when the proof
+   panel isn't displaying a derivation.
+
+   @media introduces a CONDITIONAL CSS block: the enclosed
+   rules apply only when its condition is satisfied.
+
+   CSS Grid provides the column structure.
+   ================================================================ */
+
 @media screen and (min-width: 1600px) {
+
+  /* --------------------------------------------------------------
+     A. CREATE THE THREE-COLUMN GRID
+     --------------------------------------------------------------
+
+     :has(> div.sidetoccontainer) selects a pagegrid only if
+     it has a direct child that is the sidebar container.
+
+     This avoids changing unrelated pagegrid elements.
+
+     Column widths:
+
+       1. Sidebar: between 18rem and 22rem, ideally 20vw
+       2. Textbook: one share of the remaining space
+       3. Proof panel: another share of the remaining space
+
+     rem = relative to the root font size
+     vw  = percentage of the viewport width
+     fr  = fractional unit of available grid space
+
+     clamp(min, preferred, max) constrains the sidebar width.
+
+     minmax(0, 1fr) allows flexible columns to shrink,
+     helping avoid overflow from large contents.
+  */
+
   div.pagegrid:has(> div.sidetoccontainer) {
     display: grid;
-    grid-template-columns: clamp(18rem, 20vw, 22rem) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns:
+      clamp(18rem, 20vw, 22rem)
+      minmax(0, 1fr)
+      minmax(0, 1fr);
     align-items: stretch;
   }
+
+
+  /* --------------------------------------------------------------
+     B. LEFT COLUMN — TABLE OF CONTENTS
+     --------------------------------------------------------------
+
+     grid-column and grid-row specify where the element sits.
+
+     position: sticky keeps the sidebar attached to the top
+     of the viewport as its containing area scrolls.
+
+     100vh means the full viewport height.
+  */
+
   div.pagegrid:has(> div.sidetoccontainer) > div.sidetoccontainer {
     grid-column: 1;
     grid-row: 1;
+
+    /* Disable floating from Lwarp's original layout. */
     float: none;
+
     width: 100%;
+
     position: sticky;
     top: 0;
     height: 100vh;
   }
+
+
+  /* --------------------------------------------------------------
+     C. MIDDLE COLUMN — TEXTBOOK
+     --------------------------------------------------------------
+
+     The manuscript occupies the second grid column.
+
+     Override original widths, margins, and floating behavior
+     so that CSS Grid controls its horizontal position.
+  */
+
   div.pagegrid:has(> div.sidetoccontainer) > main.bodycontainer {
     grid-column: 2;
     grid-row: 1;
+
     justify-self: stretch;
+
     float: none;
     width: 100%;
     min-width: 0;
     max-width: none;
     margin: 0;
+
+    /* Padding order: top, right, bottom, left. */
     padding: 2rem 0.75rem 2rem 1.25rem;
+
+    /* Include padding and borders within the declared width. */
     box-sizing: border-box;
   }
+
+
+  /* --------------------------------------------------------------
+     D. RIGHT COLUMN — GENTZEN DERIVATION PANEL
+     --------------------------------------------------------------
+
+     Place the proof panel permanently in the third column.
+
+     Unlike smaller-screen layouts, this is not a floating
+     drawer. The panel participates in the page's grid layout.
+  */
+
   div.pagegrid:has(> div.sidetoccontainer) > .gentzen-panel {
     grid-column: 3;
     grid-row: 1;
+
     align-self: stretch;
+
     min-height: 100vh;
     height: 100%;
+
+    /* Position relative to the normal document layout. */
     position: relative;
     top: auto;
+
     width: 100%;
+
     border-left: 1px solid #d6d2cb;
+
+    /* Remove any drawer-style shadow. */
     box-shadow: none;
+
     padding: 0.01px 1.25rem 1rem;
   }
+
+
+  /* --------------------------------------------------------------
+     E. STICKY PROOF CARD
+     --------------------------------------------------------------
+
+     The panel occupies the right column, while the card
+     containing the selected derivation remains sticky.
+
+     The variable --gentzen-anchor is a CSS custom property.
+     JavaScript can set its value dynamically.
+
+     var(--gentzen-anchor, 0px) means:
+       use --gentzen-anchor if defined;
+       otherwise, use 0px.
+
+     This is relevant to positioning derivations next to
+     their corresponding text.
+  */
+
   .gentzen-panel-card {
     position: sticky;
     top: 1rem;
+
     margin-top: var(--gentzen-anchor, 0px);
+
+    /* Limit card height to the viewport minus 2rem. */
     max-height: calc(100vh - 2rem);
   }
 }
 
+
+/* ================================================================
+   3. GENTZEN PANEL — SHARED STYLING
+   ================================================================
+
+   These rules apply at ALL screen sizes unless a later,
+   more specific rule overrides them.
+
+   We distinguish several nested elements:
+
+     .gentzen-panel
+       The complete panel container
+
+     .gentzen-panel-card
+       The card holding one selected derivation
+
+     .gentzen-panel-header
+       The header and close button
+
+     .gentzen-panel-content
+       The area containing the mathematical proof
+
+   JavaScript adds or removes the class "is-open" to control
+   visibility. CSS determines how that state looks.
+   ================================================================ */
+
+
+/* --------------------------------------------------------------
+   A. PANEL CONTAINER
+   -------------------------------------------------------------- */
+
 .gentzen-panel {
+
+  /* Hide the panel without removing it from the layout.
+     This differs from display: none, which removes its
+     layout box entirely. */
   visibility: hidden;
+
+  /* Prevent interactions with the hidden panel. */
   pointer-events: none;
+
+  /* Permit shrinking when the panel is a grid item. */
   min-width: 0;
+
   box-sizing: border-box;
+
+  /* Light cream background. */
   background: #faf9f7;
 }
+
+
+/* When JavaScript adds the class "is-open", reveal the panel.
+
+   .gentzen-panel.is-open means ONE element having BOTH classes.
+*/
 .gentzen-panel.is-open {
   visibility: visible;
   pointer-events: auto;
 }
+
+
+/* --------------------------------------------------------------
+   B. PROOF CARD
+   --------------------------------------------------------------
+
+   Flexbox arranges the contents of the card in a column.
+
+   This makes it possible to keep the header separate from
+   the potentially scrollable derivation content.
+*/
+
 .gentzen-panel-card {
   display: flex;
   min-height: 0;
   flex-direction: column;
+
   box-sizing: border-box;
   background: #faf9f7;
 }
+
+
+/* --------------------------------------------------------------
+   C. PANEL HEADER
+   --------------------------------------------------------------
+
+   Flexbox places header items horizontally, generally with
+   the heading on one side and the close button on the other.
+*/
+
 .gentzen-panel-header {
   display: flex;
+
+  /* Don't let the header shrink within the flex container. */
   flex: none;
+
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
+
   border-bottom: 1px solid #d6d2cb;
+
   padding: 0.65rem 0;
   margin-bottom: 1rem;
 }
+
+
+/* --------------------------------------------------------------
+   D. PROOF CONTENT AND SCROLLING
+   --------------------------------------------------------------
+
+   overflow: auto introduces scrolling when necessary.
+
+   min-height: 0 is particularly important inside Flexbox:
+   it permits the content region to shrink rather than
+   insisting on enough height to fit all its contents.
+
+   This helps long derivations scroll within the panel.
+*/
+
 .gentzen-panel-content {
   min-height: 0;
   overflow: auto;
   padding: 0.5rem 0.3rem 1rem;
 }
+
+
+/* Individual derivations can also scroll horizontally.
+
+   Long proof trees may be wider than the available column.
+   We prefer horizontal scrolling to cutting them off.
+*/
+
 .gentzen-panel .formalderivation {
   overflow-x: auto;
   padding: 0.5rem 0;
 }
-.gentzen-panel .formalderivation[hidden] { display: none; }
-.gentzen-linked-proof { box-shadow: inset 3px 0 #d2cbc2; }
-.derivation-trigger { text-align: right; margin: 0.5rem 0 0.25rem; }
-.derivation-trigger button, .gentzen-close {
+
+
+/* Respect the HTML "hidden" attribute for derivations.
+
+   JavaScript may use this attribute to hide derivations
+   that are not currently selected.
+*/
+
+.gentzen-panel .formalderivation[hidden] {
+  display: none;
+}
+
+
+/* Visually mark a proof as linked or selected.
+
+   An inset box-shadow draws a colored line inside the element
+   without changing the dimensions of its border box.
+*/
+
+.gentzen-linked-proof {
+  box-shadow: inset 3px 0 #d2cbc2;
+}
+
+
+/* --------------------------------------------------------------
+   E. DERIVATION BUTTONS
+   -------------------------------------------------------------- */
+
+/* Align the trigger button toward the right of the text. */
+
+.derivation-trigger {
+  text-align: right;
+  margin: 0.5rem 0 0.25rem;
+}
+
+
+/* Share the same appearance between:
+
+     - Buttons opening a derivation
+     - Buttons closing the proof panel
+*/
+
+.derivation-trigger button,
+.gentzen-close {
+
+  /* Inherit the surrounding font family and properties. */
   font: inherit;
+
   font-size: 0.82rem;
   padding: 0.35rem 0.65rem;
+
   background: transparent;
   color: inherit;
+
   border: 1px solid #a9a198;
   border-radius: 0.25rem;
+
+  /* Display a hand-shaped pointer over clickable buttons. */
   cursor: pointer;
 }
-.derivation-trigger button:hover, .gentzen-close:hover { background: #eeeae3; }
 
-/* Medium screens: prose remains readable, right panel becomes a drawer. */
+
+/* Slightly change the background when the mouse hovers. */
+
+.derivation-trigger button:hover,
+.gentzen-close:hover {
+  background: #eeeae3;
+}
+
+
+/* ================================================================
+   4. MEDIUM SCREENS — TWO-COLUMN LAYOUT
+   ================================================================
+
+   Applies between 801px and 1599px.
+
+     +------------+-----------------------+
+     |            |                       |
+     |  CONTENTS  |       TEXTBOOK        |
+     |            |                       |
+     +------------+-----------------------+
+
+   The Gentzen panel no longer gets a permanent third column.
+   Instead, it becomes a drawer, defined in Section 5.
+   ================================================================ */
+
 @media screen and (min-width: 801px) and (max-width: 1599px) {
+
+  /* Sidebar plus flexible manuscript column. */
+
   div.pagegrid:has(> div.sidetoccontainer) {
     display: grid;
-    grid-template-columns: clamp(18rem, 24vw, 22rem) minmax(0, 1fr);
+    grid-template-columns:
+      clamp(18rem, 24vw, 22rem)
+      minmax(0, 1fr);
   }
-  div.pagegrid:has(> div.sidetoccontainer) > div.sidetoccontainer { grid-column: 1; grid-row: 1; }
+
+
+  /* Place the table of contents in the first column. */
+
+  div.pagegrid:has(> div.sidetoccontainer) > div.sidetoccontainer {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+
+  /* Place the manuscript in the second column.
+
+     max-width: 52rem prevents the text from becoming too wide.
+     justify-self: center centers it within its grid column.
+  */
+
   div.pagegrid:has(> div.sidetoccontainer) > main.bodycontainer {
     grid-column: 2;
     grid-row: 1;
+
     max-width: 52rem;
     justify-self: center;
   }
 }
+
+
+/* ================================================================
+   5. SMALLER SCREENS — SLIDING PROOF DRAWER
+   ================================================================
+
+   Applies to ALL screens narrower than 1600px.
+
+   Rather than occupying a permanent column, the proof panel
+   floats over the page and slides in from the right.
+
+   This rule applies to both medium screens and phones.
+   ================================================================ */
+
 @media screen and (max-width: 1599px) {
+
   .gentzen-panel {
+
+    /* Remove the panel from ordinary document flow.
+       Its position is now relative to the viewport. */
     position: fixed;
+
+    /* Draw it above most other page elements. */
     z-index: 1000;
+
+    /* Attach to the top, right, and bottom edges. */
     top: 0;
     right: 0;
     bottom: 0;
+
+    /* At most 42rem wide, but never more than 94%
+       of the viewport width. */
     width: min(42rem, 94vw);
+
+    /* Allow scrolling if the panel contents are too tall. */
     overflow: auto;
+
     padding: 1rem 1.5rem;
+
+    /* Shadow along the left edge of the drawer. */
     box-shadow: -8px 0 24px #0002;
+
+    /* Move the panel entirely beyond the right edge.
+       translateX(100%) means 100% of its own width. */
     transform: translateX(100%);
+
+    /* Animate changes of transform over 180 milliseconds. */
     transition: transform 180ms ease;
   }
-  .gentzen-panel.is-open { transform: translateX(0); }
-  .gentzen-panel-card { max-height: calc(100vh - 2rem); }
+
+
+  /* Slide the drawer into view when JavaScript opens it. */
+
+  .gentzen-panel.is-open {
+    transform: translateX(0);
+  }
+
+
+  /* Restrict the proof card's height to the viewport. */
+
+  .gentzen-panel-card {
+    max-height: calc(100vh - 2rem);
+  }
 }
+
+
+/* ================================================================
+   6. MOBILE SCREENS — SINGLE-COLUMN LAYOUT
+   ================================================================
+
+   Applies at 800px and below.
+
+   The sidebar and manuscript no longer sit side by side.
+   Instead, they are arranged in ordinary block flow.
+
+     +-------------------+
+     | TABLE OF CONTENTS |
+     +-------------------+
+     |                   |
+     |     TEXTBOOK      |
+     |                   |
+     +-------------------+
+
+   The proof panel still uses the sliding drawer from Section 5.
+   ================================================================ */
+
 @media screen and (max-width: 800px) {
-  div.pagegrid:has(> div.sidetoccontainer) { display: block; }
+
+  /* Disable the grid layout. */
+
+  div.pagegrid:has(> div.sidetoccontainer) {
+    display: block;
+  }
+
+
+  /* Make the contents area part of the normal page flow.
+     Limit its height to 35% of the viewport height.
+  */
+
   div.pagegrid:has(> div.sidetoccontainer) > div.sidetoccontainer {
-    position: static; float: none; width: 100%; height: auto; max-height: 35vh;
+    position: static;
+    float: none;
+    width: 100%;
+    height: auto;
+    max-height: 35vh;
   }
+
+
+  /* Give the manuscript the full available width.
+     Add modest padding for comfortable mobile reading.
+  */
+
   div.pagegrid:has(> div.sidetoccontainer) > main.bodycontainer {
-    float: none; width: 100%; max-width: none; margin: 0;
-    padding: 1.25rem; box-sizing: border-box;
+    float: none;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+
+    padding: 1.25rem;
+    box-sizing: border-box;
   }
 }
+
+
+/* ================================================================
+   7. ACCESSIBILITY — REDUCED MOTION
+   ================================================================
+
+   Operating systems and browsers can expose a user preference
+   for reduced animation.
+
+   If the user requests reduced motion, disable the sliding
+   animation of the Gentzen panel.
+
+   The panel can still open and close, but without transition.
+   ================================================================ */
+
 @media (prefers-reduced-motion: reduce) {
-  .gentzen-panel { transition: none; }
+
+  .gentzen-panel {
+    transition: none;
+  }
 }
 
 
-/* Center the Gentzen derivation */
+/* ================================================================
+   8. CENTER MATHEMATICAL DERIVATIONS
+   ================================================================
+
+   MathJax renders mathematical notation in the browser.
+
+   MathJax commonly produces HTML elements named mjx-container.
+
+   We center both the paragraphs containing derivations and
+   the MathJax display containers themselves.
+
+   !important increases a declaration's priority within the
+   CSS cascade. It is useful here to override formatting
+   supplied by the LaTeX-to-HTML conversion or MathJax.
+
+   It should generally be used sparingly.
+   ================================================================ */
+
+
+/* Center paragraphs inside derivation blocks. */
+
 .gentzen-panel .formalderivation p {
   text-align: center !important;
 }
+
+
+/* Center block-level MathJax displays.
+
+   [display="true"] is an attribute selector: it targets
+   MathJax containers marked as display mathematics.
+*/
 
 .gentzen-panel .formalderivation mjx-container[display="true"] {
   text-align: center !important;
@@ -170,33 +709,103 @@ main.bodycontainer section.textbody .flushright p {
   margin-right: auto !important;
 }
 
-/* Collapsible table of contents */
+
+/* ================================================================
+   9. COLLAPSIBLE TABLE OF CONTENTS
+   ================================================================
+
+   Our table of contents can be expanded and collapsed.
+
+   CSS controls the visual presentation.
+   JavaScript controls which entries are expanded or hidden.
+
+   Hierarchical indentation is determined by --toc-level,
+   another CSS variable that can be supplied dynamically.
+   ================================================================ */
+
+
+/* --------------------------------------------------------------
+   A. TABLE-OF-CONTENTS ENTRIES
+   -------------------------------------------------------------- */
+
 nav.sidetoc p.gentzen-toc-entry {
+
+  /* Place the expansion toggle and link side by side. */
   display: flex;
+
+  /* Align them according to their text baselines. */
   align-items: baseline;
+
   gap: 0.2rem;
+
+  /* Indent entries according to their nesting level.
+
+     Level 0: 0rem
+     Level 1: 0.9rem
+     Level 2: 1.8rem
+     Level 3: 2.7rem
+
+     calc() performs arithmetic on CSS values.
+  */
   padding-left: calc(var(--toc-level, 0) * 0.9rem);
 }
+
+
+/* Hide collapsed entries completely.
+
+   Unlike visibility: hidden, display: none removes
+   the element from the layout.
+*/
 
 nav.sidetoc p.gentzen-toc-entry[hidden] {
   display: none !important;
 }
 
+
+/* --------------------------------------------------------------
+   B. LINKS WITHIN TABLE-OF-CONTENTS ENTRIES
+   -------------------------------------------------------------- */
+
 nav.sidetoc p.gentzen-toc-entry a {
+
+  /* Remove indentation that may come from Lwarp styling. */
   margin-left: 0 !important;
   text-indent: 0 !important;
+
   display: inline !important;
+
+  /* As a flex item, the link takes up available space. */
   flex: 1;
 }
+
+
+/* --------------------------------------------------------------
+   C. EXPANSION TOGGLES AND PLACEHOLDERS
+   --------------------------------------------------------------
+
+   Toggles may display symbols such as +, -, or arrows.
+
+   Placeholders occupy equivalent space for entries that
+   don't have expandable children.
+
+   Giving both the same width keeps the labels aligned.
+*/
 
 .gentzen-toc-toggle,
 .gentzen-toc-placeholder {
   display: inline-block;
+
   width: 1.1rem;
   min-width: 1.1rem;
+
   text-align: center;
   padding: 0;
 }
+
+
+/* Make the expansion toggle look like a simple text symbol
+   rather than a conventional button.
+*/
 
 .gentzen-toc-toggle {
   background: none;
@@ -206,78 +815,194 @@ nav.sidetoc p.gentzen-toc-entry a {
   font: inherit;
 }
 
+
+/* Subtle hover color for the expansion toggle. */
+
 .gentzen-toc-toggle:hover {
   color: #706052;
 }
 
 
-/* Center the mathematical tree within its column */
+/* ================================================================
+   10. ADDITIONAL CENTERING FOR GENTZEN PROOF TREES
+   ================================================================
+
+   These rules refine Section 8.
+
+   Earlier, we centered text and MathJax display containers.
+   Here, we also use Flexbox to center the actual mathematical
+   tree as an object within its paragraph.
+
+   This is important because Gentzen derivations can be very
+   wide and should remain visually centered.
+
+   The > selector targets DIRECT children only.
+   ================================================================ */
+
+
+/* Turn the paragraph containing a proof into a flex container
+   and center its children horizontally.
+*/
+
 .gentzen-panel .formalderivation > p {
-    display: flex;
-    justify-content: center;
-    text-align: center !important;
+  display: flex;
+  justify-content: center;
+  text-align: center !important;
 }
+
+
+/* The MathJax container should retain its natural width.
+
+   flex: 0 0 auto means:
+     flex-grow:   0  (do not expand)
+     flex-shrink: 0  (do not compress)
+     flex-basis:  auto (use its natural size)
+
+   This helps prevent wide derivations from being squeezed.
+*/
 
 .gentzen-panel .formalderivation > p > mjx-container {
-    flex: 0 0 auto;
-    margin: 0 !important;
+  flex: 0 0 auto;
+  margin: 0 !important;
 }
 
 
-/* =========================================
-   Night mode refinements
-   ========================================= */
+/* ================================================================
+   11. DARK-MODE REFINEMENTS
+   ================================================================
 
-/* Navigation text and links */
+   Our theme system marks the root HTML element with:
+
+     data-book-theme="dark"
+
+   This is an HTML data attribute.
+
+   The selector:
+
+     html[data-book-theme="dark"]
+
+   therefore matches the document only when dark mode is active.
+
+   These rules refine colors for navigation, text, mathematics,
+   and borders. Other theme rules may be defined elsewhere.
+   ================================================================ */
+
+
+/* --------------------------------------------------------------
+   A. SIDEBAR TEXT AND LINKS
+   -------------------------------------------------------------- */
+
 html[data-book-theme="dark"] .sidetoccontainer,
 html[data-book-theme="dark"] .sidetoccontainer p,
 html[data-book-theme="dark"] .sidetoccontainer a,
 html[data-book-theme="dark"] .sidetoccontainer a:visited,
 html[data-book-theme="dark"] .gentzen-toc-toggle {
-    color: #dce0e6 !important;
+  color: #dce0e6 !important;
 }
 
-/* Navigation hover state */
+
+/* Navigation text becomes white on hover. */
+
 html[data-book-theme="dark"] .sidetoccontainer a:hover,
 html[data-book-theme="dark"] .gentzen-toc-toggle:hover {
-    color: #ffffff !important;
+  color: #ffffff !important;
 }
 
-/* Main prose and headings */
+
+/* --------------------------------------------------------------
+   B. MAIN TEXT
+   -------------------------------------------------------------- */
+
 html[data-book-theme="dark"] main.bodycontainer {
-    color: #dce0e6;
+  color: #dce0e6;
 }
 
-/* Mathematical notation, including Gentzen trees */
+
+/* --------------------------------------------------------------
+   C. MATHEMATICAL NOTATION
+   --------------------------------------------------------------
+
+   Apply a light color to MathJax-rendered mathematics,
+   including the Gentzen derivation trees.
+*/
+
 html[data-book-theme="dark"] mjx-container {
-    color: #e8e9ed !important;
+  color: #e8e9ed !important;
 }
 
-/* Gentzen panel text */
+
+/* --------------------------------------------------------------
+   D. PROOF PANEL TEXT
+   -------------------------------------------------------------- */
+
 html[data-book-theme="dark"] .gentzen-panel,
 html[data-book-theme="dark"] .gentzen-panel-card {
-    color: #dce0e6;
+  color: #dce0e6;
 }
 
-/* Borders and separators */
+
+/* --------------------------------------------------------------
+   E. BORDERS AND SEPARATORS
+   -------------------------------------------------------------- */
+
 html[data-book-theme="dark"] .gentzen-panel-header,
 html[data-book-theme="dark"] .sidetoccontainer {
-    border-color: #454b55;
+  border-color: #454b55;
 }
 
-/* Subtle hover effect for navigation */
+
+/* --------------------------------------------------------------
+   F. NAVIGATION HOVER EFFECT
+   --------------------------------------------------------------
+
+   Underline hovered links with a subtle blue color.
+*/
+
 html[data-book-theme="dark"] nav.sidetoc a:hover {
-    text-decoration: underline;
-    text-decoration-color: #a9caff;
+  text-decoration: underline;
+  text-decoration-color: #a9caff;
 }
 
 
-/* Keep the right column's background visible
-   even when no derivation is selected. */
+/* ================================================================
+   12. LARGE SCREENS — KEEP THE EMPTY RIGHT COLUMN VISIBLE
+   ================================================================
+
+   Recall the default rule in Section 3:
+
+     .gentzen-panel {
+       visibility: hidden;
+     }
+
+   On large screens, we want the third column to remain visible
+   even when no derivation has been selected.
+
+   We therefore distinguish between:
+
+     PANEL: The permanent background of the right column.
+     CARD:  The actual content containing a derivation.
+
+   The panel remains visible, but the card is hidden until
+   the panel has the class "is-open".
+
+   This prevents the textbook's layout from changing when
+   a reader opens or closes a proof.
+   ================================================================ */
+
 @media screen and (min-width: 1600px) {
+
+  /* Keep the right column's background visible. */
+
   .gentzen-panel {
     visibility: visible;
   }
+
+
+  /* Hide only the proof card when no derivation is open.
+
+     :not(.is-open) selects a panel that does NOT have
+     the is-open class.
+  */
 
   .gentzen-panel:not(.is-open) .gentzen-panel-card {
     visibility: hidden;
@@ -285,10 +1010,34 @@ html[data-book-theme="dark"] nav.sidetoc a:hover {
 }
 
 
-/* Allow scrolling through long textbook sections */
+/* ================================================================
+   13. LARGE SCREENS — ENABLE VERTICAL PAGE SCROLLING
+   ================================================================
+
+   This rule was added during our scrolling troubleshooting.
+
+   On wide screens, long textbook sections must remain
+   vertically scrollable, including when the Gentzen panel
+   is displayed in the third column.
+
+   overflow-y governs content that overflows vertically.
+
+     visible — Content may extend beyond its container.
+     hidden  — Overflowing content is clipped.
+     auto    — Allow scrolling when necessary.
+     scroll  — Establish scrolling even when unnecessary.
+
+   !important gives this declaration additional priority
+   over competing ordinary CSS declarations.
+
+   NOTE:
+   This affects the BODY element. It does not automatically
+   override scrolling restrictions on other elements.
+   ================================================================ */
+
 @media screen and (min-width: 1600px) {
+
   html body {
     overflow-y: auto !important;
   }
 }
-
