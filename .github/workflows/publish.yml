@@ -197,7 +197,9 @@ jobs:
             lwarpmk html
             test -f index.html
 
-
+  
+      - name: Resolve Gentzen proof references
+        run: python3 scripts/resolve_proof_refs.py
 
       # ==========================================================
       # STEP 4 — CHECK THAT HTML IS AVAILABLE
