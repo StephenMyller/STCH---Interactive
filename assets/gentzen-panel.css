@@ -1116,3 +1116,43 @@ html[data-book-theme="dark"]
 }
 
 
+
+/* Inline contextual links */
+main.bodycontainer a.side-panel-link,
+main.bodycontainer a.side-panel-link:visited {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+
+main.bodycontainer a.side-panel-link:hover,
+main.bodycontainer a.side-panel-link-active {
+  text-decoration-style: solid;
+}
+
+/* Supplementary text in the shared panel */
+.gentzen-panel .sidecommentary[hidden] {
+  display: none !important;
+}
+
+.gentzen-panel .sidecommentary {
+  width: 100%;
+  min-width: 0;
+}
+
+.gentzen-panel .sidecommentary blockquote {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.gentzen-panel .sidecommentary p {
+  line-height: 1.6;
+  margin: 0 0 1em;
+  text-align: left;
+}
