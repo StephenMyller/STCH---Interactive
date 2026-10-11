@@ -12,11 +12,19 @@
     {\begin{BlockClass}{formalderivation}}
     {\end{BlockClass}}
 
-    
-\newenvironment{sideillustration}
-    {\begin{BlockClass}{sideillustration}}
-    {\end{BlockClass}}
 
+% Illustrations, optionally identified for inline links.
+\newenvironment{sideillustration}[1][]
+  {%
+    \begin{BlockClass}{sideillustration}%
+    \ifstrempty{#1}{}{\hypertarget{side:#1}{}}%
+  }
+  {%
+    \end{BlockClass}%
+  }
+
+\newcommand{\sideLink}[2]
+  {\hyperlink{side:#1}{#2}}
     
 \newcommand{\bookvspace}[1]{%
   \vspace{#1}%
