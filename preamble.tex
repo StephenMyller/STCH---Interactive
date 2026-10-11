@@ -202,6 +202,19 @@
 
 \usepackage{bussproofs}
 
+% Lwarp compatibility: restore explicit glue for inference lines.
+% Inside theorem environments, Lwarp may suppress \hfill,
+% which bussproofs requires when constructing inference lines.
+\ifbool{warpingHTML}{%
+    \patchcmd{\buildSingleScore}
+        {\hfill}
+        {\hskip 0pt plus 1fill}
+        {}
+        {\PackageError{bussproofs-fix}
+            {Could not patch inference-line construction}
+            {Check the bussproofs package implementation}}%
+}{}
+
 \let\oldRightLabel\RightLabel
 \renewcommand{\RightLabel}[1]{\oldRightLabel{\scriptsize #1}}
 
