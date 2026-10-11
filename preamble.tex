@@ -99,7 +99,7 @@
 \usepackage{nicefrac}
 \usepackage{verbatim}
 \usepackage{etoolbox}
-\usepackage{setspace}
+
 
 \usepackage{needspace}
 
@@ -179,9 +179,19 @@
 
 
 
-  \setcounter{tocdepth}{3}
+\setcounter{tocdepth}{3}
 \setcounter{FileDepth}{2}
 \setcounter{SideTOCDepth}{3}
+
+
+\NewDocumentEnvironment{proseSpacing}{O{1.2em} O{1.6}}
+  {%
+    \begin{BlockClass}[--prose-gap: #1; --prose-leading: #2;]{prose-spacing}%
+  }
+  {%
+    \end{BlockClass}%
+  }
+
 
 % ============================================================
 % Diagrams and proof trees
