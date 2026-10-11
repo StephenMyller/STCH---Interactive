@@ -303,28 +303,37 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-/* Place subsection navigation beneath the manuscript. */
+
+/* Move Lwarp's page navigation beneath the manuscript. */
 document.addEventListener('DOMContentLoaded', () => {
-  const pager = document.querySelector(
-    'body > footer .book-pagination'
-  );
   const main = document.querySelector('main.bodycontainer');
 
-  if (!pager || !main) return;
+  const pager = document.querySelector(
+    'footer .book-pagination, footer .book-page-navigation'
+  );
 
+  if (!main || !pager) return;
+
+  // Use the class expected by our existing CSS.
+  pager.classList.add('book-pagination');
+
+  // Remember the original footer before moving the navigation.
+  const footer = pager.closest('footer');
+
+  // Move the links into the middle reading column.
+  main.appendChild(pager);
+
+  // Identify the Next button for right alignment.
   for (const link of pager.querySelectorAll('a')) {
-    const label = link.textContent.trim().toLowerCase();
-
-    if (label.startsWith('next')) {
+    if (link.textContent.trim().toLowerCase().startsWith('next')) {
       link.classList.add('book-pagination-next');
     }
   }
 
-  main.appendChild(pager);
-
-  const footer = document.querySelector('body > footer');
+  // Remove Lwarp's now-empty full-width footer.
   if (footer && !footer.textContent.trim()) {
     footer.remove();
   }
 });
+
 
