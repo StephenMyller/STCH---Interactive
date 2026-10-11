@@ -218,7 +218,7 @@ jobs:
               p for p in Path('.').glob('*.html')
               if p.name != 'main_html.html'
           )
-                    numbering = re.compile(
+          numbering = re.compile(
               r'<span\s+class="listmarker"[^>]*>'
               r'(?:(?!</p>).){0,700}?'
               r'<span\s+class="textup">\s*([0-9]+(?:\.[0-9]+)*)\s*</span>'
