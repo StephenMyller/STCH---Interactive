@@ -316,3 +316,22 @@ html[data-book-theme="dark"] .book-pagination a:hover {
   background: #303642;
 }
 
+
+
+/* Hide raw LaTeX while MathJax typesets the page. */
+main.bodycontainer {
+  opacity: 0;
+  animation: book-math-fallback 0s 6s forwards;
+}
+
+/* Reveal the manuscript once mathematics is ready. */
+html.book-math-ready main.bodycontainer {
+  animation: none;
+  opacity: 1;
+  transition: opacity 0.15s ease-in;
+}
+
+/* Fallback: never leave the manuscript invisible forever. */
+@keyframes book-math-fallback {
+  to { opacity: 1; }
+}
