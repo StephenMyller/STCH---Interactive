@@ -67,6 +67,29 @@
 
 \setcounter{tocdepth}{5}
 
+
+% Labels for the navigation links.
+\renewcommand{\linkpreviousname}{Previous section}
+\renewcommand{\linknextname}{Next section}
+
+% Home page: only a Next link.
+\HTMLFirstPageBottom{%
+  \begin{BlockClass}{book-pagination}
+    \LinkNext
+  \end{BlockClass}%
+}
+
+% Subsequent pages: Previous and Next where applicable.
+\HTMLPageBottom{%
+  \begin{BlockClass}{book-pagination}
+    \ifnum\value{LWR@htmlseqfilenumber}>1
+      \LinkPrevious
+    \fi
+    \LinkNext
+  \end{BlockClass}%
+}
+
+
 % ============================================================
 % Colors and small typographical utilities
 % ============================================================
@@ -157,8 +180,8 @@
 
 
   \setcounter{tocdepth}{3}
-\setcounter{FileDepth}{1}
-\setcounter{SideTOCDepth}{2}
+\setcounter{FileDepth}{2}
+\setcounter{SideTOCDepth}{3}
 
 % ============================================================
 % Diagrams and proof trees
