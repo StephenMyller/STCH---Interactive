@@ -261,3 +261,58 @@ main.bodycontainer section.textbody > p {
   margin-top: 0;
   margin-bottom: 1.2em;
 }
+
+
+/* ================================================================
+   Previous / Next section navigation
+   ================================================================ */
+
+.book-pagination {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #a9a198;
+}
+
+.book-pagination > p {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 0;
+  text-align: left;
+}
+
+.book-pagination a {
+  display: inline-block;
+  padding: 0.65rem 1rem;
+  border: 1px solid #a9a198;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: inherit;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.book-pagination a:hover {
+  background: #eeeae3;
+}
+
+.book-pagination a.book-pagination-next {
+  margin-left: auto;
+}
+
+/* Night mode */
+html[data-book-theme="dark"] .book-pagination {
+  border-color: #454b55;
+}
+
+html[data-book-theme="dark"] .book-pagination a {
+  color: #dce0e6;
+  border-color: #454b55;
+}
+
+html[data-book-theme="dark"] .book-pagination a:hover {
+  background: #303642;
+}
+
