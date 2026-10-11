@@ -567,15 +567,18 @@ main.bodycontainer :is(
   display: none;
 }
 
-/* MathJax hyperlinks: match the surrounding mathematical text. */
-mjx-container[jax="SVG"] > svg a,
-mjx-container[jax="SVG"] > svg a:visited {
+/* MathJax hyperlinks: exactly inherit the surrounding text color. */
+mjx-container[jax="SVG"] svg a,
+mjx-container[jax="SVG"] svg a:link,
+mjx-container[jax="SVG"] svg a:visited {
+  color: inherit !important;
   fill: currentColor !important;
-  stroke: currentColor !important;
+  stroke: none !important;
 }
-
-/* Ordinary hyperlinks in the textbook body. */
+/* Main text hyperlinks: match surrounding text in both themes. */
 main.bodycontainer section.textbody a:link,
-main.bodycontainer section.textbody a:visited {
-  color: inherit;
+main.bodycontainer section.textbody a:visited,
+main.bodycontainer section.textbody a:hover,
+main.bodycontainer section.textbody a:active {
+  color: inherit !important;
 }
