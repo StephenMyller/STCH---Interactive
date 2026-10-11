@@ -1156,3 +1156,20 @@ main.bodycontainer a.side-panel-link-active {
   margin: 0 0 1em;
   text-align: left;
 }
+
+
+/* Keep the left sidebar background continuous
+   for the entire height of the textbook page. */
+
+@media screen and (min-width: 1600px) {
+  div.pagegrid:has(> div.sidetoccontainer) {
+    --toc-column-width: clamp(18rem, 20vw, 22rem);
+
+    background: linear-gradient(
+      to right,
+      var(--book-nav, #dfddd5) 0,
+      var(--book-nav, #dfddd5) var(--toc-column-width),
+      transparent var(--toc-column-width)
+    );
+  }
+}
