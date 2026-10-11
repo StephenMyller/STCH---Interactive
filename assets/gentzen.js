@@ -301,3 +301,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   refresh();
 });
+
+
+/* Place subsection navigation beneath the manuscript. */
+document.addEventListener('DOMContentLoaded', () => {
+  const pager = document.querySelector(
+    'body > footer .book-pagination'
+  );
+  const main = document.querySelector('main.bodycontainer');
+
+  if (!pager || !main) return;
+
+  for (const link of pager.querySelectorAll('a')) {
+    const label = link.textContent.trim().toLowerCase();
+
+    if (label.startsWith('next')) {
+      link.classList.add('book-pagination-next');
+    }
+  }
+
+  main.appendChild(pager);
+
+  const footer = document.querySelector('body > footer');
+  if (footer && !footer.textContent.trim()) {
+    footer.remove();
+  }
+});
+
