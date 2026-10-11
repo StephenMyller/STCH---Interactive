@@ -345,3 +345,38 @@ main.bodycontainer .prose-spacing > p {
 main.bodycontainer .prose-spacing > p:last-child {
   margin-bottom: 0;
 }
+
+
+/* ================================================================
+   Uniform spacing for theorem-like environments
+   ================================================================ */
+
+main.bodycontainer .amsthmbodydefstyle,
+main.bodycontainer .amsthmbodyzerodefstyle {
+  margin-block: 1.5em;
+  display: flow-root;
+}
+
+/* Remove extra spacing introduced by Lwarp's list wrapper. */
+main.bodycontainer .amsthmbodydefstyle > ul.list,
+main.bodycontainer .amsthmbodyzerodefstyle > ul.list {
+  margin-block: 0;
+}
+
+main.bodycontainer .amsthmbodydefstyle > ul.list > li,
+main.bodycontainer .amsthmbodyzerodefstyle > ul.list > li {
+  margin-block: 0;
+}
+
+/* Prevent the first and last paragraphs from adding
+   unwanted spacing at the edges of the environment. */
+main.bodycontainer .amsthmbodydefstyle > ul.list > li > p:first-child,
+main.bodycontainer .amsthmbodyzerodefstyle > ul.list > li > p:first-child {
+  margin-top: 0;
+}
+
+main.bodycontainer .amsthmbodydefstyle > ul.list > li > p:last-child,
+main.bodycontainer .amsthmbodyzerodefstyle > ul.list > li > p:last-child {
+  margin-bottom: 0;
+}
+
