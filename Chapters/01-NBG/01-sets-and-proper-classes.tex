@@ -1,16 +1,78 @@
+
 \subsection{Sets and Proper Classes}
 
-\begin{proposition}[Proper Classes Are Never Members]\label{prop:proper-classes-are-never-members}
-If \(A\) is a proper class, then \(A\) is not a member of any class \(B\).
+§1 \quad The major feature distinguishing NBG set theory from ZFC is that its ontology is divided into two disjoint groups: some classes are \textit{proper classes}, while others are sets. Whereas ZFC quantifies over sets only, NBG allows us to speak of classes more generally. In our one-sorted formulation, all variables range over classes, including sets. The distinction between sets and proper classes is therefore not built into the language, but will instead be expressed within it.
 
-In symbols:
-\[\forall A \forall B (\PC(A) \to A \notin B)\]
-\end{proposition} \vspace{0.3cm}
+§2 \quad In a slogan, proper classes are ``too large" to be sets. This slogan is suggestive, but should not yet be taken literally: we have not introduced any notion of size. Instead, the distinction is made entirely in terms of membership. A set is a class that can itself be a member of some class, while a proper class cannot be a member of any class whatsoever.
+
+\begin{definition}[Set]\label{def:set}
+    A class $a$ is a set iff there is a class $B$ such that $a \in B$.
+
+    In symbols:
+    \[
+        \Set(a) \quad := \quad \exists B(a \in B)
+    \]
+\end{definition}
+
+\begin{definition}[Proper Class]\label{def:proper-class}
+    A class $A$ is a proper class iff it is not a set.
+
+    In symbols:
+    \[
+        \PC(A) \quad := \quad \neg\Set(A)
+    \]
+\end{definition}
+\bookvspace{0.85em}
+
+Thus, every class is either a set or a proper class, but never both. This follows from the definitions and the laws of classical logic. Notice, however, that these definitions do not by themselves establish the existence of either sets or proper classes. They merely tell us what it means for a class to be one or the other.
+
+
+§3 \quad Before we put these definitions to work, a word about our notation. You may have noticed that we tend to use lowercase letters for sets and capital letters for classes. More precisely, we shall generally use lowercase letters when emphasizing an object's role as a member of another class, and capital letters when emphasizing a class whose members are under consideration. Thus, when we write
+\[
+    a \in A,
+\]
+we think of $a$ as a member and of $A$ as the class to which it belongs.
+
+It is important, however, not to mistake this convention for a distinction built into the language. In NBG, both lowercase and capital variables range over exactly the same domain: the domain of all classes. A lowercase variable need not represent a set, nor does a capital variable necessarily represent a proper class. Either may occur on either side of the membership relation.
+
+
+§4 \quad Since we will use the definition of a set many times, it is worth introducing a derived rule that makes its application easier. This also provides a simple first example of how we can enrich our Gentzen calculus without adding any new primitive inference rules.
+
+\begin{prooftree}
+    \AxiomC{\(a\in A\)}
+    \RightLabel{Set-I}
+    \UnaryInfC{\(\Set(a)\)}
+\end{prooftree}
+
+\begin{formalderivation}
+    \begin{prooftree}
+        \AxiomC{\(a\in A\)}
+        \RightLabel{\(\exists\)-I}
+        \UnaryInfC{\(\exists B(a\in B)\)}
+        \RightLabel{D\ref{def:set}}
+        \dashedLine
+        \UnaryInfC{\(\Set(a)\)}
+    \end{prooftree}
+\end{formalderivation}
+
+The idea is straightforward. If $a\in A$, then $a$ is a member of at least one class, namely $A$. By existential introduction, we may therefore infer $\exists B(a\in B)$, which is precisely what it means for $a$ to be a set. The derived rule Set-I simply combines these steps into a single inference.
+
+§5 \quad In the spirit of natural deduction, we can think of a derived rule as a small mathematical ``module" that we build while working through the theory. Once established, we may use it without reproducing its internal derivation every time. Importantly, this does not make the rule a new logical principle. Every application of Set-I can be replaced by the two steps displayed above, so the rule does not allow us to derive anything that we could not already derive before.
+
+§6 \quad A direct consequence of the definitions is that proper classes are never members of other classes. This deserves to be stated explicitly, since it is the precise mathematical content of our earlier slogan that proper classes are ``too large" to be sets.
+
+\begin{proposition}[Proper Classes Are Never Members]\label{prop:proper-classes-are-never-members}
+    If $A$ is a proper class, then $A$ is not a member of any class $B$.
+
+    In symbols:
+    \[
+        \forall A\forall B(\PC(A)\to A\notin B)
+    \]
+\end{proposition}
 
 \begin{proof}
-Let \(A\) and \(B\) be arbitrary classes, and suppose that \(A\) is a proper class. Assume, for a contradiction, that \(A\in B\). Then \(A\) must be a set, contradicting the definition of a proper class. Hence \(A\notin B\). Discharging the assumption that \(A\) is a proper class yields \(\PC(A)\to A\notin B\). Since \(A\) and \(B\) were arbitrary, universal generalization establishes the proposition.
+Let $A$ and $B$ be arbitrary classes, and suppose that $A$ is a proper class. Assume, for a contradiction, that $A\in B$. Then, by Set-I, $A$ must be a set. But this contradicts our assumption that $A$ is a proper class, since by definition $\PC(A)$ means $\neg\Set(A)$. Hence, $A\notin B$. Discharging the assumption that $A$ is a proper class yields $\PC(A)\to A\notin B$. Since $A$ and $B$ were arbitrary, universal generalization establishes the proposition.
 \end{proof}
-
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
@@ -29,30 +91,10 @@ Let \(A\) and \(B\) be arbitrary classes, and suppose that \(A\) is a proper cla
     \RightLabel{\(\neg\)-E}
     \BinaryInfC{\(\bot\)}
     \RightLabel{\(\neg\)-I, \(1\)}
-    \UnaryInfC{\(A \notin B\)}
+    \UnaryInfC{\(A\notin B\)}
     \RightLabel{\(\to\)-I, \(2\)}
-    \UnaryInfC{\(\PC(A)\to A \notin B\)}
+    \UnaryInfC{\(\PC(A)\to A\notin B\)}
     \RightLabel{$\forall$-I*}
-    \UnaryInfC{$\forall A \forall B(\PC(A) \to A \notin B)$}
-\end{prooftree}
-\end{formalderivation} \bookvspace{0.5cm}
-
-\begin{proposition}[Subclasshood Is Reflexive]\label{prop:subclasshood-reflexive}
-\[
-\forall x(x\subseteq x).
-\]
-\end{proposition}
-
-\begin{proof}
-Let \(A\) be an arbitrary class. To show that \(A \subseteq A\), we must show that every element of \(A\) is also an element of \(A\). But this is immediate: if \(x \in A\), then \(x \in A\). Hence \(A \subseteq A\). Since $A$ was arbitrary, Proposition \ref{prop:subclasshood-reflexive} follows by Universal Generalization.
-\end{proof}
-
-\begin{formalderivation}
-    \begin{prooftree}
-    \AxiomC{}
-    \RightLabel{\(1\)}
-    \UnaryInfC{\(a\in A\)}
-    \RightLabel{\(\subseteq\)-I, \(1\)}
-    \UnaryInfC{\(A\subseteq A\)}
+    \UnaryInfC{$\forall A\forall B(\PC(A)\to A\notin B)$}
 \end{prooftree}
 \end{formalderivation}
