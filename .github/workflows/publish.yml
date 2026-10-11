@@ -207,9 +207,7 @@ jobs:
       # freshly generated or restored from the cache.
       - name: Check website exists
         run: test -f index.html
-
-      - name: Resolve Gentzen proof references
-        run: python3 scripts/resolve_proof_refs.py
+        
       # ==========================================================
       # STEP 5 — PREPARE CSS AND JAVASCRIPT REFERENCES
       # ==========================================================
