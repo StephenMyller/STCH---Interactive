@@ -389,3 +389,151 @@ main.bodycontainer p:has(+ .amsthmbodyzerodefstyle) {
   margin-bottom: 0;
 }
 
+
+/* ================================================================
+   COLOR-CODED MATHEMATICAL STATEMENTS
+   ================================================================ */
+
+/* All theorem families share the same layout and spacing. */
+main.bodycontainer :is(
+  .amsthmbodydefstyle,
+  .amsthmbodyzerodefstyle,
+  .amsthmbodyaxiomstyle,
+  .amsthmbodyprinciplestyle,
+  .amsthmbodyresultstyle,
+  .amsthmbodymetastyle,
+  .amsthmbodyneutralstyle
+) {
+  margin-block: 1.5em;
+  display: flow-root;
+
+  /* Subtle colored rule, without a colored background. */
+  border-inline-start: 3px solid var(--statement-accent);
+  padding-inline-start: 0.85em;
+}
+
+/* Remove internal spacing that could create asymmetry. */
+main.bodycontainer :is(
+  .amsthmbodydefstyle,
+  .amsthmbodyzerodefstyle,
+  .amsthmbodyaxiomstyle,
+  .amsthmbodyprinciplestyle,
+  .amsthmbodyresultstyle,
+  .amsthmbodymetastyle,
+  .amsthmbodyneutralstyle
+) > ul.list {
+  margin-block: 0;
+}
+
+main.bodycontainer :is(
+  .amsthmbodydefstyle,
+  .amsthmbodyzerodefstyle,
+  .amsthmbodyaxiomstyle,
+  .amsthmbodyprinciplestyle,
+  .amsthmbodyresultstyle,
+  .amsthmbodymetastyle,
+  .amsthmbodyneutralstyle
+) > ul.list > li > p:first-child {
+  margin-top: 0;
+}
+
+main.bodycontainer :is(
+  .amsthmbodydefstyle,
+  .amsthmbodyzerodefstyle,
+  .amsthmbodyaxiomstyle,
+  .amsthmbodyprinciplestyle,
+  .amsthmbodyresultstyle,
+  .amsthmbodymetastyle,
+  .amsthmbodyneutralstyle
+) > ul.list > li > p:last-child {
+  margin-bottom: 0;
+}
+
+/* Color only the heading, not the statement's body text. */
+main.bodycontainer :is(
+  .amsthmbodydefstyle,
+  .amsthmbodyzerodefstyle,
+  .amsthmbodyaxiomstyle,
+  .amsthmbodyprinciplestyle,
+  .amsthmbodyresultstyle,
+  .amsthmbodymetastyle,
+  .amsthmbodyneutralstyle
+) .listmarker {
+  color: var(--statement-accent);
+  font-weight: 700;
+}
+
+/* Preserve equal gaps above and below statements. */
+main.bodycontainer p:has(+ :is(
+  .amsthmbodydefstyle,
+  .amsthmbodyzerodefstyle,
+  .amsthmbodyaxiomstyle,
+  .amsthmbodyprinciplestyle,
+  .amsthmbodyresultstyle,
+  .amsthmbodymetastyle,
+  .amsthmbodyneutralstyle
+)) {
+  margin-bottom: 0;
+}
+
+
+/* ================================================================
+   LIGHT MODE COLORS
+   ================================================================ */
+
+main.bodycontainer :is(
+  .amsthmbodydefstyle,
+  .amsthmbodyzerodefstyle
+) {
+  --statement-accent: #2D6FA8;
+}
+
+main.bodycontainer :is(
+  .amsthmbodyaxiomstyle,
+  .amsthmbodyprinciplestyle
+) {
+  --statement-accent: #A66A20;
+}
+
+main.bodycontainer .amsthmbodyresultstyle {
+  --statement-accent: #247A61;
+}
+
+main.bodycontainer .amsthmbodymetastyle {
+  --statement-accent: #7955A5;
+}
+
+main.bodycontainer .amsthmbodyneutralstyle {
+  --statement-accent: #626D79;
+}
+
+
+/* ================================================================
+   DARK MODE COLORS
+   ================================================================ */
+
+html[data-book-theme="dark"] main.bodycontainer :is(
+  .amsthmbodydefstyle,
+  .amsthmbodyzerodefstyle
+) {
+  --statement-accent: #94C4F6;
+}
+
+html[data-book-theme="dark"] main.bodycontainer :is(
+  .amsthmbodyaxiomstyle,
+  .amsthmbodyprinciplestyle
+) {
+  --statement-accent: #EABF7B;
+}
+
+html[data-book-theme="dark"] main.bodycontainer .amsthmbodyresultstyle {
+  --statement-accent: #7DD7B5;
+}
+
+html[data-book-theme="dark"] main.bodycontainer .amsthmbodymetastyle {
+  --statement-accent: #CAA6F2;
+}
+
+html[data-book-theme="dark"] main.bodycontainer .amsthmbodyneutralstyle {
+  --statement-accent: #AEBAC7;
+}
