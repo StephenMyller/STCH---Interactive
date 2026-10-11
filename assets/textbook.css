@@ -537,3 +537,32 @@ html[data-book-theme="dark"] main.bodycontainer .amsthmbodymetastyle {
 html[data-book-theme="dark"] main.bodycontainer .amsthmbodyneutralstyle {
   --statement-accent: #AEBAC7;
 }
+
+
+/* Small gap between theorem headings and their contents. */
+
+main.bodycontainer :is(
+  .amsthmbodydefstyle,
+  .amsthmbodyzerodefstyle,
+  .amsthmbodyaxiomstyle,
+  .amsthmbodyprinciplestyle,
+  .amsthmbodyresultstyle,
+  .amsthmbodymetastyle,
+  .amsthmbodyneutralstyle
+) .listmarker {
+  display: block;
+  margin-bottom: 0.3em;
+}
+
+/* The block itself now provides the line break. */
+main.bodycontainer :is(
+  .amsthmbodydefstyle,
+  .amsthmbodyzerodefstyle,
+  .amsthmbodyaxiomstyle,
+  .amsthmbodyprinciplestyle,
+  .amsthmbodyresultstyle,
+  .amsthmbodymetastyle,
+  .amsthmbodyneutralstyle
+) .listmarker br {
+  display: none;
+}
