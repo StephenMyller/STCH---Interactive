@@ -12,7 +12,7 @@ import sys
 
 AUX = Path('main_html.aux')
 TREE = re.compile(r'(\\begin\s*\{prooftree\})(.*?)(\\end\s*\{prooftree\})', re.S)
-PROOFREF = re.compile(r'\\proofref\s*\{\s*([^{}\s]+)\s*\}')
+PROOFREF = re.compile(r'\\(?:proofref|ref)\s*\{\s*([^{}\s]+)\s*\}')
 NEWLABEL = re.compile(r'^\\newlabel\{([^{}]+)\}')
 SAFE_URL = re.compile(r'^[A-Za-z0-9_.:/-]+$')
 
@@ -64,7 +64,11 @@ def references(aux_text):
 def main():
     html_paths = list(Path('.').glob('*.html'))
     # HTML may come from a build cache already processed on a previous run.
-    if not any(PROOFREF.search(p.read_text(encoding='utf-8')) for p in html_paths):
+        if not any(
+        PROOFREF.search(tree.group(2))
+        for path in html_paths
+        for tree in TREE.finditer(path.read_text(encoding='utf-8'))
+    ):
         print('proofref: no unresolved proof references in HTML')
         return
 
@@ -99,7 +103,7 @@ def main():
 
         output = TREE.sub(replace_tree, source)
         # Don't silently leave an unsupported use elsewhere in the page.
-        if PROOFREF.search(output):
+        if re.search(r'\\proofref\s*\{', output):
             raise RuntimeError(f'Unprocessed \\proofref outside a prooftree in {path}')
         if output != source:
             temp = path.with_name(path.name + '.proofref-tmp')
