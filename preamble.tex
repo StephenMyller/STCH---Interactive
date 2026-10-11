@@ -254,6 +254,28 @@
   postheadspace=\newline
 ]{defstyle}
 
+
+% Additional theorem styles for HTML color coding.
+% All share the exact typography and spacing of defstyle.
+
+\newcommand{\DeclareNBGStatementStyle}[1]{%
+  \declaretheoremstyle[
+    spaceabove=\theoremabovespace,
+    spacebelow=\theorembelowspace,
+    headfont=\bfseries,
+    bodyfont={\normalfont\leftskip=\theoreminset\rightskip=\theoreminset},
+    headpunct={},
+    headformat={\NAME\ \NUMBER.\NOTE},
+    postheadspace=\newline
+  ]{#1}%
+}
+
+\DeclareNBGStatementStyle{resultstyle}
+\DeclareNBGStatementStyle{metastyle}
+\DeclareNBGStatementStyle{principlestyle}
+\DeclareNBGStatementStyle{neutralstyle}
+
+
 \declaretheorem[
   style=defstyle,
   name=Theorem,
@@ -261,7 +283,7 @@
 ]{theorem}
 
 \declaretheorem[
-  style=defstyle,
+  style=metastyle,
   name=Metatheorem,
   sibling=theorem
 ]{metatheorem}
@@ -273,43 +295,43 @@
 ]{definition}
 
 \declaretheorem[
-  style=defstyle,
+  style=resultstyle,
   name=Proposition,
   sibling=theorem
 ]{proposition}
 
 \declaretheorem[
-  style=defstyle,
+  style=resultstyle,
   name=Lemma,
   sibling=theorem
 ]{lemma}
 
 \declaretheorem[
-  style=defstyle,
+  style=resultstyle,
   name=Corollary,
   sibling=theorem
 ]{corollary}
 
 \declaretheorem[
-  style=defstyle,
+  style=neutralstyle,
   name=Example,
   sibling=theorem
 ]{example}
 
 \declaretheorem[
-  style=defstyle,
+  style=neutralstyle,
   name=Remark,
   sibling=theorem
 ]{remark}
 
 \declaretheorem[
-  style=defstyle,
+  style=principlestyle,
   name=Principle,
   sibling=theorem
 ]{principle}
 
 \declaretheorem[
-  style=defstyle,
+  style=neutralstyle,
   name=Exercise,
   sibling=theorem
 ]{exercise}
