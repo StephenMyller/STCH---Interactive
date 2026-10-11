@@ -566,3 +566,16 @@ main.bodycontainer :is(
 ) .listmarker br {
   display: none;
 }
+
+/* MathJax hyperlinks: match the surrounding mathematical text. */
+mjx-container[jax="SVG"] > svg a,
+mjx-container[jax="SVG"] > svg a:visited {
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+/* Ordinary hyperlinks in the textbook body. */
+main.bodycontainer section.textbody a:link,
+main.bodycontainer section.textbody a:visited {
+  color: inherit;
+}
