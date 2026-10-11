@@ -197,9 +197,7 @@ jobs:
             lwarpmk html
             test -f index.html
 
-  
-      - name: Resolve Gentzen proof references
-        run: python3 scripts/resolve_proof_refs.py
+
 
       # ==========================================================
       # STEP 4 — CHECK THAT HTML IS AVAILABLE
@@ -210,7 +208,8 @@ jobs:
       - name: Check website exists
         run: test -f index.html
 
-
+      - name: Resolve Gentzen proof references
+        run: python3 scripts/resolve_proof_refs.py
       # ==========================================================
       # STEP 5 — PREPARE CSS AND JAVASCRIPT REFERENCES
       # ==========================================================
@@ -229,7 +228,7 @@ jobs:
       # This step runs EVERY time, even if the HTML was cached.
 
       - name: Enable and version website assets
-
+  
         # Make the current Git commit ID available as a variable.
         # Each commit has a unique SHA identifier.
         env:
