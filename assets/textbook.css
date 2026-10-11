@@ -335,3 +335,13 @@ html.book-math-ready main.bodycontainer {
 @keyframes book-math-fallback {
   to { opacity: 1; }
 }
+
+main.bodycontainer .prose-spacing > p {
+  line-height: var(--prose-leading, 1.6);
+  margin-top: 0;
+  margin-bottom: var(--prose-gap, 1.2em);
+}
+
+main.bodycontainer .prose-spacing > p:last-child {
+  margin-bottom: 0;
+}
