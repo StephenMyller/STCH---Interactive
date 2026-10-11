@@ -207,7 +207,64 @@ jobs:
       # freshly generated or restored from the cache.
       - name: Check website exists
         run: test -f index.html
-        
+
+      - name: Resolve Gentzen proof references
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          pages = sorted(
+              p for p in Path('.').glob('*.html')
+              if p.name != 'main_html.html'
+          )
+          numbering = re.compile(
+              r'<span\s+class="amsthmnumberplain">\s*'
+              r'<span\s+class="textup">\s*([^<]+?)\s*</span>\s*</span>'
+              r'(?:(?!</p>).){0,500}?<a\s+id="([^"]+)"',
+              re.S,
+          )
+          targets = {}
+          for page in pages:
+              for number, label in numbering.findall(page.read_text(encoding='utf-8')):
+                  targets[label] = (number.strip(), page.name)
+
+          trees = re.compile(
+              r'(\\begin\s*\{prooftree\})(.*?)(\\end\s*\{prooftree\})',
+              re.S,
+          )
+          refs = re.compile(r'\\ref\s*\{\s*([^{}\s]+)\s*\}')
+          count = 0
+          missing = set()
+
+          for page in pages:
+              html = page.read_text(encoding='utf-8')
+
+              def rewrite_tree(match):
+                  def rewrite_ref(ref_match):
+                      global count
+                      label = ref_match.group(1)
+                      if label not in targets:
+                          missing.add(label)
+                          return ref_match.group(0)
+                      number, target_page = targets[label]
+                      destination = (
+                          f'#{label}' if target_page == page.name
+                          else f'{target_page}#{label}'
+                      )
+                      count += 1
+                      return rf'\href{{{destination}}}{{{number}}}'
+
+                  return match.group(1) + refs.sub(rewrite_ref, match.group(2)) + match.group(3)
+
+              updated = trees.sub(rewrite_tree, html)
+              if updated != html:
+                  page.write_text(updated, encoding='utf-8')
+
+          if missing:
+              raise SystemExit(f'Unresolved proof-tree references: {sorted(missing)}')
+          print(f'Resolved {count} proof-tree reference(s).')
+          PY
       # ==========================================================
       # STEP 5 — PREPARE CSS AND JAVASCRIPT REFERENCES
       # ==========================================================
