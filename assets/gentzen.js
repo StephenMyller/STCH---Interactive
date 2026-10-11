@@ -337,3 +337,30 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+
+/* Reveal the manuscript after MathJax finishes typesetting. */
+(() => {
+  function reveal() {
+    document.documentElement.classList.add('book-math-ready');
+  }
+
+  function waitForMathJax() {
+    const promise = window.MathJax?.startup?.promise;
+
+    if (promise && typeof promise.then === 'function') {
+      promise.then(reveal, reveal);
+    } else {
+      reveal();
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener(
+      'DOMContentLoaded',
+      waitForMathJax,
+      { once: true }
+    );
+  } else {
+    waitForMathJax();
+  }
+})();
