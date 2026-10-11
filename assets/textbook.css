@@ -380,3 +380,12 @@ main.bodycontainer .amsthmbodyzerodefstyle > ul.list > li > p:last-child {
   margin-bottom: 0;
 }
 
+
+/* Prevent paragraph spacing from enlarging the gap
+   before theorem-like environments. */
+
+main.bodycontainer p:has(+ .amsthmbodydefstyle),
+main.bodycontainer p:has(+ .amsthmbodyzerodefstyle) {
+  margin-bottom: 0;
+}
+
