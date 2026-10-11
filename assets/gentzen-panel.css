@@ -1173,3 +1173,15 @@ main.bodycontainer a.side-panel-link-active {
     );
   }
 }
+
+
+
+/* Let the three-column grid grow with the manuscript. */
+@media screen and (min-width: 1600px) {
+  div.pagegrid:has(> div.sidetoccontainer) {
+    height: auto !important;
+    max-height: none !important;
+    min-height: 100vh;
+  }
+}
+
