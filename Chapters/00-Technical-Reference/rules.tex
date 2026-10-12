@@ -1,4 +1,4 @@
-
+\begin{proseSpacing}[1cm]
 
 \nbgpara{1}{Derivations}
 A derivation is a finite rooted tree of formula occurrences constructed in accordance with the inference rules stated below. Its lowermost formula occurrence is its conclusion. Each uppermost formula occurrence is either an assumption or the conclusion of a rule with no premises.
@@ -155,7 +155,7 @@ Thus, \(\vdash\varphi\) means that there exists a proof of \(\varphi\), or equiv
 
 \begin{prooftree}
     \AxiomC{\(\varphi\lor\psi\)}
-
+%
     \AxiomC{}
     \RightLabel{\(n\)}
     \UnaryInfC{\(\varphi\)}
@@ -163,7 +163,7 @@ Thus, \(\vdash\varphi\) means that there exists a proof of \(\varphi\), or equiv
     \UnaryInfC{\(\vdots\)}
     \noLine
     \UnaryInfC{\(\chi\)}
-
+%
     \AxiomC{}
     \RightLabel{\(m\)}
     \UnaryInfC{\(\psi\)}
@@ -171,7 +171,7 @@ Thus, \(\vdash\varphi\) means that there exists a proof of \(\varphi\), or equiv
     \UnaryInfC{\(\vdots\)}
     \noLine
     \UnaryInfC{\(\chi\)}
-
+%
     \RightLabel{\(\lor\)-E, \(n,m\)}
     \TrinaryInfC{\(\chi\)}
 \end{prooftree} \vspace{0.3cm}
@@ -368,7 +368,7 @@ The rule is permitted only if \(\eta\) is free for \(\xi\) in \(\varphi\).
 
 \begin{prooftree}
     \AxiomC{\(\exists\xi\,\varphi\)}
-
+%
     \AxiomC{}
     \RightLabel{\(n\)}
     \UnaryInfC{\(\varphi[\eta/\xi]\)}
@@ -376,7 +376,7 @@ The rule is permitted only if \(\eta\) is free for \(\xi\) in \(\varphi\).
     \UnaryInfC{\(\vdots\)}
     \noLine
     \UnaryInfC{\(\psi\)}
-
+%
     \RightLabel{\(\exists\)-E, \(n\)}
     \BinaryInfC{\(\psi\)}
 \end{prooftree} \vspace{0.3cm}
@@ -460,3 +460,5 @@ abbreviates the corresponding succession of applications of \(\forall\)-I, with 
 Similarly, a displayed application of \(\land\)-I\(^{*}\), \(\land\)-E\(^{*}\), or another rule may abbreviate the corresponding finite derivation segment.
 
 This convention concerns only the display of derivations and introduces no new inference rules. Every suppressed application must be a legitimate application of the ordinary rule and must separately satisfy all side conditions governing that rule.
+
+\end{proseSpacing}
