@@ -1,0 +1,109 @@
+\subsection{Definitions as Extended Syntax} \label{sec:definitions}
+
+\nbgpara{1}{Extended Syntax}
+
+We supplement the primitive language with
+eliminable defined notation. The resulting system of notation will be
+called the \emph{extended syntax}.
+
+Every variable and every formula of the primitive language is also an
+extended expression. Whenever a new item of defined notation is introduced,
+the stock of extended expressions is enlarged by the formation clauses
+accompanying its definition. Extended expressions are expressions of the
+metalinguistic notation used in this text; they are not additional
+expressions of the primitive language of NBG.
+
+An extended expression that has the syntactic role of a formula is called
+an \emph{extended formula}. Every primitive formula is therefore an
+extended formula. If \(\varphi\) and \(\psi\) are extended formulas and \(\xi\) is a
+variable, then the expressions obtained from them by the primitive
+connectives and quantifiers are extended formulas.
+
+\nbgpara{2}{Primitive Expansion}
+
+Every primitive formula has itself as its primitive expansion. Every
+non-primitive extended formula is assigned a \emph{primitive expansion}: a
+formula obtained by applying the prescribed expansion clauses for its
+defined notation until only symbols of the primitive language remain.
+
+Thus, the introduction of extended syntax does not enlarge the primitive
+language. The only non-logical primitive symbol of NBG remains \(\in\).
+
+When an extended formula is displayed in a derivation, axiom, theorem, or
+derivability statement, it abbreviates one of its primitive expansions.
+Accordingly, all axioms and derivations ultimately consist of formulas of
+the primitive language, even when they are displayed using extended
+notation.
+
+\nbgpara{3}{Contextual Elimination}
+
+Not every extended expression need itself have a primitive expansion of the
+same syntactic category. In particular, later portions of the text will
+introduce extended expressions that behave like terms, although the
+primitive language contains no corresponding non-variable terms.
+
+Such expressions will be eliminated contextually: the prescribed
+elimination clauses will assign primitive expansions to the complete
+extended formulas in which they occur.
+
+\nbgpara{4}{Binding and Fresh Variables}
+
+Unless otherwise stated, defined notation does not bind variables. Whenever
+an item of notation binds a variable, its definition will specify its scope
+and which variable occurrences it binds.
+
+Whenever an expansion clause introduces a bound variable, choose a variable that does not occur in the surrounding extended formula. Since every extended expression is finite and therefore contains only finitely many variable occurrences, while the primitive stock \(v_0,v_1,\ldots\) is infinite, a variable not occurring in the surrounding extended formula can always be chosen.
+
+Different legitimate choices of fresh bound variables may yield literally
+distinct primitive formulas. Formulas differing only through such choices
+are alphabetic variants. By
+Metatheorems~\ref{meta:alphabetic-variants} and
+\ref{meta:replacement-by-alphabetic-variants}, they are interderivable and
+may be used interchangeably in derivations.
+
+Each expansion procedure introduced in this text will therefore be required
+to determine the primitive expansion of a complete extended formula up to
+alphabetic variation.
+
+\nbgpara{5}{Substitution in Extended Formulas}
+
+The notions of free occurrence, bound occurrence, substitution, and a
+variable being free for another are extended recursively to the extended
+syntax in accordance with the formation and binding clauses of the notation
+involved.
+
+The extension of substitution to extended formulas is required to be
+compatible with primitive expansion in the following sense. Let
+\(\varphi\) be an extended formula, let \(\xi\) and \(\eta\) be variables,
+and suppose that \(\eta\) is free for \(\xi\) in \(\varphi\). If
+\(\theta\) is a primitive expansion of \(\varphi\), then \(\eta\) is free
+for \(\xi\) in \(\theta\), and every primitive expansion of
+\[
+\varphi[\eta/\xi]
+\]
+is an alphabetic variant of
+\[
+\theta[\eta/\xi].
+\]
+Bound variables are renamed where necessary to preserve this condition.
+
+\nbgpara{6}{Definitional Equivalence}
+
+Two extended formulas are called \emph{definitionally equivalent} iff their
+primitive expansions are alphabetic variants. Expansion and contraction of
+defined notation are instances of replacement by a definitionally
+equivalent extended formula and do not constitute logical inferences.
+
+When such a replacement is displayed in a proof tree, it is represented by a dashed-line step labelled ``Def.'' If the displayed formulas are replaced by identical choices of primitive expansion, the step disappears entirely. If the resulting primitive formulas are merely alphabetic variants, the corresponding replacement is licensed by Metatheorem~\ref{meta:replacement-by-alphabetic-variants}.
+
+Definitional contraction need not be unique. Several distinct extended
+formulas may have alphabetically variant primitive expansions and may
+therefore be definitionally equivalent.
+
+We use the symbol
+\[
+\defequiv
+\]
+to introduce defined notation in this sense. The symbol
+\(\defequiv\) belongs to the metalanguage and does not express a relation
+within the language of NBG. 
