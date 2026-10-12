@@ -1,12 +1,14 @@
-\begin{proseSpacing}[1cm]
+
 \subsection{Sets and Proper Classes}
 
-§1 \quad The major feature distinguishing NBG set theory from ZFC is that it recognizes not only sets, but also \textit{proper classes}. We might therefore expect our language to distinguish between these two kinds of objects, perhaps by employing different kinds of variables for sets and proper classes. However, this is not how we shall proceed.
+\nbgpara{1}{}
+The major feature distinguishing NBG set theory from ZFC is that it recognizes not only sets, but also \textit{proper classes}. We might therefore expect our language to distinguish between these two kinds of objects, perhaps by employing different kinds of variables for sets and proper classes. However, this is not how we shall proceed.
 
 Instead, we treat all objects in our theory as classes, and all our variables range over classes without restriction. In this sense, our language is \textit{one-sorted}: it has only one kind of variable, ranging over one domain of objects. Sets and proper classes are thus not distinguished by the variables we use to represent them, but by a property that some classes have and others lack. As we shall see, this property can be expressed entirely in terms of our primitive relation of membership.
 
 
-§2 \quad In a slogan, proper classes are ``too large" to be sets. This slogan is suggestive, but should not yet be taken literally: we have not introduced any notion of size. Instead, the distinction is made entirely in terms of membership. A set is a class that can itself be a member of some class, while a proper class cannot be a member of any class whatsoever.
+\nbgpara{2}{}
+In a slogan, proper classes are ``too large" to be sets. This slogan is suggestive, but should not yet be taken literally: we have not introduced any notion of size. Instead, the distinction is made entirely in terms of membership. A set is a class that can itself be a member of some class, while a proper class cannot be a member of any class whatsoever.
 
 \begin{definition}[Set]\label{def:set}
     A class $a$ is a set iff there is a class $B$ such that $a \in B$.
@@ -30,7 +32,8 @@ Instead, we treat all objects in our theory as classes, and all our variables ra
 Thus, every class is either a set or a proper class, but never both. This follows from the definitions and the laws of classical logic. Notice, however, that these definitions do not by themselves establish the existence of either sets or proper classes. They merely tell us what it means for a class to be one or the other.
 
 
-§3 \quad Before we put these definitions to work, a word about our notation. You may have noticed that we tend to use lowercase letters for sets and capital letters for the classes in which they're contained. More precisely, we shall generally use lowercase letters when emphasizing an object's role as a member of another class, and capital letters when emphasizing a class whose members are under consideration. Thus, when we write
+\nbgpara{3}{}
+Before we put these definitions to work, a word about our notation. You may have noticed that we tend to use lowercase letters for sets and capital letters for the classes in which they're contained. More precisely, we shall generally use lowercase letters when emphasizing an object's role as a member of another class, and capital letters when emphasizing a class whose members are under consideration. Thus, when we write
 \[
     a \in A,
 \]
@@ -39,7 +42,8 @@ we think of $a$ as a member and of $A$ as the class to which it belongs.
 It is important, however, not to mistake this convention for a distinction built into the language. In NBG, both lowercase and capital variables range over exactly the same domain: the domain of all classes. A lowercase variable need not represent a set, nor does a capital variable necessarily represent a proper class. Either may occur on either side of the membership relation.
 
 
-§4 \quad Since we will use the definition of a set many times, it is worth introducing a derived rule that makes its application easier. This also provides a simple first example of how we can enrich our Gentzen calculus without adding any new primitive inference rules.
+\nbgpara{4}{}
+Since we will use the definition of a set many times, it is worth introducing a derived rule that makes its application easier. This also provides a simple first example of how we can enrich our Gentzen calculus without adding any new primitive inference rules.
 
 \begin{derivedrule}[Set-I] 
 
@@ -63,13 +67,15 @@ It is important, however, not to mistake this convention for a distinction built
 
 The idea is straightforward. If $a\in A$, then $a$ is a member of at least one class, namely $A$. By existential introduction, we may therefore infer $\exists B(a\in B)$, which is precisely what it means for $a$ to be a set. The derived rule Set-I simply combines these steps into a single inference.
 
-§5 \quad 
+\nbgpara{5}{}
 In the spirit of natural deduction, a derived rule should correspond to a mathematical intuition that we have developed while working through the theory. Initially, we may have to reason through several individual steps to arrive at a conclusion. But once we have understood the underlying idea, the same inference can become almost immediate. In this sense, we can think of a derived rule as a small mathematical ``module": a piece of reasoning that we have already worked out and can now apply in a single step.
 
-§6 \quad Importantly, this psychological perspective has a precise formal counterpart. Every application of Set-I can be replaced by the two steps displayed above. The derived rule therefore does not introduce a new logical principle or allow us to derive anything that we could not already derive before. It merely allows us to treat an established pattern of reasoning as a single inference, just as we naturally do once we have developed the corresponding mathematical intuition.
+\nbgpara{6}{}
+Importantly, this psychological perspective has a precise formal counterpart. Every application of Set-I can be replaced by the two steps displayed above. The derived rule therefore does not introduce a new logical principle or allow us to derive anything that we could not already derive before. It merely allows us to treat an established pattern of reasoning as a single inference, just as we naturally do once we have developed the corresponding mathematical intuition.
 
 
-§7 \quad A direct consequence of the definitions is that proper classes are never members of other classes. This deserves to be stated explicitly, since it is the precise mathematical content of our earlier slogan that proper classes are ``too large" to be sets.
+\nbgpara{7}{}
+A direct consequence of the definitions is that proper classes are never members of other classes. This deserves to be stated explicitly, since it is the precise mathematical content of our earlier slogan that proper classes are ``too large" to be sets.
 
 \begin{proposition}[Proper Classes Are Never Members]\label{prop:proper-classes-are-never-members}
     If $A$ is a proper class, then $A$ is not a member of any class $B$.
@@ -108,5 +114,3 @@ Let $A$ and $B$ be arbitrary classes, and suppose that $A$ is a proper class. As
     \UnaryInfC{$\forall A\forall B(\PC(A)\to A\notin B)$}
 \end{prooftree}
 \end{formalderivation}
-
-\end{proseSpacing}
