@@ -262,7 +262,7 @@ jobs:
               updated = trees.sub(rewrite_tree, html)
               if updated != html:
                   temporary = page.with_name(page.name + ".tmp")
-                  temporary.write_text(html, encoding="utf-8")
+                  temporary.write_text(updated, encoding="utf-8")
                   temporary.replace(page)
 
           if missing:
