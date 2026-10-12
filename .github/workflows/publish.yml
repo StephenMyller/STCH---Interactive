@@ -262,7 +262,9 @@ jobs:
 
               updated = trees.sub(rewrite_tree, html)
               if updated != html:
-                  page.write_text(updated, encoding='utf-8')
+                  temporary = page.with_name(page.name + ".tmp")
+                  temporary.write_text(html, encoding="utf-8")
+                  temporary.replace(page)
 
           if missing:
               raise SystemExit(f'Unresolved proof-tree references: {sorted(missing)}')
