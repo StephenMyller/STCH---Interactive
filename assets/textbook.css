@@ -604,3 +604,8 @@ main.bodycontainer h1:not(.titlepage h1) {
     margin-bottom: 2rem;
     border-bottom: 1px solid var(--book-border);
 }
+
+/* Mathematical notation inherits theorem-heading color. */
+html main.bodycontainer .listmarker mjx-container {
+    color: inherit !important;
+}
