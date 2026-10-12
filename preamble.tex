@@ -109,24 +109,34 @@
 
 \usepackage{needspace}
 
+
+\newlength{\nbgsectiongap}
+\setlength{\nbgsectiongap}{1cm}
+
 \newcommand{\nbgpara}[2]{%
     \par
     \needspace{3\baselineskip}%
-    \addvspace{1.15\baselineskip}%
+    \addvspace{\nbgsectiongap}%
     \noindent
-    \textbf{\S#1}\quad
-    \textbf{#2.}\enspace
+    \InlineClass{nbg-section-start}{%
+        \textbf{\S#1}\quad
+        \ifstrempty{#2}{}{\textbf{#2.}\enspace}%
+    }%
     \ignorespaces
 }
 
 \newcommand{\nbgparar}[1]{%
     \par
     \needspace{3\baselineskip}%
-    \addvspace{1.15\baselineskip}%
+    \addvspace{\nbgsectiongap}%
     \noindent
-    \textbf{#1.}\enspace
+    \InlineClass{nbg-section-start}{%
+        \textbf{#1.}%
+    }\enspace
     \ignorespaces
 }
+
+
 
 \definecolor{bostonuniversityred}{rgb}{0.8, 0.0, 0.0}
 
