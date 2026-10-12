@@ -597,8 +597,9 @@ main.bodycontainer section.textbody p:has(> .nbg-section-start) {
     margin-top: var(--nbg-section-gap, 1cm);
 }
 
-/* Separate the book title from the chapter content. */
-main.bodycontainer div.titlepage {
+/* Separate the repeated book title from chapter content,
+   without affecting the Home page. */
+main.bodycontainer h1:not(.titlepage h1) {
     padding-bottom: 1.5rem;
     margin-bottom: 2rem;
     border-bottom: 1px solid var(--book-border);
