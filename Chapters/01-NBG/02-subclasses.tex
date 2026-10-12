@@ -8,12 +8,19 @@ Let \(A\) and \(B\) be classes.
 We write that \(A \subseteq B\) (i.e., that \(A\) is a \textit{subclass} of \(B\), or that \(A\) is \textit{contained in} \(B\)), iff every element of \(A\) is also an element of \(B\).
 
 In symbols:
-$$
-A \subseteq B \quad \defequiv \quad \forall x\,(x \in A \to x \in B).
-$$
+\[
+A \subseteq B \quad \defequiv \quad
+\forall x\,(x \in A \to x \in B).
+\]
+
+We write \(A \nsubseteq B\) to mean that \(A\) is not a subclass of \(B\):
+\[
+A \nsubseteq B \quad \defequiv \quad
+\neg(A\subseteq B).
+\]
 \end{definition}
 
-\nbgpara{2}{} For example, if \(A = \{a,b\}\) and \(B = \{a,b,c\},\) then \(A \subseteq B\), since every element of \(A\) is also an element of \(B\). The class \(B\) contains everything that \(A\) contains, and possibly more. On a first pass, the metaphor of \sideLink{subclass}{spatial containment} helpfully visualizes this relationship.
+\nbgpara{2}{} For illustration, let us suppose that \(a\), \(b\), \(c\), and \(d\) are distinct objects, and that the classes described by our brace notation exist. For example, if \(A = \{a,b\}\) and \(B = \{a,b,c\},\) then \(A \subseteq B\), since every element of \(A\) is also an element of \(B\). The class \(B\) contains everything that \(A\) contains, and possibly more. On a first pass, the metaphor of \sideLink{subclass}{spatial containment} helpfully visualizes this relationship.
 
 \begin{sideillustration}[subclass]
 \begin{figure}[h]
@@ -34,11 +41,11 @@ $$
     \node[font=\large] at (1.5,-0.38) {$c$};
 
 \end{tikzpicture}
-\caption{If \(A=\{a,b\}\) and \(B=\{a,b,c\}\), then \(A \subseteq B\).}
+\caption{If \(A=\{a,b\}\) and \(B=\{a,b,c\}\), then \(A \subseteq B\).}\label{fig:subclass}
 \end{figure}
 \end{sideillustration}
 
-\nbgpara{3}{} \quad By contrast, if \(C = \{c,d\}\), then \(C \nsubseteq B\), since \(d \in C\), but \(d \notin B\). To show that one class is not a subclass of another, it is enough to find a single element of the first class that is missing from the second. Again, the metaphor of \sideLink{subclass2}{spatial containment} provides a helpful visualization.
+\nbgpara{3}{} By contrast, if \(C = \{c,d\}\), then \(C \nsubseteq B\), since \(d \in C\), but \(d \notin B\). To show that one class is not a subclass of another, it is enough to find a single element of the first class that is missing from the second. Again, the metaphor of \sideLink{subclass2}{spatial containment} provides a helpful visualization.
 
 \begin{sideillustration}[subclass2]
 \begin{figure}[h]
@@ -82,6 +89,23 @@ $$
 Let \(A\) be an arbitrary class. To show that \(A \subseteq A\), we must show that every element of \(A\) is also an element of \(A\). But this is immediate: if \(x \in A\), then \(x \in A\). Hence \(A \subseteq A\). Since $A$ was arbitrary, Proposition \ref{prop:subclasshood-reflexive} follows by Universal Generalization.
 \end{proof}
 
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(a\in A\)}
+    \RightLabel{\(\to\)-I, \(1\)}
+    \UnaryInfC{\(a\in A\to a\in A\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall x(x\in A\to x\in A)\)}
+    \RightLabel{D\ref{def:subclass}}
+    \dashedLine
+    \UnaryInfC{\(A\subseteq A\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall x(x\subseteq x)\)}
+\end{prooftree}
+\end{formalderivation}
+
 If we tried to draw this case, the two boundaries would simply coincide; there is therefore no very helpful picture to add. Note that the quantifier in Proposition \ref{prop:subclasshood-reflexive} is entirely unrestricted: It ranges over the \textit{entire} domain of set theory, i.e., all classes whatsoever. 
 
 \nbgpara{6}{} This is why subclasshood should not be understood as meaning ``properly smaller than." A class may be contained in another class even when the two classes are identical. Loosely put, a relation is \textit{reflexive} iff every object stands in that relation to itself. We will make the concept of a relation, and properties such as reflexivity, more precise later. For now, the intuitive idea is enough. Identity is another familiar example of a reflexive relation: for every object \(x\), we have \(x = x\).
@@ -94,14 +118,23 @@ Let \(A\) and \(B\) be classes.
 We write that \(A \subset B\) (i.e., that \(A\) is a \textit{proper subclass} of \(B\)), iff \(A \subseteq B\) and \(A \neq B\).
 
 In symbols:
-\[A \subset B \quad \defequiv \quad A \subseteq B \ \land \ A \neq B\]
+\[
+A \subset B \quad \defequiv \quad
+A \subseteq B \land A \neq B.
+\]
+
+We write \(A \not\subset B\) to mean that \(A\) is not a proper subclass of \(B\):
+\[
+A \not\subset B \quad \defequiv \quad
+\neg(A\subset B).
+\]
 \end{definition}
 
-\nbgpara{8}{} \quad Consider \(A = \{a,b\}\) and \(B = \{a,b,c\}\) once more. We have already seen that \(A \subseteq B\). But \(A\) and \(B\) are not identical, since \(c \in B\) while \(c \notin A\). Thus, \(A\) is not merely a subclass of \(B\), but a proper subclass of \(B\). This is visually obvious in Figure 2.
+\nbgpara{8}{} Consider \(A = \{a,b\}\) and \(B = \{a,b,c\}\) once more. We have already seen that \(A \subseteq B\). But \(A\) and \(B\) are not identical, since \(c \in B\) while \(c \notin A\). Thus, \(A\) is not merely a subclass of \(B\), but a proper subclass of \(B\). This is visually obvious in Figure~\ref{fig:subclass}.
 
 \nbgpara{9}{} \quad By contrast, \(A \subseteq A\), but it is not the case that \(A \subset A\). A class cannot be a proper subclass of itself, because proper subclasshood requires inequality. 
 
-\begin{proposition}[Proper Subclasshood is Anti-Reflexive]
+\begin{proposition}[Proper Subclasshood Is Irreflexive]
     \[\forall x(x \not\subset x)\]
 \end{proposition}
 
@@ -109,13 +142,40 @@ In symbols:
     Let $A$ be an arbitrary class. By the reflexivity of identity, we have $A=A$, i.e., it is not the case that $A \neq A$. Thus, the second conjunct of Definition \ref{def:proper-subclass} is not fulfilled, and hence $A \not\subset A$.
 \end{proof}
 
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(=\)-I}
+    \UnaryInfC{\(A=A\)}
+%
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(A\subset A\)}
+    \RightLabel{D\ref{def:proper-subclass}}
+    \dashedLine
+    \UnaryInfC{\(A\subseteq A\land A\neq A\)}
+    \solidLine
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(A\neq A\)}
+%
+    \solidLine
+    \RightLabel{\(\neg\)-E}
+    \BinaryInfC{\(\bot\)}
+    \RightLabel{\(\neg\)-I, \(1\)}
+    \UnaryInfC{\(A\not\subset A\)}
+    \solidLine
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall x(x\not\subset x)\)}
+\end{prooftree}
+\end{formalderivation}
+
 Thus, \(\subseteq\) allows equality, while \(\subset\) excludes it. The visual similarity to the symbols for numerical inequality is intentional: in terms of allowing or forbidding equality, \(\subseteq\) resembles \(\leq\), and \(\subset\) resembles \(<\).
 
 \nbgpara{10}{} However, this analogy with numbers carries a hidden danger, and we must be careful about which intuitions we draw from it. For any two numbers \(n\) and \(m\), they can always be compared: either \(n \leq m\) or \(m \leq n\). Numbers lie on a single, ordered line. Classes, by contrast, generally do not. If \(A = \{a,b\}\) and \(B = \{b,c\}\), neither class is contained in the other. Even though they share an element, \(A \nsubseteq B\) (because \(a \notin B\)) and \(B \nsubseteq A\) (because \(c \notin A\)). Thus, it is perfectly possible for both to be true simultaneously. Subclasshood tells us how classes are nested, but it does not force all classes into a single linear order.
 
 \nbgpara{11}{} We shall use \(\subseteq\) for subclasshood in general, allowing equality, and \(\subset\) for proper subclasshood, excluding equality. Be aware that some authors use these symbols differently. It is common in other literature to see \(\subset\) used for general subclasses (what we write as \(\subseteq\)), and \(\subsetneq\) used for proper subclasses. However, our convention will be fixed throughout this text.
 
-\nbgpara{12}{} Finally, the phrase \textit{proper subclass} should not be confused with the phrase \textit{proper class}. A proper subclass is a class strictly contained in another class. A proper class, by contrast, will mean a class that is too large to be a set.
+\nbgpara{12}{} Finally, the phrase \textit{proper subclass} should not be confused with the phrase \textit{proper class}. A proper subclass is a class strictly contained in another class. A proper class, by contrast, is a class that is not a set and therefore cannot be a member of any class.
 
 
 \nbgpara{13}{}
@@ -189,21 +249,21 @@ In particular, $a\in A\to a\in B$. Together with $a\in A$, this yields $a\in B$ 
     \UnaryInfC{\(\forall x(x\in A\to x\in B)\)}
     \RightLabel{\(\forall\)-E}
     \UnaryInfC{\(a\in A\to a\in B\)}
-
+%
     \AxiomC{\(a\in A\)}
-
+%
     \RightLabel{\(\to\)-E}
     \BinaryInfC{\(a\in B\)}
 \end{prooftree}
 \end{formalderivation}
 
-Together, these two rules capture the essential way we reason about subclasses. To establish $A\subseteq B$, we show that membership in $A$ entails membership in $B$. Once $A\subseteq B$ has been established, we may pass from membership in $A$ to membership in $B$ directly.
+Together, these two rules capture the essential way we reason about subclasses. To establish $A\subseteq B$, we show that membership in $A$ entails membership in $B$. Once $A\subseteq B$ has been established, we may pass from membership in $A$ to membership in $B$ directly. The rules closely mirror $\to$-I and $\to$-E, since subclasshood is defined in terms of membership, implication, and universal quantification.
 
 
 \nbgpara{14}{}
 We have already established that subclasshood is reflexive: every class is a subclass of itself. With our new introduction rule, however, the proof becomes almost immediate.
 
-Consider an arbitrary class $A$. To show that $A\subseteq A$, suppose that $a\in A$. But this is already exactly what we need to establish. We may therefore apply $\subseteq$-I immediately, discharging the assumption and obtaining $A\subseteq A$.
+Consider an arbitrary class $A$. Every member of $A$ is, of course, a member of $A$. Hence $A\subseteq A$; and since $A$ was arbitrary, the claim follows.
 
 \begin{formalderivation}
 \begin{prooftree}
@@ -238,11 +298,15 @@ Subclasshood is transitive. In symbols:
 \begin{proof}
 Let $A$, $B$, and $C$ be arbitrary classes, and suppose that $A\subseteq B$ and $B\subseteq C$. We wish to show that $A\subseteq C$.
 
-To this end, consider an arbitrary object $a$ and suppose that $a\in A$. Since $A\subseteq B$, an application of $\subseteq$-E gives $a\in B$. But we also know that $B\subseteq C$, so a second application of $\subseteq$-E gives $a\in C$.
+To this end, consider an arbitrary object $a$ and suppose that $a\in A$. Since every member of $A$ belongs to $B$, we have $a\in B$. But every member of $B$ also belongs to $C$, so $a\in C$.
 
-We have thus shown that any arbitrary member of $A$ must also belong to $C$. By $\subseteq$-I, we conclude that
+We have thus shown that every member of $A$ belongs to $C$. Therefore,
 \[
 A\subseteq C.
+\]
+Our argument required only that $A\subseteq B$ and $B\subseteq C$. It therefore establishes
+\[
+(A\subseteq B\land B\subseteq C)\to A\subseteq C.
 \]
 Since $A$, $B$, and $C$ were arbitrary, this establishes the proposition.
 \end{proof}
@@ -252,27 +316,27 @@ Since $A$, $B$, and $C$ were arbitrary, this establishes the proposition.
     \AxiomC{}
     \RightLabel{\(3\)}
     \UnaryInfC{\(a\in A\)}
-
+%
     \AxiomC{}
     \RightLabel{\(1\)}
     \UnaryInfC{\(A\subseteq B\)}
-
+%
     \RightLabel{\(\subseteq\)-E}
     \BinaryInfC{\(a\in B\)}
-
+%
     \AxiomC{}
     \RightLabel{\(2\)}
     \UnaryInfC{\(B\subseteq C\)}
-
+%
     \RightLabel{\(\subseteq\)-E}
     \BinaryInfC{\(a\in C\)}
-
+%
     \RightLabel{\(\subseteq\)-I, \(3\)}
     \UnaryInfC{\(A\subseteq C\)}
 \end{prooftree}
 \end{formalderivation}
 
-Notice how the two derived rules work together. We begin with the assumption that $a\in A$, use $\subseteq$-E twice to carry membership from $A$ through $B$ to $C$, and finally apply $\subseteq$-I to establish that $A\subseteq C$. The two subclass assumptions remain in force throughout this argument, while the assumption $a\in A$ is discharged.
+The formal derivation shows how the two derived rules work together. We begin with the assumption that $a\in A$, use $\subseteq$-E twice to carry membership from $A$ through $B$ to $C$, and finally apply $\subseteq$-I to establish that $A\subseteq C$. The two subclass assumptions remain in force throughout this argument, while the assumption $a\in A$ is discharged.
 
 Since transitivity is a general property of subclasshood, we can now treat it as another derived rule.
 
