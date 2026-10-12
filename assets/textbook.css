@@ -622,3 +622,8 @@ mjx-container[jax="SVG"]:has(
 ) svg {
     overflow: visible;
 }
+
+/* Make mathematical numbering in axiom headings inherit the heading color. */
+main.bodycontainer .axiom mjx-container {
+    color: inherit !important;
+}
