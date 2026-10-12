@@ -582,3 +582,9 @@ main.bodycontainer section.textbody a:hover,
 main.bodycontainer section.textbody a:active {
   color: inherit !important;
 }
+
+/* Give proof prose the same line spacing as ordinary prose. */
+main.bodycontainer section.textbody .amsthmproof,
+main.bodycontainer section.textbody .amsthmproof p {
+  line-height: 1.6;
+}
