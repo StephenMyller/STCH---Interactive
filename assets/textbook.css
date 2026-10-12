@@ -613,7 +613,7 @@ html main.bodycontainer .listmarker mjx-container {
 /* Move Gentzen right-hand labels slightly away from inference lines. */
 mjx-container[jax="SVG"] svg
 g[semantics="bspr_prooflabel:right"] {
-    translate: 4px 0;
+    translate: 60px 0;
 }
 
 /* Allow labels to extend slightly beyond the SVG's original bounds. */
