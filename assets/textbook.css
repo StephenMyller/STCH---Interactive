@@ -623,7 +623,7 @@ mjx-container[jax="SVG"]:has(
     overflow: visible;
 }
 
-/* Make mathematical numbering in axiom headings inherit the heading color. */
-main.bodycontainer .axiom mjx-container {
+/* MathJax in theorem numbering inherits the number's color. */
+main.bodycontainer .amsthmnumberplain mjx-container {
     color: inherit !important;
 }
