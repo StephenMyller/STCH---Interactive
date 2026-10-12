@@ -1,9 +1,6 @@
 
 @import url("../lwarp.css");
 
-/* Computer Modern: match the original LaTeX typography. */
-@import url("https://cdn.jsdelivr.net/gh/bitmaks/cm-web-fonts@latest/fonts.css");
-
 /* Main reading column */
 main.bodycontainer {
     width: 100%;
@@ -14,9 +11,8 @@ main.bodycontainer {
     box-sizing: border-box;
 }
 
-/* Text typography */
-html body {
-    font-family: "Computer Modern Serif", serif;
+/* Text spacing */
+body {
     line-height: 1.5;
 }
 
