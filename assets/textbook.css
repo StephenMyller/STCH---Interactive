@@ -609,3 +609,16 @@ main.bodycontainer h1:not(.titlepage h1) {
 html main.bodycontainer .listmarker mjx-container {
     color: inherit !important;
 }
+
+/* Move Gentzen right-hand labels slightly away from inference lines. */
+mjx-container[jax="SVG"] svg
+g[semantics="bspr_prooflabel:right"] {
+    translate: 4px 0;
+}
+
+/* Allow labels to extend slightly beyond the SVG's original bounds. */
+mjx-container[jax="SVG"]:has(
+    g[semantics="bspr_prooflabel:right"]
+) svg {
+    overflow: visible;
+}
