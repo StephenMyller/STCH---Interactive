@@ -1185,3 +1185,7 @@ main.bodycontainer a.side-panel-link-active {
   }
 }
 
+/* Increase spacing when a derivation button is followed by prose. */
+main.bodycontainer .derivation-trigger:has(+ p) {
+  margin-bottom: 1.5rem;
+}
