@@ -8,6 +8,12 @@
 
 \usepackage[mathjax,HomeHTMLFilename=index]{lwarp}
 \CSSFilename{assets/textbook.css}
+% Preserve the original Computer Modern typography in PDF output.
+% Lwarp uses T1 encoding for HTML generation.
+\ifbool{warpingHTML}{}{%
+    \renewcommand{\encodingdefault}{OT1}%
+}
+
 \newenvironment{formalderivation}
     {\begin{BlockClass}{formalderivation}}
     {\end{BlockClass}}
@@ -109,7 +115,7 @@
     \addvspace{1.15\baselineskip}%
     \noindent
     \textbf{\S#1}\quad
-    \textbf{\textsc{#2.}}\enspace
+    \textbf{#2.}\enspace
     \ignorespaces
 }
 
@@ -118,7 +124,7 @@
     \needspace{3\baselineskip}%
     \addvspace{1.15\baselineskip}%
     \noindent
-    \textbf{\textsc{#1.}}\enspace
+    \textbf{#1.}\enspace
     \ignorespaces
 }
 

@@ -1,0 +1,462 @@
+
+
+\nbgpara{1}{Derivations}
+A derivation is a finite rooted tree of formula occurrences constructed in accordance with the inference rules stated below. Its lowermost formula occurrence is its conclusion. Each uppermost formula occurrence is either an assumption or the conclusion of a rule with no premises.
+
+Since derivations are trees of formula occurrences, distinct nodes may contain the same formula while occupying different positions in the derivation and depending on different assumptions.
+
+\nbgpara{2}{Assumptions and Dependency}
+An assumption occurrence may be marked with an assumption label. The assumption labels are natural numbers. We use \(n,m,\ldots\) as metavariables ranging over assumption labels. Thus, if \(n\) is an assumption label, then \(n+1\) is also an assumption label. An assumption occurrence marked with the label \(n\) is written as follows:
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(n\)}
+    \UnaryInfC{\(\varphi\)}
+\end{prooftree}
+
+Assumption labels are metalinguistic bookkeeping marks. They are not symbols of the language of NBG and are not parts of the formulas to which they are attached.
+
+Within a derivation, each assumption label identifies a single discharge class. All assumption occurrences carrying the same label are occurrences of the same formula, and a label is associated with at most one application of a discharge rule. If a label is associated with such an application, every occurrence carrying that label lies within the premise subderivation designated by the rule. The same labels may be reused in separate derivations.
+
+When an application of a discharge rule carries the label \(n\), it discharges every still-undischarged assumption occurrence marked with \(n\) in the premise subderivation designated by that rule. A single application may therefore discharge several occurrences of the same assumption.
+
+For \(\to\)-I, \(\neg\)-I, and CR, the designated premise subderivation is the sole premise subderivation of the rule. In an application of \(\lor\)-E, each label applies only to its corresponding minor premise subderivation. In an application of \(\exists\)-E, the label applies only to the minor premise subderivation beginning with the assumed instance of the existential formula.
+
+The dependency of formula occurrences on assumptions is defined recursively. For each formula occurrence \(\theta\) in a derivation, let \(\Dep(\theta)\) be its dependency set.
+
+\begin{enumerate}
+    \item If \(\theta\) is an assumption occurrence, then
+    \[
+    \Dep(\theta)=\{\theta\}.
+    \]
+
+    \item If \(\theta\) is the conclusion of a rule with no premises, then
+    \[
+    \Dep(\theta)=\varnothing.
+    \]
+
+    \item Suppose that \(\theta\) is the conclusion of an application of a rule whose premise occurrences are
+    \[
+    \theta_1,\ldots,\theta_k.
+    \]
+    Let \(\Delta\) be the set of assumption occurrences discharged by that application. Then
+    \[
+    \Dep(\theta)
+    =
+    \bigl(
+    \Dep(\theta_1)\cup\cdots\cup\Dep(\theta_k)
+    \bigr)
+    \setminus\Delta.
+    \]
+\end{enumerate}
+
+A formula occurrence \(\theta\) depends on precisely the assumption occurrences belonging to \(\Dep(\theta)\). The undischarged assumptions of a derivation are the assumption occurrences belonging to the dependency set of its conclusion.
+
+\nbgpara{3}{Turnstile}
+Let \(\Gamma\) be a collection of formulas and let \(\varphi\) be a formula. We write
+\[
+\Gamma\vdash\varphi
+\]
+iff there exists a derivation of \(\varphi\) such that the formula occurring at every undischarged assumption occurrence is a member of \(\Gamma\). This is read as ``\(\varphi\) is derivable from \(\Gamma\).'' Thus, the symbol \(\vdash\) is a symbol of the metalanguage, not of the language of NBG.
+
+The definition does not require every member of \(\Gamma\) to occur as an undischarged assumption. Consequently, if
+\[
+\Gamma\vdash\varphi
+\qquad\text{and}\qquad
+\Gamma\subseteq\Delta,
+\]
+then
+\[
+\Delta\vdash\varphi.
+\]
+Weakening is therefore built into the definition of derivability.
+
+The collection \(\Gamma\) also does not record the multiplicity of assumption occurrences. Several undischarged occurrences of the same formula are represented by a single member of \(\Gamma\), although they remain distinct occurrences within the derivation itself.
+
+\nbgpara{4}{Proofs}
+A derivation with no undischarged assumptions is called a proof. Its conclusion is called a theorem of the deductive system in which the derivation is carried out.
+
+When the derivation has no undischarged assumptions, we write
+\[
+\vdash\varphi
+\]
+instead of
+\[
+\varnothing\vdash\varphi.
+\]
+Thus, \(\vdash\varphi\) means that there exists a proof of \(\varphi\), or equivalently that \(\varphi\) is a theorem of the deductive system.
+
+\vspace{0.5cm}
+
+\nbgpara{5}{Conjunction}
+
+\nbgparar{$\bm{\land}$-I} \quad Conjunction is governed by the following introduction rule:
+
+\begin{prooftree}
+    \AxiomC{\(\varphi\)}
+    \AxiomC{\(\psi\)}
+    \RightLabel{\(\land\)-I}
+    \BinaryInfC{\(\varphi\land\psi\)}
+\end{prooftree}
+
+\vspace{0.3cm}
+
+\nbgparar{$\bm{\land}$-E} \quad Conjunction is governed by the following two elimination rules:
+
+\begin{center}
+\begin{minipage}{0.55\textwidth}
+\centering
+\begin{prooftree}
+    \AxiomC{\(\varphi\land\psi\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(\varphi\)}
+\end{prooftree}
+\end{minipage}
+\hfill
+\begin{minipage}{0.42\textwidth}
+\centering
+\begin{prooftree}
+    \AxiomC{\(\varphi\land\psi\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(\psi\)}
+\end{prooftree}
+\end{minipage}
+\end{center}
+
+\vspace{0.5cm}
+
+\nbgpara{6}{Disjunction}
+
+\nbgparar{$\bm{\lor}$-I} \quad Disjunction is governed by the following two introduction rules:
+
+\begin{center}
+\begin{minipage}{0.55\textwidth}
+\centering
+\begin{prooftree}
+    \AxiomC{\(\varphi\)}
+    \RightLabel{\(\lor\)-I}
+    \UnaryInfC{\(\varphi\lor\psi\)}
+\end{prooftree}
+\end{minipage}
+\hfill
+\begin{minipage}{0.42\textwidth}
+\centering
+\begin{prooftree}
+    \AxiomC{\(\psi\)}
+    \RightLabel{\(\lor\)-I}
+    \UnaryInfC{\(\varphi\lor\psi\)}
+\end{prooftree}
+\end{minipage}
+\end{center}
+
+\vspace{0.3cm}
+
+\nbgparar{$\bm{\lor}$-E} \quad Disjunction is governed by the following elimination rule:
+
+\begin{prooftree}
+    \AxiomC{\(\varphi\lor\psi\)}
+
+    \AxiomC{}
+    \RightLabel{\(n\)}
+    \UnaryInfC{\(\varphi\)}
+    \noLine
+    \UnaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(\chi\)}
+
+    \AxiomC{}
+    \RightLabel{\(m\)}
+    \UnaryInfC{\(\psi\)}
+    \noLine
+    \UnaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(\chi\)}
+
+    \RightLabel{\(\lor\)-E, \(n,m\)}
+    \TrinaryInfC{\(\chi\)}
+\end{prooftree} \vspace{0.3cm}
+
+The labels \(n\) and \(m\) are distinct. The application discharges the assumption occurrences marked with \(n\) only in the left minor premise subderivation and the assumption occurrences marked with \(m\) only in the right minor premise subderivation.
+
+\vspace{0.3cm}
+
+\nbgpara{7}{Implication}
+
+\nbgparar{$\bm{\to}$-I} \quad Implication is governed by the following introduction rule:
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(n\)}
+    \UnaryInfC{\(\varphi\)}
+    \noLine
+    \UnaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(\psi\)}
+    \RightLabel{\(\to\)-I, \(n\)}
+    \UnaryInfC{\(\varphi\to\psi\)}
+\end{prooftree}
+
+The application discharges every assumption occurrence marked with \(n\) in its premise subderivation.
+
+An application of \(\to\)-I may be vacuous: the rule may be applied even if its premise subderivation contains no assumption occurrence marked with the indicated label \(n\):
+
+\begin{prooftree}
+    \AxiomC{}
+    \noLine
+    \UnaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(\psi\)}
+    \RightLabel{\(\to\)-I, \(n\)}
+    \UnaryInfC{\(\varphi\to\psi\)}
+\end{prooftree}
+
+\vspace{0.3cm}
+
+\nbgparar{$\bm{\to}$-E} \quad Implication is governed by the following elimination rule:
+
+\begin{prooftree}
+    \AxiomC{\(\varphi\to\psi\)}
+    \AxiomC{\(\varphi\)}
+    \RightLabel{\(\to\)-E}
+    \BinaryInfC{\(\psi\)}
+\end{prooftree}
+
+\nbgpara{8}{Biconditional}
+
+\nbgparar{$\bm{\leftrightarrow}$-I} \quad The biconditional is governed by the following introduction rule:
+
+\begin{prooftree}
+    \AxiomC{\(\varphi\to\psi\)}
+    \AxiomC{\(\psi\to\varphi\)}
+    \RightLabel{\(\leftrightarrow\)-I}
+    \BinaryInfC{\(\varphi\leftrightarrow\psi\)}
+\end{prooftree}
+
+\vspace{0.3cm}
+
+\nbgparar{$\bm{\leftrightarrow}$-E} \quad The biconditional is governed by the following two elimination rules:
+
+\begin{center}
+\begin{minipage}{0.55\textwidth}
+\centering
+\begin{prooftree}
+    \AxiomC{\(\varphi\leftrightarrow\psi\)}
+    \AxiomC{\(\varphi\)}
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(\psi\)}
+\end{prooftree}
+\end{minipage}
+\hfill
+\begin{minipage}{0.42\textwidth}
+\centering
+\begin{prooftree}
+    \AxiomC{\(\varphi\leftrightarrow\psi\)}
+    \AxiomC{\(\psi\)}
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(\varphi\)}
+\end{prooftree}
+\end{minipage}
+\end{center} 
+
+\nbgpara{9}{Negation}
+
+\nbgparar{$\bm{\neg}$-I} \quad Negation is governed by the following introduction rule:
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(n\)}
+    \UnaryInfC{\(\varphi\)}
+    \noLine
+    \UnaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(\bot\)}
+    \RightLabel{\(\neg\)-I, \(n\)}
+    \UnaryInfC{\(\neg\varphi\)}
+\end{prooftree}
+
+\vspace{0.3cm}
+
+\nbgparar{$\bm{\neg}$-E} \quad Negation is governed by the following elimination rule:
+
+\begin{prooftree}
+    \AxiomC{\(\varphi\)}
+    \AxiomC{\(\neg\varphi\)}
+    \RightLabel{\(\neg\)-E}
+    \BinaryInfC{\(\bot\)}
+\end{prooftree}
+
+
+\nbgpara{10}{Falsity}
+
+\nbgparar{$\bm{\bot}$-E} \quad From falsity, any formula may be inferred:
+
+\begin{prooftree}
+    \AxiomC{\(\bot\)}
+    \RightLabel{\(\bot\)-E}
+    \UnaryInfC{\(\varphi\)}
+\end{prooftree}
+
+\vspace{0.3cm}
+
+\nbgpara{11}{Classical Reductio}
+
+\nbgparar{CR} \quad Classical reductio is governed by the following rule:
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(n\)}
+    \UnaryInfC{\(\neg\varphi\)}
+    \noLine
+    \UnaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(\bot\)}
+    \RightLabel{CR, \(n\)}
+    \UnaryInfC{\(\varphi\)}
+\end{prooftree} \vspace{0.3cm}
+
+The propositional rules stated in paragraphs 5--10 are intuitionistically valid. The addition of CR is what makes the propositional fragment of the deductive system classical. \vspace{-0.3cm}
+
+\nbgpara{12}{Universal Quantification}
+
+\nbgparar{$\bm{\forall}$-I} \quad Universal quantification is governed by the following introduction rule: \vspace{0.3cm}
+
+\begin{prooftree}
+    \AxiomC{\(\varphi[\eta/\xi]\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall\xi\,\varphi\)}
+\end{prooftree} \vspace{0.3cm}
+
+The variable $\eta$ is called the eigenvariable of the application. Intuitively, it is treated as arbitrary: no undischarged assumption on which the premise depends may contain $\eta$ free.
+
+This is made precise by the following side conditions:
+
+\begin{enumerate}
+    \item \(\eta\) is free for \(\xi\) in \(\varphi\);
+
+    \item \(\eta\) does not occur free in \(\varphi\); and
+
+    \item \(\eta\) does not occur free in any undischarged assumption on which the premise occurrence \(\varphi[\eta/\xi]\) depends.
+\end{enumerate}
+
+\nbgparar{$\bm{\forall}$-E} \quad Universal quantification is governed by the following elimination rule: \vspace{0.3cm}
+
+\begin{prooftree}
+    \AxiomC{\(\forall\xi\,\varphi\)}
+    \RightLabel{\(\forall\)-E}
+    \UnaryInfC{\(\varphi[\eta/\xi]\)}
+\end{prooftree} \vspace{0.3cm}
+
+The rule is permitted only if \(\eta\) is free for \(\xi\) in \(\varphi\).
+
+\vspace{0.5cm}
+
+\nbgpara{13}{Existential Quantification}
+
+\nbgparar{$\bm{\exists}$-I} \quad Existential quantification is governed by the following introduction rule: \vspace{0.3cm}
+
+\begin{prooftree}
+    \AxiomC{\(\varphi[\eta/\xi]\)}
+    \RightLabel{\(\exists\)-I}
+    \UnaryInfC{\(\exists\xi\,\varphi\)}
+\end{prooftree} \vspace{0.3cm}
+
+The rule is permitted only if \(\eta\) is free for \(\xi\) in \(\varphi\).
+
+\vspace{0.3cm}
+
+\nbgparar{$\bm{\exists}$-E} \quad Existential quantification is governed by the following elimination rule:
+
+\begin{prooftree}
+    \AxiomC{\(\exists\xi\,\varphi\)}
+
+    \AxiomC{}
+    \RightLabel{\(n\)}
+    \UnaryInfC{\(\varphi[\eta/\xi]\)}
+    \noLine
+    \UnaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(\psi\)}
+
+    \RightLabel{\(\exists\)-E, \(n\)}
+    \BinaryInfC{\(\psi\)}
+\end{prooftree} \vspace{0.3cm}
+
+The right-hand premise subderivation ending with the displayed occurrence of $\psi$ is called the minor premise subderivation. It contains the assumption occurrences $\varphi[\eta/\xi]$ marked with $n$, which are discharged by the application. The application of \(\exists\)-E discharges the assumption occurrences marked with \(n\) only within this subderivation.
+
+The variable \(\eta\) is called the eigenvariable of the application. Its role is to represent an arbitrary witness to the existential statement about which no other relevant assumption has been made.
+
+This is made precise by the following side conditions:
+
+\begin{enumerate}
+    \item \(\eta\) is free for \(\xi\) in \(\varphi\);
+
+    \item \(\eta\) does not occur free in \(\exists\xi\,\varphi\);
+
+    \item \(\eta\) does not occur free in \(\psi\); and
+
+    \item \(\eta\) does not occur free in any undischarged assumption on which the minor premise derivation of \(\psi\) depends, other than the assumption occurrences discharged by the application.
+\end{enumerate}
+
+\vspace{0.35cm}
+
+\nbgpara{14}{Identity}
+
+\nbgparar{$\bm{=}$-I} \quad Identity is governed by the following introduction rule:
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(=\)-I}
+    \UnaryInfC{\(\xi=\xi\)}
+\end{prooftree}
+
+\vspace{0.2cm}
+
+\nbgparar{$\bm{=}$-E} \quad Identity is governed by the following two elimination rules: \vspace{0.3cm}
+
+\begin{center}
+\begin{minipage}{0.5\textwidth}
+\centering
+\begin{prooftree}
+    \AxiomC{\(\xi=\eta\)}
+    \AxiomC{\(\varphi[\xi/\zeta]\)}
+    \RightLabel{\(=\)-E}
+    \BinaryInfC{\(\varphi[\eta/\zeta]\)}
+\end{prooftree}
+\end{minipage}
+\hfill
+\begin{minipage}{0.46\textwidth}
+\centering
+\begin{prooftree}
+    \AxiomC{\(\xi=\eta\)}
+    \AxiomC{\(\varphi[\eta/\zeta]\)}
+    \RightLabel{\(=\)-E}
+    \BinaryInfC{\(\varphi[\xi/\zeta]\)}
+\end{prooftree}
+\end{minipage}
+\end{center} \vspace{0.3cm}
+
+Each rule is permitted only if both \(\xi\) and \(\eta\) are free for \(\zeta\) in \(\varphi\).
+
+
+\nbgpara{15}{Compressed Derivation Displays}
+In later derivations, we shall occasionally suppress a finite sequence of routine applications of the same inference rule. If \(R\) is an inference rule, a displayed application labelled
+
+$$
+R^{*}
+$$
+
+indicates that the displayed premise occurrences and conclusion are connected by a finite nonempty derivation segment whose inference applications are all applications of \(R\). Intermediate formula occurrences within that segment are omitted from the display.
+
+Thus, for example, a step of the form
+
+\begin{prooftree}
+    \AxiomC{\(\varphi\)}
+    \RightLabel{\(\forall\)-I\(^{*}\)}
+    \UnaryInfC{\(\forall\xi_1\cdots\forall\xi_k\,\varphi\)}
+\end{prooftree}
+
+abbreviates the corresponding succession of applications of \(\forall\)-I, with the quantifiers introduced one at a time in the order required to obtain the displayed conclusion.
+
+Similarly, a displayed application of \(\land\)-I\(^{*}\), \(\land\)-E\(^{*}\), or another rule may abbreviate the corresponding finite derivation segment.
+
+This convention concerns only the display of derivations and introduces no new inference rules. Every suppressed application must be a legitimate application of the ordinary rule and must separately satisfy all side conditions governing that rule.
