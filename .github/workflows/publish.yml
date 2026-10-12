@@ -210,7 +210,6 @@ jobs:
 
       - name: Resolve Gentzen proof references
         run: |
-          chmod u+w -- ./*.html
           python3 - <<'PY'
           from pathlib import Path
           import re
