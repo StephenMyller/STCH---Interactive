@@ -1,0 +1,251 @@
+
+\subsection{Axiom of Extensionality}
+
+\nbgpara{1}{}
+Our underlying logic already provides the concept of identity. What remains to be determined is what makes two classes identical. In particular, could two classes have exactly the same members and nevertheless be distinct objects?
+
+In the preceding section, we established that identical classes must be subclasses of one another. This follows from the logical properties of identity alone: if \(A=B\), every member of \(A\) must also belong to \(B\), and vice versa. But the converse does not follow from logic alone. Even if \(A\) and \(B\) have exactly the same members, our logical rules do not yet allow us to conclude that \(A=B\).
+
+The first axiom of NBG, the \emph{Axiom of Extensionality}, rules out precisely this possibility. It says that two classes with exactly the same members must be identical.
+
+\begin{axiom}[\textbf{\hspace{-0.12cm}Extensionality}]
+\label{ax:extensionality}
+For all classes \(A\) and \(B\), if \(A\) and \(B\) have exactly the same elements, then they are identical. In symbols:
+\[
+\forall A\forall B
+\bigl(
+\forall x(x\in A\leftrightarrow x\in B)
+\to A=B
+\bigr).
+\]
+\end{axiom}
+
+In our Gentzen derivations, we abbreviate the inference licensed by this axiom with the label \(\mathrm{Ext}\). Whenever we have established that two classes have exactly the same members, we may infer that they are identical.
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{\(\forall x(x\in A\leftrightarrow x\in B)\)}
+    \RightLabel{\(\mathrm{Ext}\)}
+    \UnaryInfC{\(A=B\)}
+\end{prooftree}
+\end{formalderivation}
+
+\nbgpara{2}{}
+The Axiom of Extensionality articulates a fundamental feature of classes: a class is determined entirely by what belongs to it.
+
+Notice that the axiom states an implication in only one direction. The reverse implication is already guaranteed by logic. If two classes are identical, they must share all the same properties, including having exactly the same members. Extensionality supplies the crucial converse: if they have exactly the same members, they must be identical.
+
+In other words, two classes cannot differ in identity without differing in membership. There is no room in our theory for two distinct classes that nevertheless contain exactly the same objects. The members of a class determine which class it is.
+
+\nbgpara{3}{}
+The name \emph{Extensionality} comes from the word \emph{extension}. The extension of a class is simply the collection of objects that belong to it. By contrast, an \emph{intensional} description concerns the way a class is specified: the concept, property, or condition by which we pick out its members.
+
+To illustrate, consider the class of all letters appearing in the word \emph{silent} and the class of all letters appearing in the word \emph{listen}. These descriptions are different, but they pick out exactly the same letters. By Extensionality, they therefore determine one and the same class.
+
+The manner in which we describe a class is not part of the class itself. Nor does the order in which we happen to enumerate its members make any difference. Mentioning an object twice does not give the class an additional member. What matters is only which objects belong to it.
+
+Extensionality thus tells us that classes are identified by their extensions, not by the particular descriptions through which we arrive at them. Different descriptions may determine the same class; conversely, if two classes are genuinely distinct, their memberships must differ somewhere.
+
+\nbgpara{4}{}
+A particularly useful consequence of Extensionality concerns the relationship between identity and subclasshood. We have already established that identical classes must be subclasses of one another. Extensionality now supplies the converse, giving us a complete criterion for equality in terms of subclasshood.
+
+\begin{proposition}[Extensional Criterion for Equality]
+\label{prop:extensional-equality}
+For all classes \(A\) and \(B\),
+\[
+A=B
+\quad\text{iff}\quad
+A\subseteq B\text{ and }B\subseteq A.
+\]
+\end{proposition}
+
+\begin{proof}
+Let \(A\) and \(B\) be arbitrary classes.
+
+First, suppose that \(A=B\). By Proposition~\ref{prop:identity-implies-mutual-subclasshood}, identical classes are subclasses of one another. Hence, \(A\subseteq B\) and \(B\subseteq A\).
+
+Conversely, suppose that \(A\subseteq B\) and \(B\subseteq A\). Let \(x\) be an arbitrary object. Since \(A\subseteq B\), every member of \(A\) is also a member of \(B\). Since \(B\subseteq A\), every member of \(B\) is also a member of \(A\). Thus,
+\[
+x\in A\quad\text{iff}\quad x\in B.
+\]
+Since \(x\) was arbitrary, \(A\) and \(B\) have exactly the same members. By the Axiom of Extensionality, \(A=B\).
+
+Having established both directions, we conclude that
+\[
+A=B
+\quad\text{iff}\quad
+A\subseteq B\text{ and }B\subseteq A.
+\qedhere
+\]
+\end{proof}
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{\(A\subseteq B\)}
+
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(a\in A\)}
+
+    \RightLabel{\(\subseteq\)-E}
+    \BinaryInfC{\(a\in B\)}
+    \RightLabel{\(\to\)-I, \(1\)}
+    \UnaryInfC{\(a\in A\to a\in B\)}
+
+    \AxiomC{\(B\subseteq A\)}
+
+    \AxiomC{}
+    \RightLabel{\(2\)}
+    \UnaryInfC{\(a\in B\)}
+
+    \RightLabel{\(\subseteq\)-E}
+    \BinaryInfC{\(a\in A\)}
+    \RightLabel{\(\to\)-I, \(2\)}
+    \UnaryInfC{\(a\in B\to a\in A\)}
+
+    \RightLabel{\(\leftrightarrow\)-I}
+    \BinaryInfC{\(a\in A\leftrightarrow a\in B\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall x(x\in A\leftrightarrow x\in B)\)}
+    \RightLabel{\(\mathrm{Ext}\)}
+    \UnaryInfC{\(A=B\)}
+\end{prooftree}
+\end{formalderivation}
+
+The proposition also establishes an important structural property of subclasshood. We have already shown that subclasshood is reflexive and transitive. Extensionality now establishes that it is also \emph{antisymmetric}: whenever \(A\subseteq B\) and \(B\subseteq A\), we have \(A=B\). Thus, subclasshood is a \emph{partial order} on classes.
+
+\nbgpara{5}{}
+Proposition~\ref{prop:extensional-equality} gives us one of the most common proof strategies in set theory, often called \emph{proof by double inclusion} or \emph{proof by mutual inclusion}.
+
+To show that two classes \(A\) and \(B\) are identical, we need not establish \(A=B\) directly. Instead, we can prove two separate inclusions: first \(A\subseteq B\), and then \(B\subseteq A\). Once both inclusions have been established, Extensionality allows us to conclude that \(A=B\).
+
+Because this pattern of reasoning is so useful, we introduce it as a derived rule.
+
+\begin{derivedrule}[Mutual Inclusion]
+\label{rule:mutual-inclusion}
+From \(A\subseteq B\) and \(B\subseteq A\), we may infer \(A=B\).
+\end{derivedrule}
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{\(A\subseteq B\)}
+    \AxiomC{\(B\subseteq A\)}
+    \RightLabel{\(\mathrm{MI}\)}
+    \BinaryInfC{\(A=B\)}
+\end{prooftree}
+\end{formalderivation}
+
+This rule, which we abbreviate as \(\mathrm{MI}\), differs in an important respect from the derived rules for subclasshood introduced in the preceding section. Those rules followed from logic and the definition of subclasshood alone. Mutual Inclusion, by contrast, depends on the Axiom of Extensionality. Without that axiom, we would have no justification for inferring the identity of two classes merely from their mutual inclusion.
+
+\nbgpara{6}{Uniqueness by Extensionality}
+There is another consequence of Extensionality that will become especially important as our theory develops. It concerns the possibility of specifying a class by describing exactly which objects belong to it.
+
+Suppose we give a condition $\varphi$ that an object may or may not satisfy. We want to consider a class whose members are exactly the objects satisfying $\varphi$. For the moment, let us set aside the question of whether such a class exists.
+
+Could there be two different classes satisfying the same membership specification?
+
+To answer this question, suppose that \(A\) and \(B\) both satisfy $\varphi$. Take any object \(x\). If \(x\) belongs to \(A\), it must satisfy $\varphi$, since \(A\) contains exactly the objects satisfying $\varphi$. But then \(x\) must also belong to \(B\), since \(B\) is supposed to contain exactly those same objects. The reasoning works in reverse as well: every member of \(B\) must also be a member of \(A\).
+
+Thus, \(A\) and \(B\) are subclasses of one another. By the Extensional Criterion for Equality, they must be identical.
+
+This is a remarkably general argument. We did not need to know anything about the particular condition $\varphi$ used to specify the class. All that mattered was that both candidates were characterized by the same membership condition.
+
+We can state the result more precisely. Let \(\varphi(x)\) stand for a fixed condition on an object \(x\), which does not depend on the particular classes \(A\) and \(B\) under consideration. The statement
+\[
+\forall x\bigl(x\in A\leftrightarrow\varphi(x)\bigr)
+\]
+says that an object belongs to \(A\) exactly when it satisfies the condition \(\varphi(x)\).
+
+\begin{proposition}[Uniqueness of Class Specifications]
+\label{prop:uniqueness-class-specification}
+Let \(\varphi(x)\) be a fixed condition on \(x\) that does not depend on \(A\) or \(B\). If
+\[
+\forall x\bigl(x\in A\leftrightarrow\varphi(x)\bigr)
+\]
+and
+\[
+\forall x\bigl(x\in B\leftrightarrow\varphi(x)\bigr),
+\]
+then \(A=B\).
+\end{proposition}
+
+\begin{proof}
+Let \(A\) and \(B\) be classes satisfying the two specifications. For an arbitrary object \(x\), we have
+\[
+x\in A
+\quad\text{iff}\quad
+\varphi(x)
+\quad\text{iff}\quad
+x\in B.
+\]
+Hence, \(A\) and \(B\) have exactly the same members. By the Axiom of Extensionality, \(A=B\).
+\end{proof}
+
+
+\begin{formalderivation}
+Suppose that
+\[
+\forall x(x\in A\leftrightarrow\varphi(x))
+\qquad\text{and}\qquad
+\forall x(x\in B\leftrightarrow\varphi(x)).
+\]
+
+We first derive:
+
+\begin{prooftree}
+    \AxiomC{\(\forall x(x\in A\leftrightarrow\varphi(x))\)}
+    \RightLabel{\(\forall\)-E}
+    \UnaryInfC{\(a\in A\leftrightarrow\varphi(a)\)}
+
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(a\in A\)}
+
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(\varphi(a)\)}
+
+    \AxiomC{\(\forall x(x\in B\leftrightarrow\varphi(x))\)}
+    \RightLabel{\(\forall\)-E}
+    \UnaryInfC{\(a\in B\leftrightarrow\varphi(a)\)}
+
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(a\in B\)}
+    \RightLabel{\(\to\)-I, \(1\)}
+    \UnaryInfC{\(a\in A\to a\in B\)}
+\end{prooftree}
+
+Interchanging \(A\) and \(B\) gives the converse implication. Combining both directions, with \(a\) chosen fresh for the assumptions, yields:
+
+\begin{prooftree}
+    \AxiomC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(a\in A\to a\in B\)}
+
+    \AxiomC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(a\in B\to a\in A\)}
+
+    \RightLabel{\(\leftrightarrow\)-I}
+    \BinaryInfC{\(a\in A\leftrightarrow a\in B\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall x(x\in A\leftrightarrow x\in B)\)}
+    \RightLabel{\(\mathrm{Ext}\)}
+    \UnaryInfC{\(A=B\)}
+\end{prooftree}
+\end{formalderivation}
+
+
+The method of proof is worth remembering. To establish the uniqueness of an object satisfying a given specification, we may suppose that two objects satisfy it and then show that they must be identical. In the present case, Extensionality makes this possible whenever the specification determines exactly which objects belong to a class.
+
+\nbgpara{7}{Uniqueness and Existence}
+There is, however, an important limitation to what we have established.
+
+Extensionality guarantees that a given membership condition can determine \emph{at most one} class. But this does not mean that every membership condition actually determines a class. Our uniqueness argument began by supposing that two classes satisfied the same specification. It showed that these two classes could not be distinct. It did not establish that even one such class exists.
+
+We must therefore distinguish two questions. The first is a question of \emph{existence}: is there a class whose members are exactly the objects satisfying a particular condition? The second is a question of \emph{uniqueness}: if such a class exists, could there be more than one?
+
+The Axiom of Extensionality answers the second question. It tells us that whenever a class is completely specified by its members, that specification cannot pick out two different classes. But answering the first question will require further axioms.
+
+This distinction will prove fundamental when we eventually introduce notation for classes specified by membership conditions. Before we can legitimately speak of \emph{the} class satisfying a condition, we must know both that such a class exists and that it is unique.
+
+Extensionality has supplied the uniqueness. We must now investigate existence.
