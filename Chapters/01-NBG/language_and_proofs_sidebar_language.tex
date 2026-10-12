@@ -1,0 +1,171 @@
+\subsubsection*{Formal Language of NBG}
+
+\nbgpara{1}{Underlying Language}
+We formulate NBG in a one-sorted first-order language with identity.
+
+\nbgpara{2}{Variables}
+The primitive variable symbols of the language are
+\[
+v_0,v_1,v_2,\ldots,
+\]
+indexed metalinguistically by the natural numbers. Thus, the language has denumerably infinitely many primitive variable symbols. Because the language contains neither constants nor function symbols, variables would be its only terms. We therefore dispense with a separate syntactic category of terms.
+\nbgpara{3}{Display Names for Variables}
+For readability, we shall normally display primitive variables using the customary letters
+\[
+x,y,z,a,b,c,\ldots
+\qquad\text{and}\qquad
+A,B,C,D,E,\ldots,
+\]
+adding subscripts whenever further variables are required. These customary letters are not additional variable symbols of the language. Rather, they are context-dependent typographical representatives of variables from the primitive stock
+\[
+v_0,v_1,v_2,\ldots.
+\]
+
+Within any formula, derivation, or continuous argument, each customary letter uniformly represents a particular primitive variable symbol, and distinct customary letters represent distinct primitive variable symbols. Thus, a displayed formula such as
+\[
+a\in A\to a\in B
+\]
+may, for example, represent the primitive formula
+\[
+v_{17}\in v_3\to v_{17}\in v_{26}.
+\]
+The choice of primitive variables represented by the customary letters may change between independent contexts. This display convention is entirely eliminable: every expression written using customary variable letters can be replaced uniformly by an expression using only variables from the primitive stock. 
+
+\nbgpara{4}{Metavariables}
+Throughout this text, we use
+\[
+\xi,\eta,\zeta,\ldots
+\]
+as metavariables ranging over primitive variable symbols of the language. Distinct metavariables are not assumed to represent distinct variables unless this is explicitly stated.
+
+We use
+\[
+\varphi,\psi,\chi,\ldots
+\]
+as metavariables ranging over formulas of the language.
+
+\nbgpara{5}{Logical Symbols}
+The logical symbols are the identity symbol \(=\), the falsity symbol \(\bot\), the connectives
+\[
+\neg,\qquad
+\land,\qquad
+\lor,\qquad
+\to,\qquad
+\leftrightarrow,
+\]
+and the quantifiers
+\[
+\forall,\qquad
+\exists.
+\]
+The symbols \(\lparen\) and \(\rparen\) are used as punctuation.
+
+The logical vocabulary is deliberately not chosen for functional minimality. Although some of the connectives and one of the quantifiers could be defined in terms of the others, we take the familiar connectives and both quantifiers as primitive so that their respective inferential roles can be stated and studied directly. The non-logical vocabulary, by contrast, is chosen for maximal economy.
+
+\nbgpara{6}{Non-Logical Symbol}
+The sole non-logical primitive symbol is \(\in\), which is a binary relation symbol.
+
+\nbgpara{7}{Atomic Formulas}
+If \(\xi\) and \(\eta\) are variables, then
+\[
+\xi=\eta
+\quad \text{ and } \quad
+\xi\in\eta
+\]
+are atomic formulas.
+
+An atomic formula of the form \(\xi\in\eta\) is read as ``\(\xi\) is a member of \(\eta\).''
+
+\nbgpara{8}{Formation Rules}
+The formulas of the language are generated recursively by the following clauses:
+
+\begin{enumerate}
+    \item Every atomic formula is a formula.
+
+    \item \(\bot\) is a formula.
+
+    \item If \(\varphi\) is a formula, then $\neg\varphi$ is a formula.
+
+    \item If \(\varphi\) and \(\psi\) are formulas, then
+    \[
+    (\varphi\land\psi),\qquad
+    (\varphi\lor\psi),\qquad
+    (\varphi\to\psi),\qquad
+    (\varphi\leftrightarrow\psi)
+    \]
+    are formulas.
+
+    \item If \(\varphi\) is a formula and \(\xi\) is a variable, then
+    \[
+    \forall\xi\,\varphi
+    \qquad\text{and}\qquad
+    \exists\xi\,\varphi
+    \]
+    are formulas.
+    \item Nothing else is a formula.
+\end{enumerate}
+
+\nbgpara{9}{Parenthesis Conventions}
+Outermost parentheses may be omitted. Quantifiers and \(\neg\) bind more strongly than the binary connectives, while \(\land\) and \(\lor\) bind more strongly than \(\to\) and \(\leftrightarrow\). Connectives of equal binding strength have no precedence over one another.
+
+Repeated conjunctions and disjunctions associate to the left. Thus,
+\[
+\varphi\land\psi\land\chi
+\]
+abbreviates
+\[
+(\varphi\land\psi)\land\chi,
+\]
+and analogously for \(\lor\). No associativity convention is adopted for \(\to\) or \(\leftrightarrow\).
+
+The scope of a quantifier is the shortest formula immediately following it. Parentheses may be suppressed whenever these conventions determine a unique reading.
+
+\nbgpara{10}{Free and Bound Variables}
+An occurrence of a variable $\xi$ is bound if it lies within the scope of at least one quantifier $\forall \xi$ or $\exists \xi$. Otherwise, it is free. If an occurrence of \(\xi\) lies within the scopes of several quantifiers binding \(\xi\), it is governed by the innermost such quantifier.
+
+A variable occurs free in a formula if at least one of its occurrences in that formula is free. A single variable may have both free and bound occurrences in the same formula.
+
+\nbgpara{11}{Substitution}
+Let \(\varphi\) be a formula, and let \(\xi\) and \(\eta\) be variables. We say that \(\eta\) is free for \(\xi\) in \(\varphi\) iff no free occurrence of \(\xi\) in \(\varphi\) lies within the scope of a quantifier binding \(\eta\).
+
+If \(\eta\) is free for \(\xi\) in \(\varphi\), then
+\[
+\varphi[\eta/\xi]
+\]
+denotes the formula obtained by replacing every free occurrence of \(\xi\) in \(\varphi\) by \(\eta\). Bound occurrences of \(\xi\) are not replaced.
+
+\nbgpara{12}{Alphabetic Variants}
+Let \(Q\) be either \(\forall\) or \(\exists\). Suppose that \(\eta\) is distinct from \(\xi\) and does not occur in \(\varphi\). Then
+\[
+Q\xi\,\varphi
+\]
+and
+\[
+Q\eta\,\varphi[\eta/\xi]
+\]
+
+are called immediate alphabetic variants.
+
+The substitution in the second formula replaces precisely those occurrences of \(\xi\) in \(\varphi\) that are bound by the displayed outer quantifier in the complete formula \(Q\xi\,\varphi\). Any occurrence of \(\xi\) already bound by a quantifier within \(\varphi\) is not replaced. A formula obtained from another by one or more successive renamings of this kind is called an alphabetic variant of that formula.
+
+\nbgpara{13}{Intended Interpretation}
+Our investigation of NBG will be syntactic: we shall study formulas, derivations, and the relations of derivability that hold between them. Nevertheless, the intended interpretation may serve as an informal guide to the formalism.
+
+Under the intended interpretation of NBG, the variables range over classes. Since the language is one-sorted, every variable ranges over the same domain. The distinction between sets and proper classes is therefore not built into the variable symbols or the quantifiers, but will instead be expressed within the language.
+
+Distinct variable symbols need not be understood as representing distinct classes. Thus, although \(v_0\) and \(v_{15}\) are distinct variable symbols, their metalinguistic distinctness does not by itself license the object-language formula
+\[
+\neg(v_0= v_{15}).
+\]
+Intuitively, identity and non-identity are relations between the objects represented by variables, not relations between the variable symbols themselves.
+
+\nbgpara{14}{Typographical Convention}
+We shall generally use lowercase variables when emphasizing an object's role as a member and capital variables when emphasizing its role as a class whose members are under consideration. Thus, in
+\[
+a\in A,
+\]
+the notation emphasizes the role of \(a\) as a member and the role of \(A\) as a class whose members are under consideration.
+
+This convention has no formal significance. Lowercase and capital variables are variables of exactly the same kind, range over the same domain, and may occur in the same syntactic positions. In particular, lowercase variables do not range only over sets, and capital variables do not range only over proper classes. 
+
+

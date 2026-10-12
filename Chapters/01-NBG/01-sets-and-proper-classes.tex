@@ -1,7 +1,10 @@
-
+\begin{proseSpacing}[1cm]
 \subsection{Sets and Proper Classes}
 
-§1 \quad The major feature distinguishing NBG set theory from ZFC is that its ontology is divided into two disjoint groups: some classes are \textit{proper classes}, while others are sets. Whereas ZFC quantifies over sets only, NBG allows us to speak of classes more generally. In our one-sorted formulation, all variables range over classes, including sets. The distinction between sets and proper classes is therefore not built into the language, but will instead be expressed within it.
+§1 \quad The major feature distinguishing NBG set theory from ZFC is that it recognizes not only sets, but also \textit{proper classes}. We might therefore expect our language to distinguish between these two kinds of objects, perhaps by employing different kinds of variables for sets and proper classes. However, this is not how we shall proceed.
+
+Instead, we treat all objects in our theory as classes, and all our variables range over classes without restriction. In this sense, our language is \textit{one-sorted}: it has only one kind of variable, ranging over one domain of objects. Sets and proper classes are thus not distinguished by the variables we use to represent them, but by a property that some classes have and others lack. As we shall see, this property can be expressed entirely in terms of our primitive relation of membership.
+
 
 §2 \quad In a slogan, proper classes are ``too large" to be sets. This slogan is suggestive, but should not yet be taken literally: we have not introduced any notion of size. Instead, the distinction is made entirely in terms of membership. A set is a class that can itself be a member of some class, while a proper class cannot be a member of any class whatsoever.
 
@@ -105,3 +108,5 @@ Let $A$ and $B$ be arbitrary classes, and suppose that $A$ is a proper class. As
     \UnaryInfC{$\forall A\forall B(\PC(A)\to A\notin B)$}
 \end{prooftree}
 \end{formalderivation}
+
+\end{proseSpacing}

@@ -1,0 +1,146 @@
+\subsubsection*{Quantification, Identity, and Display Conventions}
+
+\nbgpara{12}{Universal Quantification}
+
+\nbgparar{$\bm{\forall}$-I} \quad Universal quantification is governed by the following introduction rule: \vspace{0.3cm}
+
+\begin{prooftree}
+    \AxiomC{\(\varphi[\eta/\xi]\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall\xi\,\varphi\)}
+\end{prooftree} \vspace{0.3cm}
+
+The variable $\eta$ is called the eigenvariable of the application. Intuitively, it is treated as arbitrary: no undischarged assumption on which the premise depends may contain $\eta$ free.
+
+This is made precise by the following side conditions:
+
+\begin{enumerate}
+    \item \(\eta\) is free for \(\xi\) in \(\varphi\);
+
+    \item \(\eta\) does not occur free in \(\varphi\); and
+
+    \item \(\eta\) does not occur free in any undischarged assumption on which the premise occurrence \(\varphi[\eta/\xi]\) depends.
+\end{enumerate}
+
+\nbgparar{$\bm{\forall}$-E} \quad Universal quantification is governed by the following elimination rule: \vspace{0.3cm}
+
+\begin{prooftree}
+    \AxiomC{\(\forall\xi\,\varphi\)}
+    \RightLabel{\(\forall\)-E}
+    \UnaryInfC{\(\varphi[\eta/\xi]\)}
+\end{prooftree} \vspace{0.3cm}
+
+The rule is permitted only if \(\eta\) is free for \(\xi\) in \(\varphi\).
+
+\vspace{0.5cm}
+
+\nbgpara{13}{Existential Quantification}
+
+\nbgparar{$\bm{\exists}$-I} \quad Existential quantification is governed by the following introduction rule: \vspace{0.3cm}
+
+\begin{prooftree}
+    \AxiomC{\(\varphi[\eta/\xi]\)}
+    \RightLabel{\(\exists\)-I}
+    \UnaryInfC{\(\exists\xi\,\varphi\)}
+\end{prooftree} \vspace{0.3cm}
+
+The rule is permitted only if \(\eta\) is free for \(\xi\) in \(\varphi\).
+
+\vspace{0.3cm}
+
+\nbgparar{$\bm{\exists}$-E} \quad Existential quantification is governed by the following elimination rule:
+
+\begin{prooftree}
+    \AxiomC{\(\exists\xi\,\varphi\)}
+
+    \AxiomC{}
+    \RightLabel{\(n\)}
+    \UnaryInfC{\(\varphi[\eta/\xi]\)}
+    \noLine
+    \UnaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(\psi\)}
+
+    \RightLabel{\(\exists\)-E, \(n\)}
+    \BinaryInfC{\(\psi\)}
+\end{prooftree} \vspace{0.3cm}
+
+The right-hand premise subderivation ending with the displayed occurrence of $\psi$ is called the minor premise subderivation. It contains the assumption occurrences $\varphi[\eta/\xi]$ marked with $n$, which are discharged by the application. The application of \(\exists\)-E discharges the assumption occurrences marked with \(n\) only within this subderivation.
+
+The variable \(\eta\) is called the eigenvariable of the application. Its role is to represent an arbitrary witness to the existential statement about which no other relevant assumption has been made.
+
+This is made precise by the following side conditions:
+
+\begin{enumerate}
+    \item \(\eta\) is free for \(\xi\) in \(\varphi\);
+
+    \item \(\eta\) does not occur free in \(\exists\xi\,\varphi\);
+
+    \item \(\eta\) does not occur free in \(\psi\); and
+
+    \item \(\eta\) does not occur free in any undischarged assumption on which the minor premise derivation of \(\psi\) depends, other than the assumption occurrences discharged by the application.
+\end{enumerate}
+
+\vspace{0.35cm}
+
+\nbgpara{14}{Identity}
+
+\nbgparar{$\bm{=}$-I} \quad Identity is governed by the following introduction rule:
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(=\)-I}
+    \UnaryInfC{\(\xi=\xi\)}
+\end{prooftree}
+
+\vspace{0.2cm}
+
+\nbgparar{$\bm{=}$-E} \quad Identity is governed by the following two elimination rules: \vspace{0.3cm}
+
+\begin{center}
+\begin{minipage}{0.5\textwidth}
+\centering
+\begin{prooftree}
+    \AxiomC{\(\xi=\eta\)}
+    \AxiomC{\(\varphi[\xi/\zeta]\)}
+    \RightLabel{\(=\)-E}
+    \BinaryInfC{\(\varphi[\eta/\zeta]\)}
+\end{prooftree}
+\end{minipage}
+\hfill
+\begin{minipage}{0.46\textwidth}
+\centering
+\begin{prooftree}
+    \AxiomC{\(\xi=\eta\)}
+    \AxiomC{\(\varphi[\eta/\zeta]\)}
+    \RightLabel{\(=\)-E}
+    \BinaryInfC{\(\varphi[\xi/\zeta]\)}
+\end{prooftree}
+\end{minipage}
+\end{center} \vspace{0.3cm}
+
+Each rule is permitted only if both \(\xi\) and \(\eta\) are free for \(\zeta\) in \(\varphi\).
+
+
+\nbgpara{15}{Compressed Derivation Displays}
+In later derivations, we shall occasionally suppress a finite sequence of routine applications of the same inference rule. If \(R\) is an inference rule, a displayed application labelled
+
+$$
+R^{*}
+$$
+
+indicates that the displayed premise occurrences and conclusion are connected by a finite nonempty derivation segment whose inference applications are all applications of \(R\). Intermediate formula occurrences within that segment are omitted from the display.
+
+Thus, for example, a step of the form
+
+\begin{prooftree}
+    \AxiomC{\(\varphi\)}
+    \RightLabel{\(\forall\)-I\(^{*}\)}
+    \UnaryInfC{\(\forall\xi_1\cdots\forall\xi_k\,\varphi\)}
+\end{prooftree}
+
+abbreviates the corresponding succession of applications of \(\forall\)-I, with the quantifiers introduced one at a time in the order required to obtain the displayed conclusion.
+
+Similarly, a displayed application of \(\land\)-I\(^{*}\), \(\land\)-E\(^{*}\), or another rule may abbreviate the corresponding finite derivation segment.
+
+This convention concerns only the display of derivations and introduces no new inference rules. Every suppressed application must be a legitimate application of the ordinary rule and must separately satisfy all side conditions governing that rule.

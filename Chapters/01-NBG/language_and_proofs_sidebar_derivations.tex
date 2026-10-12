@@ -1,0 +1,90 @@
+\subsubsection*{Logical Inference Rules: Derivations and Dependency}
+
+\nbgpara{1}{Derivations}
+A derivation is a finite rooted tree of formula occurrences constructed in accordance with the inference rules stated below. Its lowermost formula occurrence is its conclusion. Each uppermost formula occurrence is either an assumption or the conclusion of a rule with no premises.
+
+Since derivations are trees of formula occurrences, distinct nodes may contain the same formula while occupying different positions in the derivation and depending on different assumptions.
+
+\nbgpara{2}{Assumptions and Dependency}
+An assumption occurrence may be marked with an assumption label. The assumption labels are natural numbers. We use \(n,m,\ldots\) as metavariables ranging over assumption labels. Thus, if \(n\) is an assumption label, then \(n+1\) is also an assumption label. An assumption occurrence marked with the label \(n\) is written as follows:
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(n\)}
+    \UnaryInfC{\(\varphi\)}
+\end{prooftree}
+
+Assumption labels are metalinguistic bookkeeping marks. They are not symbols of the language of NBG and are not parts of the formulas to which they are attached.
+
+Within a derivation, each assumption label identifies a single discharge class. All assumption occurrences carrying the same label are occurrences of the same formula, and a label is associated with at most one application of a discharge rule. If a label is associated with such an application, every occurrence carrying that label lies within the premise subderivation designated by the rule. The same labels may be reused in separate derivations.
+
+When an application of a discharge rule carries the label \(n\), it discharges every still-undischarged assumption occurrence marked with \(n\) in the premise subderivation designated by that rule. A single application may therefore discharge several occurrences of the same assumption.
+
+For \(\to\)-I, \(\neg\)-I, and CR, the designated premise subderivation is the sole premise subderivation of the rule. In an application of \(\lor\)-E, each label applies only to its corresponding minor premise subderivation. In an application of \(\exists\)-E, the label applies only to the minor premise subderivation beginning with the assumed instance of the existential formula.
+
+The dependency of formula occurrences on assumptions is defined recursively. For each formula occurrence \(\theta\) in a derivation, let \(\Dep(\theta)\) be its dependency set.
+
+\begin{enumerate}
+    \item If \(\theta\) is an assumption occurrence, then
+    \[
+    \Dep(\theta)=\{\theta\}.
+    \]
+
+    \item If \(\theta\) is the conclusion of a rule with no premises, then
+    \[
+    \Dep(\theta)=\varnothing.
+    \]
+
+    \item Suppose that \(\theta\) is the conclusion of an application of a rule whose premise occurrences are
+    \[
+    \theta_1,\ldots,\theta_k.
+    \]
+    Let \(\Delta\) be the set of assumption occurrences discharged by that application. Then
+    \[
+    \Dep(\theta)
+    =
+    \bigl(
+    \Dep(\theta_1)\cup\cdots\cup\Dep(\theta_k)
+    \bigr)
+    \setminus\Delta.
+    \]
+\end{enumerate}
+
+A formula occurrence \(\theta\) depends on precisely the assumption occurrences belonging to \(\Dep(\theta)\). The undischarged assumptions of a derivation are the assumption occurrences belonging to the dependency set of its conclusion.
+
+\nbgpara{3}{Turnstile}
+Let \(\Gamma\) be a collection of formulas and let \(\varphi\) be a formula. We write
+\[
+\Gamma\vdash\varphi
+\]
+iff there exists a derivation of \(\varphi\) such that the formula occurring at every undischarged assumption occurrence is a member of \(\Gamma\). This is read as ``\(\varphi\) is derivable from \(\Gamma\).'' Thus, the symbol \(\vdash\) is a symbol of the metalanguage, not of the language of NBG.
+
+The definition does not require every member of \(\Gamma\) to occur as an undischarged assumption. Consequently, if
+\[
+\Gamma\vdash\varphi
+\qquad\text{and}\qquad
+\Gamma\subseteq\Delta,
+\]
+then
+\[
+\Delta\vdash\varphi.
+\]
+Weakening is therefore built into the definition of derivability.
+
+The collection \(\Gamma\) also does not record the multiplicity of assumption occurrences. Several undischarged occurrences of the same formula are represented by a single member of \(\Gamma\), although they remain distinct occurrences within the derivation itself.
+
+\nbgpara{4}{Proofs}
+A derivation with no undischarged assumptions is called a proof. Its conclusion is called a theorem of the deductive system in which the derivation is carried out.
+
+When the derivation has no undischarged assumptions, we write
+\[
+\vdash\varphi
+\]
+instead of
+\[
+\varnothing\vdash\varphi.
+\]
+Thus, \(\vdash\varphi\) means that there exists a proof of \(\varphi\), or equivalently that \(\varphi\) is a theorem of the deductive system.
+
+\vspace{0.5cm}
+
