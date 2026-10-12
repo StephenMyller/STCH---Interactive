@@ -588,3 +588,11 @@ main.bodycontainer section.textbody .amsthmproof,
 main.bodycontainer section.textbody .amsthmproof p {
   line-height: 1.6;
 }
+
+
+/* Spacing before numbered and named NBG paragraphs.
+   Does not affect ordinary paragraphs within them. */
+
+main.bodycontainer section.textbody p:has(> .nbg-section-start) {
+    margin-top: var(--nbg-section-gap, 1cm);
+}
