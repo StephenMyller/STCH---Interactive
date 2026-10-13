@@ -148,8 +148,9 @@ Hence they have exactly the same members, and Extensionality gives \(A=B\).
 \end{proof}
 
 \begin{formalderivation}
+\begin{derivationnote}
 Choose \(a\) fresh for the two specifications. We first derive:
-
+\end{derivationnote}
 \begin{prooftree}
     \AxiomC{\(\forall x(x\in A\leftrightarrow\varphi(x))\)}
     \RightLabel{\(\forall\)-E}
@@ -171,9 +172,9 @@ Choose \(a\) fresh for the two specifications. We first derive:
     \RightLabel{\(\to\)-I, \(1\)}
     \UnaryInfC{\(a\in A\to a\in B\)}
 \end{prooftree}
-
+\begin{derivationnote}
 Interchanging \(A\) and \(B\) gives the converse implication. Combining both directions, we obtain:
-
+\end{derivationnote}
 \begin{prooftree}
     \AxiomC{\(\vdots\)}
     \noLine
