@@ -373,27 +373,27 @@ Let \(A\) and \(B\) be arbitrary classes, and suppose that \(A=B\). Since identi
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{\(A=B\)}
-
+%
     \AxiomC{}
     \RightLabel{\(1\)}
     \UnaryInfC{\(a\in A\)}
-
+%
     \RightLabel{\(=\)-E}
     \BinaryInfC{\(a\in B\)}
     \RightLabel{\(\subseteq\)-I, \(1\)}
     \UnaryInfC{\(A\subseteq B\)}
-
+%
     \AxiomC{\(A=B\)}
-
+%
     \AxiomC{}
     \RightLabel{\(2\)}
     \UnaryInfC{\(a\in B\)}
-
+%
     \RightLabel{\(=\)-E}
     \BinaryInfC{\(a\in A\)}
     \RightLabel{\(\subseteq\)-I, \(2\)}
     \UnaryInfC{\(B\subseteq A\)}
-
+%
     \RightLabel{\(\land\)-I}
     \BinaryInfC{\(A\subseteq B\land B\subseteq A\)}
 \end{prooftree}
