@@ -25,27 +25,28 @@ In Gentzen derivations, we use \(\mathrm{Ext}\) to abbreviate the inference lice
 \end{prooftree}
 
 \nbgpara{2}{}
-The name \emph{Extensionality} comes from the word \emph{extension}: the extension of a class consists of its members. An \emph{intensional} description, by contrast, concerns the property or condition by which those members are picked out.
+The axiom's contribution can be better appreciated by considering how it could be different. The name \emph{Extensionality} comes from the word \emph{extension}: the extension of a class consists of its members. An \emph{intensional} description, by contrast, concerns the property or condition by which those members are picked out.
 
 Consider the class of all letters appearing in the word \emph{silent} and the class of all letters appearing in \emph{listen}. The descriptions differ, but they pick out exactly the same letters. By Extensionality, they determine one and the same class. The way we describe or enumerate a class's members is therefore not part of its identity; only the members themselves matter.
 
-\nbgpara{3}{}
-Extensionality also completes the relationship between identity and subclasshood. The preceding section established one direction; we can now prove the converse.
 
-\begin{proposition}[Extensional Criterion for Equality]
-\label{prop:extensional-equality}
-For all classes \(A\) and \(B\),
+\nbgpara{3}{}
+The Axiom of Extensionality also establishes an important property of subclasshood. We have already shown that subclasshood is reflexive and transitive. We can now establish a third property, called \emph{antisymmetry}.
+
+\begin{proposition}[Antisymmetry of Subclasshood]
+\label{prop:subclasshood-antisymmetric}
+For all classes \(A\) and \(B\), if \(A\subseteq B\) and \(B\subseteq A\), then \(A=B\). In symbols:
 \[
-A=B
-\quad\text{iff}\quad
-A\subseteq B\text{ and }B\subseteq A.
+(A\subseteq B\land B\subseteq A)\to A=B.
 \]
 \end{proposition}
 
 \begin{proof}
-Let \(A\) and \(B\) be arbitrary classes. If \(A=B\), then \(A\subseteq B\) and \(B\subseteq A\) by Proposition~\ref{prop:identity-implies-mutual-subclasshood}.
-
-Conversely, suppose that \(A\subseteq B\) and \(B\subseteq A\). For any object \(x\), the first inclusion gives \(x\in A\to x\in B\), and the second gives \(x\in B\to x\in A\). Thus \(x\in A\leftrightarrow x\in B\) for every \(x\), so Extensionality yields \(A=B\).
+Let \(A\) and \(B\) be arbitrary classes, and suppose that \(A\subseteq B\) and \(B\subseteq A\). Let \(x\) be any object. Since \(A\subseteq B\), if \(x\in A\), then \(x\in B\). Conversely, since \(B\subseteq A\), if \(x\in B\), then \(x\in A\). Thus,
+\[
+x\in A\leftrightarrow x\in B.
+\]
+Since \(x\) was arbitrary, the two classes have exactly the same members. By the Axiom of Extensionality, \(A=B\).
 \end{proof}
 
 \begin{formalderivation}
@@ -81,26 +82,29 @@ Conversely, suppose that \(A\subseteq B\) and \(B\subseteq A\). For any object \
 \end{prooftree}
 \end{formalderivation}
 
-The converse implication is called \emph{antisymmetry} of subclasshood. Together with the reflexivity and transitivity established earlier, it shows that subclasshood is a \emph{partial order} on classes.
+Antisymmetry completes a familiar mathematical pattern. A relation is called a \emph{partial order} if it is reflexive, transitive, and antisymmetric. Reflexivity says that every object stands in the relation to itself; transitivity says that the relation can be passed along a chain; and antisymmetry says that two objects standing in the relation to one another must be identical.
+
+These three properties now hold for subclasshood. Thus, \(\subseteq\) is a partial order on classes.
+
+The word \emph{partial} reflects the fact that a partial order need not compare every pair of objects. Unlike a \emph{total order}, it does not require that, for any two classes \(A\) and \(B\), either \(A\subseteq B\) or \(B\subseteq A\).
 
 \nbgpara{4}{}
-This criterion gives us a fundamental proof strategy, called \emph{proof by double inclusion} or \emph{proof by mutual inclusion}: to establish \(A=B\), prove \(A\subseteq B\) and \(B\subseteq A\) separately. We record the strategy as a derived rule.
+We can now combine the preceding proposition with a result from the previous section to obtain a complete criterion for the identity of classes.
 
-\begin{derivedrule}[Mutual Inclusion]
-\label{rule:mutual-inclusion}
-From \(A\subseteq B\) and \(B\subseteq A\), we may infer \(A=B\).
-\end{derivedrule}
+\begin{proposition}[Extensional Criterion for Equality]
+\label{prop:extensional-equality}
+For all classes \(A\) and \(B\),
+\[
+A=B
+\quad\text{iff}\quad
+A\subseteq B\text{ and }B\subseteq A.
+\]
+\end{proposition}
 
-\begin{formalderivation}
-\begin{prooftree}
-    \AxiomC{\(A\subseteq B\)}
-    \AxiomC{\(B\subseteq A\)}
-    \RightLabel{\(\mathrm{MI}\)}
-    \BinaryInfC{\(A=B\)}
-\end{prooftree}
-\end{formalderivation}
+\begin{proof}
+By Proposition~\ref{prop:identity-implies-mutual-subclasshood}, if \(A=B\), then \(A\subseteq B\) and \(B\subseteq A\). Conversely, by Proposition~\ref{prop:subclasshood-antisymmetric}, if \(A\subseteq B\) and \(B\subseteq A\), then \(A=B\). Together, these two implications establish the biconditional.
+\end{proof}
 
-Unlike the derived subclass rules introduced earlier, Mutual Inclusion (\(\mathrm{MI}\)) depends on a non-logical axiom: Extensionality.
 
 \nbgpara{5}{Uniqueness by Extensionality}
 Suppose we specify a class by giving a condition \(\varphi(x)\) that characterizes exactly which objects belong to it. Could two different classes satisfy this same specification? If every member of either class must satisfy \(\varphi(x)\), and every object satisfying \(\varphi(x)\) must belong to both, then the two classes necessarily have the same members. Extensionality tells us they must be identical.
