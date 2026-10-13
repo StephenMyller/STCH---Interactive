@@ -105,8 +105,25 @@ A\subseteq B\text{ and }B\subseteq A.
 By Proposition~\ref{prop:identity-implies-mutual-subclasshood}, if \(A=B\), then \(A\subseteq B\) and \(B\subseteq A\). Conversely, by Proposition~\ref{prop:subclasshood-antisymmetric}, if \(A\subseteq B\) and \(B\subseteq A\), then \(A=B\). Together, these two implications establish the biconditional.
 \end{proof}
 
+\nbgpara{5}{}
+This criterion gives us a fundamental proof strategy, called \emph{proof by double inclusion} or \emph{proof by mutual inclusion}: to establish \(A=B\), prove \(A\subseteq B\) and \(B\subseteq A\) separately. We record the strategy as a derived rule.
 
-\nbgpara{5}{Uniqueness by Extensionality}
+\begin{derivedrule}[Mutual Inclusion]
+\label{rule:mutual-inclusion}
+\begin{prooftree}
+    \AxiomC{\(A\subseteq B\)}
+    \AxiomC{\(B\subseteq A\)}
+    \RightLabel{\(\mathrm{MI}\)}
+    \BinaryInfC{\(A=B\)}
+\end{prooftree}
+\end{derivedrule}
+
+
+
+Unlike the derived subclass rules introduced earlier, Mutual Inclusion (\(\mathrm{MI}\)) depends on a non-logical axiom: Extensionality.
+
+
+\nbgpara{6}{Uniqueness by Extensionality}
 Suppose we specify a class by giving a condition \(\varphi(x)\) that characterizes exactly which objects belong to it. Could two different classes satisfy this same specification? If every member of either class must satisfy \(\varphi(x)\), and every object satisfying \(\varphi(x)\) must belong to both, then the two classes necessarily have the same members. Extensionality tells us they must be identical.
 
 Importantly, this argument does not depend on what the condition \(\varphi(x)\) says. It gives us a general principle of uniqueness.
