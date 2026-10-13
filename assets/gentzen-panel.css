@@ -1189,3 +1189,22 @@ main.bodycontainer a.side-panel-link-active {
 main.bodycontainer .derivation-trigger:has(+ p) {
   margin-bottom: 1.5rem;
 }
+
+/* Explanatory prose inside Gentzen panels. */
+.gentzen-panel .formalderivation .derivationnote {
+    max-width: 38rem;
+    margin: 1rem auto;
+    padding: 0 0.75rem;
+}
+
+.gentzen-panel .formalderivation .derivationnote p {
+    display: block;
+    text-align: left !important;
+    line-height: 1.55;
+    hyphens: auto;
+    margin: 0 0 0.65rem;
+}
+
+.gentzen-panel .formalderivation .derivationnote p:last-child {
+    margin-bottom: 0;
+}
