@@ -1,5 +1,5 @@
 
-\subsection{Axiom Schema of Class Formation}
+\subsection{Axiom of Class Formation}
 
 \nbgpara{1}{}
 The Axiom of Extensionality established that a membership condition can determine at most one class. We now turn to the question of existence: under what circumstances can we be certain that a class with a given membership condition exists?
@@ -227,21 +227,23 @@ The same problem arises with
 \]
 which asserts the existence of a class other than \(A\) containing \(x\). Here, the unrestricted existential quantifier makes the condition non-predicative as written.
 
-\nbgpara{4.4}{} 
-There is one complication concerning defined notation. Although subclasshood is defined using an unrestricted quantifier (D\ref{def:subclass}), it can equivalently be expressed as
+
+\nbgpara{4.4}{}
+There is one complication concerning defined notation. Although subclasshood is defined using an unrestricted quantifier (Definition~\ref{def:subclass}), it can equivalently be expressed as
 \[
 A\subseteq B
 \quad\text{iff}\quad
 \forall_S x(x\in A\to x\in B),
 \]
-since only sets can belong to classes such as $A$ and $B$. Thus, subclasshood may occur in predicative conditions. More generally, defined notation is admissible whenever an equivalent predicative formulation has been justified. The Technical Appendix makes these restrictions precise and shows how such applications follow from the original axiom schema.
+since only sets can belong to classes such as $A$ and $B$. Thus, subclasshood may occur in predicative conditions. More generally, defined notation is admissible whenever an equivalent predicative formulation has been justified. The precise treatment of such expressions, including their relation to the original axiom schema, is given in \hyperref[sec:technical-class-formation]{Appendix~\ref*{sec:technical-class-formation}}.
+
 
 
 
 \nbgpara{5}{}
 We can now introduce our second set-theoretic axiom.
 
-\begin{axiom}[\textbf{\hspace{-0.12cm}Class Formation Schema}]
+\begin{axiom}[\textbf{\hspace{-0.12cm}Class Formation (Schema)}]
 \label{ax:class-formation}
 Let \(\varphi\) be a predicative membership condition. Let \(\xi\) and \(\eta\) be distinct variables, and suppose that \(\eta\) does not occur free in \(\varphi\). Then
 \[
@@ -251,9 +253,10 @@ Let \(\varphi\) be a predicative membership condition. Let \(\xi\) and \(\eta\) 
 \xi\in\eta
 \leftrightarrow
 \varphi
-\bigr)
+\bigr).
 \]
-is an axiom.
+
+
 \end{axiom}
 
 The meaning is straightforward: for every admissible predicative condition \(\varphi\), there exists a class whose members are precisely the sets satisfying \(\varphi\).
@@ -262,9 +265,13 @@ The meaning is straightforward: for every admissible predicative condition \(\va
 
 \nbgpara{5.2}{} The axiom therefore does not say that every predicative condition determines a \textit{set}. It says that the condition determines a \textit{class}, which may or may not itself be a set.
 
-\nbgpara{5.3}{} The word \textit{schema} deserves some explanation. Strictly speaking, Class Formation is not a single formula of our language. Rather, each admissible choice of \(\varphi\) determines a separate axiom. The displayed formulation is a pattern describing all these axioms at once.
 
-\nbgpara{5.4}{} In Gentzen derivations, an instance of Class Formation may be introduced without premises:
+\nbgpara{5.3}{}
+The word \textit{schema} deserves some explanation. Strictly speaking, Class Formation is not a single formula of our language. Rather, it describes a family of axioms, one for each condition admitted directly by the schema. Statements involving further predicative notation follow from these axioms as theorems. The precise distinction is explained in \hyperref[sec:technical-class-formation]{Appendix~\ref*{sec:technical-class-formation}}.
+
+\nbgpara{5.4}{}
+In Gentzen derivations, a direct instance of Class Formation may be introduced without premises:
+
 
 \begin{prooftree}
     \AxiomC{}
