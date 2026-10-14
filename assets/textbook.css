@@ -583,11 +583,15 @@ main.bodycontainer section.textbody a:active {
   color: inherit !important;
 }
 
-/* Give proof prose the same line spacing as ordinary prose. */
+
+/* Consistent line spacing in theorem-like environments. */
 main.bodycontainer section.textbody .amsthmproof,
-main.bodycontainer section.textbody .amsthmproof p {
+main.bodycontainer section.textbody .amsthmproof p,
+main.bodycontainer section.textbody [class*="amsthmbody"],
+main.bodycontainer section.textbody [class*="amsthmbody"] p {
   line-height: 1.6;
 }
+
 
 
 /* Spacing before numbered and named NBG paragraphs.
