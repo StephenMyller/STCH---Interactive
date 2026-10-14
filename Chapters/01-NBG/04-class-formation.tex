@@ -1,0 +1,305 @@
+
+\subsection{Axiom Schema of Class Formation}
+
+\nbgpara{1}{}
+The Axiom of Extensionality established that a membership condition can determine at most one class. We now turn to the question of existence: under what circumstances can we be certain that a class with a given membership condition exists?
+
+\nbgpara{2}{}
+Before introducing our next axiom, we need a small addition to our notation. Recall that our variables range over all classes, including both sets and proper classes. Consequently, the ordinary quantifiers \(\forall\) and \(\exists\) range over all classes as well. Frequently, however, we want to speak only about sets. For this purpose, we introduce \emph{restricted quantifiers}.
+
+\begin{definition}[Restricted Universal Quantification]
+\label{def:restricted-universal-quantification}
+Let \(\varphi\) be an extended formula and let \(\xi\) be a variable.
+\[
+\forall_S\xi\,\varphi \quad
+\defequiv \quad
+\forall\xi\bigl(\Set(\xi)\to\varphi\bigr).
+\]
+\end{definition}
+
+The expression \(\forall_S\xi\,\varphi\) means that every set satisfies \(\varphi\). Its definition says that, for every class \(\xi\), if \(\xi\) is a set, then \(\varphi\) holds. No requirement is imposed on proper classes.
+
+Similarly, we introduce a restricted existential quantifier.
+
+\begin{definition}[Restricted Existential Quantification]
+\label{def:restricted-existential-quantification}
+Let \(\varphi\) be an extended formula and let \(\xi\) be a variable.
+\[
+\exists_S\xi\,\varphi
+\quad \defequiv \quad
+\exists\xi\bigl(\Set(\xi)\land\varphi\bigr).
+\]
+\end{definition}
+
+Thus, \(\exists_S\xi\,\varphi\) means that at least one set satisfies \(\varphi\). Unlike its universal counterpart, the definition uses a conjunction: there must exist an object that is both a set and satisfies the given condition.
+
+Neither restricted quantifier introduces anything fundamentally new into our language. Both are abbreviations constructed from our existing logical symbols and the previously introduced notion of sethood. We are still working in a one-sorted language whose variables range over all classes.
+
+
+\nbgpara{3}{Rules for Restricted Quantification}
+The definitions of restricted quantification license four derived rules, corresponding to the introduction and elimination rules for ordinary quantification.
+
+\begin{derivedrule}[Restricted Universal Introduction]
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(n\)}
+    \UnaryInfC{\(\Set(\zeta)\)}
+    \noLine
+    \UnaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\forall_S\)-I, \(n\)}
+    \UnaryInfC{\(\forall_S\xi\,\varphi\)}
+\end{prooftree}
+\end{derivedrule}
+
+The rule discharges assumption \(n\). The variable \(\zeta\) must be free for \(\xi\) in \(\varphi\), must not occur free in \(\varphi\), and must not occur free in any remaining undischarged assumption on which the premise depends.
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(n\)}
+    \UnaryInfC{\(\Set(\zeta)\)}
+    \noLine
+    \UnaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\to\)-I, \(n\)}
+    \UnaryInfC{\(\Set(\zeta)\to\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall\xi(\Set(\xi)\to\varphi)\)}
+    \RightLabel{Def.}
+    \dashedLine
+    \UnaryInfC{\(\forall_S\xi\,\varphi\)}
+\end{prooftree}
+\end{formalderivation}
+
+\begin{derivedrule}[Restricted Universal Elimination]
+\begin{prooftree}
+    \AxiomC{\(\forall_S\xi\,\varphi\)}
+    \AxiomC{\(\Set(\zeta)\)}
+    \RightLabel{\(\forall_S\)-E}
+    \BinaryInfC{\(\varphi[\zeta/\xi]\)}
+\end{prooftree}
+\end{derivedrule}
+
+The rule requires that \(\zeta\) be free for \(\xi\) in \(\varphi\).
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{\(\forall_S\xi\,\varphi\)}
+    \RightLabel{Def.}
+    \dashedLine
+    \UnaryInfC{\(\forall\xi(\Set(\xi)\to\varphi)\)}
+    \RightLabel{\(\forall\)-E}
+    \UnaryInfC{\(\Set(\zeta)\to\varphi[\zeta/\xi]\)}
+
+    \AxiomC{\(\Set(\zeta)\)}
+
+    \RightLabel{\(\to\)-E}
+    \BinaryInfC{\(\varphi[\zeta/\xi]\)}
+\end{prooftree}
+\end{formalderivation}
+
+\begin{derivedrule}[Restricted Existential Introduction]
+\begin{prooftree}
+    \AxiomC{\(\Set(\zeta)\)}
+    \AxiomC{\(\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\exists_S\)-I}
+    \BinaryInfC{\(\exists_S\xi\,\varphi\)}
+\end{prooftree}
+\end{derivedrule}
+
+The rule requires that \(\zeta\) be free for \(\xi\) in \(\varphi\).
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{\(\Set(\zeta)\)}
+    \AxiomC{\(\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\land\)-I}
+    \BinaryInfC{\(\Set(\zeta)\land\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\exists\)-I}
+    \UnaryInfC{\(\exists\xi(\Set(\xi)\land\varphi)\)}
+    \RightLabel{Def.}
+    \dashedLine
+    \UnaryInfC{\(\exists_S\xi\,\varphi\)}
+\end{prooftree}
+\end{formalderivation}
+
+\begin{derivedrule}[Restricted Existential Elimination]
+\begin{prooftree}
+    \AxiomC{\(\exists_S\xi\,\varphi\)}
+
+    \AxiomC{}
+    \RightLabel{\(n\)}
+    \UnaryInfC{\(\Set(\zeta)\)}
+
+    \AxiomC{}
+    \RightLabel{\(m\)}
+    \UnaryInfC{\(\varphi[\zeta/\xi]\)}
+
+    \noLine
+    \BinaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(\psi\)}
+
+    \RightLabel{\(\exists_S\)-E, \(n,m\)}
+    \BinaryInfC{\(\psi\)}
+\end{prooftree}
+\end{derivedrule}
+
+The rule discharges assumptions \(n\) and \(m\) within the minor premise subderivation. The variable \(\zeta\) must be free for \(\xi\) in \(\varphi\), must not occur free in \(\varphi\) or \(\psi\), and must not occur free in any remaining undischarged assumption on which either premise depends.
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{\(\exists_S\xi\,\varphi\)}
+    \RightLabel{Def.}
+    \dashedLine
+    \UnaryInfC{\(\exists\xi(\Set(\xi)\land\varphi)\)}
+
+    \AxiomC{}
+    \RightLabel{\(k\)}
+    \UnaryInfC{\(\Set(\zeta)\land\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(\Set(\zeta)\)}
+
+    \AxiomC{}
+    \RightLabel{\(k\)}
+    \UnaryInfC{\(\Set(\zeta)\land\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(\varphi[\zeta/\xi]\)}
+
+    \noLine
+    \BinaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(\psi\)}
+
+    \RightLabel{\(\exists\)-E, \(k\)}
+    \BinaryInfC{\(\psi\)}
+\end{prooftree}
+\end{formalderivation}
+
+All four rules are justified by the definitions of the restricted quantifiers and the ordinary rules of natural deduction. They therefore introduce no additional logical principles.
+
+
+
+\nbgpara{4}{}
+The Axiom of Class Formation will guarantee the existence of classes $\eta$ specified by membership conditions $\varphi$, i.e., by formulas of the form
+\[\forall_S \xi(\xi \in \eta \leftrightarrow \varphi). \]
+Not every condition $\varphi$, however, is admissible. The crucial restriction is called \emph{predicativity}: a defining condition $\varphi$ may quantify over sets, but it may not quantify unrestrictedly over classes.
+
+
+
+\begin{definition}[Predicative Membership Conditions]
+A membership condition $\varphi$ is \textit{predicative} if it can be expressed without quantifying over classes.
+\end{definition}
+
+
+
+
+\nbgpara{4.1}{} This does not prevent $\varphi$ from \textit{referring} to particular classes. Consider, for example,
+\[
+\varphi = x\notin A.
+\]
+Here, \(x\) is the object whose possible membership in the class to be formed is being described, while \(A\) is a parameter: a given class that we keep fixed as \(x\) varies. Different choices of \(A\) may give rise to different membership conditions. The condition is predicative because it is simply the negation of an atomic formula. In particular, it does not quantify over classes.
+
+\nbgpara{4.2}{} More elaborate conditions are also permitted. For example,
+\[
+\varphi = \forall_S y\,(y\in x\to y\in A)
+\]
+states that every set belonging to \(x\) also belongs to \(A\). This condition is predicative because its only quantifier ranges over sets. The fact that \(x\) and \(A\) may themselves be proper classes is irrelevant.
+
+Similarly,
+\[
+\varphi = \exists_S y\,(x\in y\land y\in A)
+\]
+states that \(x\) belongs to some set that is itself a member of \(A\). Again, the condition is predicative: it uses a restricted quantifier and combines atomic formulas by a logical connective.
+
+\nbgpara{4.3}{} By contrast, consider
+\[
+\forall B\,(x\in B\to B=A).
+\]
+This condition says that every class containing \(x\) must be identical to \(A\). It is not core predicative, because \(\forall B\) ranges over all classes, including proper classes.
+
+The same problem arises with
+\[
+\exists B\,(x\in B\land B\neq A),
+\]
+which asserts the existence of a class other than \(A\) containing \(x\). Here, the unrestricted existential quantifier makes the condition non-predicative as written.
+
+\nbgpara{4.4}{} 
+There is one complication concerning defined notation. Although subclasshood is defined using an unrestricted quantifier (D\ref{def:subclass}), it can equivalently be expressed as
+\[
+A\subseteq B
+\quad\text{iff}\quad
+\forall_S x(x\in A\to x\in B),
+\]
+since only sets can belong to classes such as $A$ and $B$. Thus, subclasshood may occur in predicative conditions. More generally, defined notation is admissible whenever an equivalent predicative formulation has been justified. The Technical Appendix makes these restrictions precise and shows how such applications follow from the original axiom schema.
+
+
+
+\nbgpara{5}{Class Formation}
+We can now introduce our second set-theoretic axiom.
+
+\begin{axiom}[\textbf{\hspace{-0.12cm}Class Formation Schema}]
+\label{ax:class-formation}
+Let \(\varphi\) be a predicative membership condition. Let \(\xi\) and \(\eta\) be distinct variables, and suppose that \(\eta\) does not occur free in \(\varphi\). Then
+\[
+\exists\eta\,
+\forall_S\xi
+\bigl(
+\xi\in\eta
+\leftrightarrow
+\varphi
+\bigr)
+\]
+is an axiom.
+\end{axiom}
+
+The meaning is straightforward: for every admissible predicative condition \(\varphi\), there exists a class whose members are precisely the sets satisfying \(\varphi\).
+
+\nbgpara{5.1}{} Notice especially the difference between the two quantifiers in the axiom. The existential quantifier \(\exists\eta\) is unrestricted: it asserts that a \emph{class} exists. The universal quantifier \(\forall_S\xi\), on the other hand, ranges only over sets, since these are the only objects that can be members of classes.
+
+\nbgpara{5.2}{} The axiom therefore does not say that every predicative condition determines a \textit{set}. It says that the condition determines a \textit{class}, which may or may not itself be a set.
+
+\nbgpara{5.3}{} The word \textit{schema} deserves some explanation. Strictly speaking, Class Formation is not a single formula of our language. Rather, each admissible choice of \(\varphi\) determines a separate axiom. The displayed formulation is a pattern describing all these axioms at once.
+
+\nbgpara{5.4}{} In Gentzen derivations, an instance of Class Formation may be introduced without premises:
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(\mathrm{A}_2\)}
+    \UnaryInfC{
+        \(\exists\eta\,
+        \forall_S\xi
+        \bigl(
+        \xi\in\eta
+        \leftrightarrow
+        \varphi
+        \bigr)\)
+    }
+\end{prooftree}
+
+
+\nbgpara{6}{Existence and Uniqueness}
+We have already established that a membership condition can determine at most one class. Class Formation now supplies the missing existence claim for predicative conditions. Together, these results yield the following proposition.
+
+\begin{proposition}[Existence and Uniqueness of Predicatively Specified Classes]
+\label{prop:existence-uniqueness-class-formation}
+Let \(\varphi(x)\) be a predicative condition on \(x\). Then there exists exactly one class \(A\) satisfying
+\[
+\forall_S x
+\bigl(
+x\in A\leftrightarrow\varphi(x)
+\bigr).
+\]
+\end{proposition}
+
+
+\begin{proof}
+Existence follows from the Axiom of Class Formation. Since only sets can belong to classes, the specification determines membership completely. Uniqueness therefore follows from Proposition~\ref{prop:uniqueness-class-specification}.
+\end{proof}
+
+
+Notice that predicativity is required for existence, but not for uniqueness. Extensionality guarantees that \textit{any} membership specification determines at most one class, whether or not Class Formation guarantees its existence.
+
