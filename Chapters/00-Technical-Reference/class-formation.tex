@@ -1,0 +1,317 @@
+
+\subsection{Class Formation: Syntax and Admissibility}
+\label{sec:technical-class-formation}
+
+The main text introduces predicative membership conditions and permits certain defined expressions to occur within them. We now specify which formulas are admitted directly by the Class Formation Schema and how further formulations are obtained from its axiom instances.
+
+\nbgpara{1}{Core Predicative Formulas}
+
+\begin{definition}[Core Predicative Formulas]
+\label{def:core-predicative-formulas}
+The \emph{core predicative formulas} are the smallest collection of extended formulas containing every atomic formula of the primitive language, every formula of the form \(\Set(\xi)\), and \(\bot\), and closed under the logical connectives
+\[
+\neg,\qquad \land,\qquad \lor,\qquad \to,\qquad \leftrightarrow
+\]
+and the restricted quantifiers \(\forall_S\) and \(\exists_S\).
+\end{definition}
+
+Thus, unrestricted quantifiers are not among the formation operations for core predicative formulas. The inclusion of \(\Set(\xi)\) as a basic case is important: its primitive expansion,
+\[
+\exists\zeta(\xi\in\zeta),
+\]
+contains an unrestricted quantifier, but this does not affect its status within the extended syntax. The same applies to the primitive expansions of the restricted quantifiers. Core predicativity is determined before these designated expressions are expanded.
+
+\nbgpara{2}{The Class Formation Schema}
+
+The precise range of the Class Formation Schema can now be stated. Let \(\varphi\) be a core predicative formula, let \(\xi\) and \(\eta\) be distinct variables, and suppose that \(\eta\) does not occur free in \(\varphi\). Then every primitive expansion of
+\[
+\exists\eta\,\forall_S\xi
+\bigl(
+\xi\in\eta\leftrightarrow\varphi
+\bigr)
+\]
+is an axiom.
+
+Each permissible choice of \(\varphi\) therefore determines an axiom instance. The restriction to core predicative formulas applies to \(\varphi\), not to the axiom instance as a whole. In particular, the outer existential quantifier is unrestricted: the axiom asserts the existence of a class, not necessarily a set.
+
+Any additional variables occurring free in \(\varphi\) serve as parameters. Their values may be arbitrary classes, including proper classes.
+
+\nbgpara{3}{Restricted and Unrestricted Membership Specifications}
+
+The restriction to sets in a membership specification can also be expressed within an unrestricted universal quantifier, provided that sethood is included in the defining condition.
+
+\begin{metatheorem}[Restricted and Unrestricted Membership Specifications]
+\label{meta:restricted-unrestricted-class-formulation}
+Let \(\varphi\) be an extended formula, and let \(\xi\) and \(\eta\) be distinct variables such that \(\eta\) does not occur free in \(\varphi\). Then
+\[
+\vdash
+\forall_S\xi
+\bigl(
+\xi\in\eta\leftrightarrow\varphi
+\bigr)
+\leftrightarrow
+\forall\xi
+\bigl(
+\xi\in\eta
+\leftrightarrow
+(\Set(\xi)\land\varphi)
+\bigr).
+\]
+\end{metatheorem}
+
+\begin{proof}
+Choose a variable \(\zeta\) not occurring in \(\varphi\) and distinct from \(\xi\) and \(\eta\).
+
+Suppose first that
+\[
+\forall_S\xi
+\bigl(
+\xi\in\eta\leftrightarrow\varphi
+\bigr).
+\]
+If \(\zeta\in\eta\), then \(\Set(\zeta)\) follows by Set-I, and restricted universal elimination yields \(\varphi[\zeta/\xi]\). Conversely, if
+\[
+\Set(\zeta)\land\varphi[\zeta/\xi],
+\]
+restricted universal elimination gives
+\[
+\zeta\in\eta
+\leftrightarrow
+\varphi[\zeta/\xi],
+\]
+from which \(\zeta\in\eta\) follows. Hence
+\[
+\zeta\in\eta
+\leftrightarrow
+\bigl(
+\Set(\zeta)\land\varphi[\zeta/\xi]
+\bigr).
+\]
+Since \(\zeta\) was arbitrary, universal generalization establishes the unrestricted specification.
+
+Conversely, suppose that
+\[
+\forall\xi
+\bigl(
+\xi\in\eta
+\leftrightarrow
+(\Set(\xi)\land\varphi)
+\bigr).
+\]
+Assume \(\Set(\zeta)\). Ordinary universal elimination gives
+\[
+\zeta\in\eta
+\leftrightarrow
+\bigl(
+\Set(\zeta)\land\varphi[\zeta/\xi]
+\bigr).
+\]
+Under the assumption \(\Set(\zeta)\), this is equivalent to
+\[
+\zeta\in\eta
+\leftrightarrow
+\varphi[\zeta/\xi].
+\]
+Restricted universal introduction therefore establishes the restricted specification.
+
+The two implications yield the required equivalence.
+\end{proof}
+
+In particular, the Class Formation Schema also yields
+\[
+\vdash
+\exists\eta\,\forall\xi
+\bigl(
+\xi\in\eta
+\leftrightarrow
+(\Set(\xi)\land\varphi)
+\bigr)
+\]
+for every core predicative \(\varphi\) satisfying the schema's side conditions. This is a theorem obtained from Class Formation, rather than a separate axiom instance.
+
+\nbgpara{4}{Predicative Reduction}
+
+Not all defined notation is included among the formation operations for core predicative formulas. Some such notation can nevertheless be admitted by assigning it an equivalent formulation within the permitted syntax.
+
+\begin{definition}[Predicative Reduction]
+\label{def:predicative-reduction}
+A \emph{predicative reduction} for an item of defined notation is a prescribed replacement of that notation by an extended formula constructed using only the core predicative syntax and notation whose predicative reductions have already been assigned.
+
+Any bound variables introduced by a reduction must be chosen fresh for the surrounding formula. Moreover, a reduction must not introduce free variables that were absent from the original expression.
+\end{definition}
+
+The requirement that a reduction may use only previously admitted notation makes the assignments well-founded. Repeated reduction therefore terminates in a core predicative formula. The result is determined up to alphabetic variation arising from the choice of fresh bound variables.
+
+\begin{definition}[Justification of a Predicative Reduction]
+\label{def:justification-of-predicative-reduction}
+A predicative reduction is \emph{justified} if the notation to which it is assigned has been proved equivalent to its prescribed reduct independently of any application of Class Formation whose availability depends upon that reduction.
+
+If the prescribed reduct is definitionally equivalent to the original notation, no separate proof of equivalence is required.
+\end{definition}
+
+\begin{definition}[Predicative Extended Formula]
+\label{def:predicative-extended-formula}
+An extended formula is \emph{predicative} if repeated application of justified predicative reductions yields a core predicative formula.
+
+A core predicative formula obtained in this way is called a \emph{core predicative reduct} of the original formula.
+\end{definition}
+
+Predicative reduction must be distinguished from primitive expansion. Primitive expansion eliminates defined notation to recover a formula of the primitive language. Predicative reduction instead transforms a condition into the syntax admitted by Class Formation, leaving \(\Set\), \(\forall_S\), and \(\exists_S\) unexpanded.
+
+A provable equivalence alone does not automatically enlarge the permitted syntax. A reduction must be assigned and justified, with the stated restrictions on variables and dependencies. In particular, unrestricted quantification over classes cannot be made admissible merely by concealing it within a new abbreviation.
+
+\nbgpara{5}{Class Formation by Predicative Reduction}
+
+The preceding definitions justify the use of predicative extended formulas in membership specifications, even when those formulas are not themselves core predicative.
+
+\begin{metatheorem}[Class Formation by Predicative Reduction]
+\label{meta:class-formation-by-predicative-reduction}
+Let \(\varphi\) be a predicative extended formula, and let \(\varphi^\ast\) be a core predicative reduct of \(\varphi\). Suppose that the reductions leading to \(\varphi^\ast\) have been justified independently of the present application of Class Formation.
+
+Let \(\xi\) and \(\eta\) be distinct variables, and suppose that \(\eta\) does not occur free in \(\varphi\). Then
+\[
+\vdash
+\exists\eta\,\forall_S\xi
+\bigl(
+\xi\in\eta\leftrightarrow\varphi
+\bigr).
+\]
+\end{metatheorem}
+
+\begin{proof}
+Since each reduction is justified, the equivalence of an expression and its reduct is preserved when the replacement is made within a larger formula. Repeated application, using propositional reasoning and quantifier congruence where necessary, therefore establishes
+\[
+\vdash
+\varphi\leftrightarrow\varphi^\ast.
+\]
+
+Consequently,
+\[
+\vdash
+\forall_S\xi
+\bigl(
+\xi\in\eta\leftrightarrow\varphi
+\bigr)
+\leftrightarrow
+\forall_S\xi
+\bigl(
+\xi\in\eta\leftrightarrow\varphi^\ast
+\bigr).
+\]
+Quantifier congruence gives
+\[
+\vdash
+\begin{aligned}[t]
+&
+\exists\eta\,\forall_S\xi
+\bigl(
+\xi\in\eta\leftrightarrow\varphi
+\bigr)
+\\
+&\qquad\leftrightarrow
+\exists\eta\,\forall_S\xi
+\bigl(
+\xi\in\eta\leftrightarrow\varphi^\ast
+\bigr).
+\end{aligned}
+\]
+
+Since predicative reductions introduce no new free variables, \(\eta\) does not occur free in \(\varphi^\ast\). Moreover, \(\varphi^\ast\) is core predicative. The Class Formation Schema therefore supplies
+\[
+\vdash
+\exists\eta\,\forall_S\xi
+\bigl(
+\xi\in\eta\leftrightarrow\varphi^\ast
+\bigr).
+\]
+Biconditional elimination yields
+\[
+\vdash
+\exists\eta\,\forall_S\xi
+\bigl(
+\xi\in\eta\leftrightarrow\varphi
+\bigr),
+\]
+as required.
+\end{proof}
+
+The resulting formulas are \emph{derived instances of Class Formation}. They are theorems obtained from the original schema, not additional axiom instances. Predicative reduction thus enlarges the notation available in membership specifications without enlarging the axioms of NBG.
+
+\nbgpara{6}{Predicativity of Basic Defined Notation}
+
+Several expressions introduced earlier have immediate predicative reductions. The formulas
+\[
+\xi\notin\eta,\qquad
+\xi\neq\eta,\qquad
+\PC(\xi)
+\]
+reduce by definition to
+\[
+\neg(\xi\in\eta),\qquad
+\neg(\xi=\eta),\qquad
+\neg\Set(\xi),
+\]
+respectively. All three reducts are core predicative. The expression \(\Set(\xi)\) itself requires no reduction, since it is already included in the core syntax.
+
+Subclasshood requires a further justification. Its definition is
+\[
+\xi\subseteq\eta
+\defequiv
+\forall\zeta
+\bigl(
+\zeta\in\xi\to\zeta\in\eta
+\bigr),
+\]
+which contains an unrestricted quantifier. Nevertheless, the quantification can be restricted to sets without changing the relation.
+
+\begin{metatheorem}[Predicative Reduction of Subclasshood]
+\label{meta:predicative-reduction-of-subclasshood}
+Let \(\zeta\) be distinct from \(\xi\) and \(\eta\). Then
+\[
+\vdash
+\xi\subseteq\eta
+\leftrightarrow
+\forall_S\zeta
+\bigl(
+\zeta\in\xi\to\zeta\in\eta
+\bigr).
+\]
+\end{metatheorem}
+
+\begin{proof}
+Suppose first that \(\xi\subseteq\eta\). By the definition of subclasshood, every member of \(\xi\) belongs to \(\eta\). This holds, in particular, for every set. Hence
+\[
+\forall_S\zeta
+\bigl(
+\zeta\in\xi\to\zeta\in\eta
+\bigr).
+\]
+
+Conversely, suppose that
+\[
+\forall_S\zeta
+\bigl(
+\zeta\in\xi\to\zeta\in\eta
+\bigr).
+\]
+Let \(a\) be arbitrary and assume \(a\in\xi\). By Set-I, \(\Set(a)\). Restricted universal elimination therefore yields
+\[
+a\in\xi\to a\in\eta,
+\]
+and hence \(a\in\eta\). Since \(a\) was arbitrary, the definition of subclasshood gives \(\xi\subseteq\eta\).
+
+The two implications establish the equivalence.
+\end{proof}
+
+We may therefore assign
+\[
+\forall_S\zeta
+\bigl(
+\zeta\in\xi\to\zeta\in\eta
+\bigr)
+\]
+as the predicative reduction of \(\xi\subseteq\eta\), with \(\zeta\) chosen fresh for the surrounding formula.
+
+Consequently, subclasshood may occur in predicative membership conditions. By Metatheorem~\ref{meta:class-formation-by-predicative-reduction}, the corresponding Class Formation statements follow from the original schema whenever the remaining defined notation is likewise admissible.
+
+Finally, combining Class Formation by Predicative Reduction with Metatheorem~\ref{meta:restricted-unrestricted-class-formulation} gives the existence of a class whose members are exactly the sets satisfying any predicative condition. Its uniqueness follows from the general uniqueness of class specifications established using Extensionality. Predicativity is therefore required for existence, but not for uniqueness.
