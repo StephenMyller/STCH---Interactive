@@ -50,10 +50,9 @@ The definitions of restricted quantification license four derived rules, corresp
     \UnaryInfC{\(\varphi[\zeta/\xi]\)}
     \RightLabel{\(\forall_S\)-I, \(n\)}
     \UnaryInfC{\(\forall_S\xi\,\varphi\)}
-\end{prooftree}
-\end{derivedrule}
-
+\end{prooftree} \bookvspace{0.3cm}
 The rule discharges assumption \(n\). The variable \(\zeta\) must be free for \(\xi\) in \(\varphi\), must not occur free in \(\varphi\), and must not occur free in any remaining undischarged assumption on which the premise depends.
+\end{derivedrule}
 
 \begin{formalderivation}
 \begin{prooftree}
@@ -80,10 +79,11 @@ The rule discharges assumption \(n\). The variable \(\zeta\) must be free for \(
     \AxiomC{\(\Set(\zeta)\)}
     \RightLabel{\(\forall_S\)-E}
     \BinaryInfC{\(\varphi[\zeta/\xi]\)}
-\end{prooftree}
+\end{prooftree} \bookvspace{0.3cm}
+The rule requires that \(\zeta\) be free for \(\xi\) in \(\varphi\).
 \end{derivedrule}
 
-The rule requires that \(\zeta\) be free for \(\xi\) in \(\varphi\).
+
 
 \begin{formalderivation}
 \begin{prooftree}
@@ -107,10 +107,9 @@ The rule requires that \(\zeta\) be free for \(\xi\) in \(\varphi\).
     \AxiomC{\(\varphi[\zeta/\xi]\)}
     \RightLabel{\(\exists_S\)-I}
     \BinaryInfC{\(\exists_S\xi\,\varphi\)}
-\end{prooftree}
-\end{derivedrule}
-
+\end{prooftree} \bookvspace{0.3cm}
 The rule requires that \(\zeta\) be free for \(\xi\) in \(\varphi\).
+\end{derivedrule}
 
 \begin{formalderivation}
 \begin{prooftree}
@@ -145,10 +144,9 @@ The rule requires that \(\zeta\) be free for \(\xi\) in \(\varphi\).
 %
     \RightLabel{\(\exists_S\)-E, \(n,m\)}
     \BinaryInfC{\(\psi\)}
-\end{prooftree}
-\end{derivedrule}
-
+\end{prooftree} \bookvspace{0.3cm}
 The rule discharges assumptions \(n\) and \(m\) within the minor premise subderivation. The variable \(\zeta\) must be free for \(\xi\) in \(\varphi\), must not occur free in \(\varphi\) or \(\psi\), and must not occur free in any remaining undischarged assumption on which either premise depends.
+\end{derivedrule}
 
 \begin{formalderivation}
 \begin{prooftree}

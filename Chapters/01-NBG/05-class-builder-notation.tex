@@ -1,0 +1,316 @@
+
+\subsection{Class-Builder Notation}
+\label{sec:class-builder-notation}
+
+\nbgpara{1}{}
+We have established that every predicative membership condition determines exactly one class. We can therefore introduce notation that refers to this class directly, without having to describe it each time by an existential statement.
+
+\begin{definition}[Class-Builder Notation]
+\label{def:class-builder-notation}
+Let \(\varphi\) be a predicative condition on \(\xi\). We write
+\[
+\{\xi\mid\varphi\}
+\]
+for the unique class whose members are exactly the sets satisfying \(\varphi\).
+\end{definition}
+
+The expression \(\{\xi\mid\varphi\}\) is called a \emph{class term}. The variable \(\xi\) is bound by the class-builder notation, while any other free variables in \(\varphi\) serve as parameters. Different values of these parameters may determine different classes.
+
+For example,
+\[
+\{x\mid x\notin A\}
+\]
+denotes the class of all sets that do not belong to \(A\). The class itself is uniquely determined once the parameter \(A\) has been fixed.
+
+We may use class terms wherever we would ordinarily use a variable denoting a class, including in membership and identity statements. Their introduction does not enlarge the collection of objects recognized by NBG: Class Formation and Extensionality have already established the existence and uniqueness of the classes they denote.
+
+\nbgpara{2}{Membership Conditions}
+
+To reason systematically with class terms, we associate each of them with a formula stating precisely what it takes for an object to belong to the class.
+
+\begin{definition}[Canonical Membership Condition]
+\label{def:canonical-membership-condition}
+Let
+\[
+T=\{\xi\mid\varphi\}
+\]
+be a class term, and let \(\zeta\) be a variable. We define its \emph{canonical membership condition} by
+\[
+\operatorname{Cond}_T(\zeta)
+\defequiv
+\Set(\zeta)\land\varphi[\zeta/\xi],
+\]
+whenever the indicated substitution is defined.
+\end{definition}
+
+Thus, \(\operatorname{Cond}_T(\zeta)\) says that \(\zeta\) is a set satisfying the condition used to specify \(T\).
+
+The explicit sethood requirement is essential. A proper class might satisfy \(\varphi\), but it cannot be a member of \(T\).
+
+For example, if
+\[
+T=\{x\mid x\notin A\},
+\]
+then
+\[
+\operatorname{Cond}_T(y)
+\defequiv
+\Set(y)\land y\notin A.
+\]
+
+The condition does not merely say that \(y\) is absent from \(A\). It says that \(y\) is a set absent from \(A\).
+
+\nbgpara{3}{Realizations}
+
+The canonical membership condition tells us which objects belong to the class denoted by \(T\). We also want to express when a given class has exactly those members.
+
+\begin{definition}[Realization of a Class Term]
+\label{def:realization-of-class-term}
+Let \(T\) be a class term and let \(A\) be a variable. We define
+\[
+\operatorname{Real}_T(A)
+\defequiv
+\forall\zeta
+\bigl(
+\zeta\in A
+\leftrightarrow
+\operatorname{Cond}_T(\zeta)
+\bigr),
+\]
+where \(\zeta\) is chosen distinct from \(A\) and fresh for \(T\).
+\end{definition}
+
+The formula \(\operatorname{Real}_T(A)\) says that \(A\) has exactly the members specified by \(T\). In this case, we say that \(A\) \emph{realizes} \(T\), or that \(A\) is a \emph{realization} of \(T\).
+
+For our preceding example,
+\[
+\operatorname{Real}_T(B)
+\defequiv
+\forall y
+\bigl(
+y\in B
+\leftrightarrow
+(\Set(y)\land y\notin A)
+\bigr).
+\]
+
+Thus, \(B\) realizes \(T\) precisely when its members are all and only the sets that do not belong to \(A\).
+
+Notice the difference between the two notions. The formula \(\operatorname{Cond}_T(y)\) specifies what it takes for an object to be a \emph{member} of \(T\). The formula \(\operatorname{Real}_T(B)\) specifies what it takes for a class to be \emph{identical} to \(T\).
+
+\nbgpara{4}{Fundamental Laws}
+
+The preceding definitions allow us to formulate two fundamental laws governing class terms.
+
+\begin{proposition}[Fundamental Laws of Class-Builder Notation]
+\label{prop:fundamental-class-builder-laws}
+Let \(T\) be a class term. Then, whenever the corresponding expressions are defined,
+\[
+\zeta\in T
+\leftrightarrow
+\operatorname{Cond}_T(\zeta)
+\]
+and
+\[
+A=T
+\leftrightarrow
+\operatorname{Real}_T(A).
+\]
+\end{proposition}
+
+\begin{proof}
+By Proposition~\ref{prop:existence-uniqueness-class-formation}, the condition specifying \(T\) determines exactly one class. The formula \(\operatorname{Cond}_T(\zeta)\) expresses precisely the condition under which \(\zeta\) belongs to that class. This establishes the first equivalence.
+
+For the second, suppose that \(A=T\). Then \(A\) and \(T\) have the same members, so \(A\) satisfies \(\operatorname{Real}_T(A)\).
+
+Conversely, if \(\operatorname{Real}_T(A)\) holds, then \(A\) has exactly the members specified by \(T\). By the uniqueness of class specifications, \(A=T\).
+\end{proof}
+
+The first equivalence is called the \emph{Membership Law}; the second is called the \emph{Identity Law}.
+
+In particular, the Membership Law for a general class term takes the familiar form
+\[
+\zeta\in\{\xi\mid\varphi\}
+\leftrightarrow
+\bigl(
+\Set(\zeta)\land\varphi[\zeta/\xi]
+\bigr).
+\]
+
+The Identity Law states that a class is identical to a class term exactly when it realizes the membership condition associated with that term.
+
+\nbgpara{5}{Derived Rules for Class Terms}
+
+Each fundamental law provides two implications. We can therefore extract four derived rules that allow us to reason directly with class terms in Gentzen derivations.
+
+\begin{derivedrule}[Class-Builder Membership Introduction]
+\begin{prooftree}
+    \AxiomC{\(\operatorname{Cond}_T(\zeta)\)}
+    \RightLabel{\(\mathrm{CB}{\in}\text{-I}\)}
+    \UnaryInfC{\(\zeta\in T\)}
+\end{prooftree}
+\end{derivedrule}
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{Thm.}
+    \UnaryInfC{
+        \(\zeta\in T
+        \leftrightarrow
+        \operatorname{Cond}_T(\zeta)\)
+    }
+
+    \AxiomC{\(\operatorname{Cond}_T(\zeta)\)}
+
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(\zeta\in T\)}
+\end{prooftree}
+\end{formalderivation}
+
+\begin{derivedrule}[Class-Builder Membership Elimination]
+\begin{prooftree}
+    \AxiomC{\(\zeta\in T\)}
+    \RightLabel{\(\mathrm{CB}{\in}\text{-E}\)}
+    \UnaryInfC{\(\operatorname{Cond}_T(\zeta)\)}
+\end{prooftree}
+\end{derivedrule}
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{Thm.}
+    \UnaryInfC{
+        \(\zeta\in T
+        \leftrightarrow
+        \operatorname{Cond}_T(\zeta)\)
+    }
+
+    \AxiomC{\(\zeta\in T\)}
+
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(\operatorname{Cond}_T(\zeta)\)}
+\end{prooftree}
+\end{formalderivation}
+
+These two rules permit us to pass between a membership statement involving a class term and its canonical membership condition.
+
+The Identity Law similarly licenses two rules.
+
+\begin{derivedrule}[Class-Builder Identity Introduction]
+\begin{prooftree}
+    \AxiomC{\(\operatorname{Real}_T(A)\)}
+    \RightLabel{\(\mathrm{CB}{=}\text{-I}\)}
+    \UnaryInfC{\(A=T\)}
+\end{prooftree}
+\end{derivedrule}
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{Thm.}
+    \UnaryInfC{
+        \(A=T
+        \leftrightarrow
+        \operatorname{Real}_T(A)\)
+    }
+
+    \AxiomC{\(\operatorname{Real}_T(A)\)}
+
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(A=T\)}
+\end{prooftree}
+\end{formalderivation}
+
+\begin{derivedrule}[Class-Builder Identity Elimination]
+\begin{prooftree}
+    \AxiomC{\(A=T\)}
+    \RightLabel{\(\mathrm{CB}{=}\text{-E}\)}
+    \UnaryInfC{\(\operatorname{Real}_T(A)\)}
+\end{prooftree}
+\end{derivedrule}
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{Thm.}
+    \UnaryInfC{
+        \(A=T
+        \leftrightarrow
+        \operatorname{Real}_T(A)\)
+    }
+
+    \AxiomC{\(A=T\)}
+
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(\operatorname{Real}_T(A)\)}
+\end{prooftree}
+\end{formalderivation}
+
+In these rules, \(T\) is a class term, and the relevant membership or realization condition must be defined. As usual, bound variables may be renamed where necessary to avoid conflicts in substitution.
+
+All four rules follow from the fundamental laws by Biconditional Elimination. They introduce no additional logical or set-theoretic principles.
+
+\nbgpara{6}{Bounded Class-Builder Notation}
+
+It is often convenient to specify a class by selecting from the members of another class. For this purpose, we introduce a bounded form of class-builder notation.
+
+\begin{definition}[Bounded Class-Builder Notation]
+\label{def:bounded-class-builder-notation}
+Let \(A\) be a class and let \(\varphi\) be a predicative condition on \(\xi\). The expression
+\[
+\{\xi\in A\mid\varphi\}
+\]
+is defined by
+\[
+\{\xi\in A\mid\varphi\}
+\defequiv
+\{\xi\mid(\xi\in A\land\varphi)\},
+\]
+where \(\xi\) is distinct from the variable denoting \(A\).
+\end{definition}
+
+Thus, \(\{\xi\in A\mid\varphi\}\) denotes the class of all members of \(A\) satisfying \(\varphi\).
+
+Its canonical membership condition takes a particularly simple form. If
+\[
+T=\{\xi\in A\mid\varphi\},
+\]
+then
+\[
+\operatorname{Cond}_T(\zeta)
+\defequiv
+\zeta\in A\land\varphi[\zeta/\xi].
+\]
+
+There is no need to include \(\Set(\zeta)\) explicitly: the statement \(\zeta\in A\) already implies that \(\zeta\) is a set.
+
+Consequently, the Membership Law for bounded class terms becomes
+\[
+\zeta\in\{\xi\in A\mid\varphi\}
+\leftrightarrow
+\bigl(
+\zeta\in A\land\varphi[\zeta/\xi]
+\bigr).
+\]
+
+Likewise, the realization condition is
+\[
+\operatorname{Real}_T(B)
+\defequiv
+\forall\zeta
+\bigl(
+\zeta\in B
+\leftrightarrow
+(\zeta\in A\land\varphi[\zeta/\xi])
+\bigr).
+\]
+
+General and bounded class terms obey the same four derived rules. The bounded form merely allows us to express certain membership conditions more conveniently.
+
+\nbgpara{7}{}
+Class-builder notation can also be nested: a class term may occur within the defining condition of another class term, provided the resulting condition remains predicative.
+
+Although class terms behave like ordinary terms in mathematical expressions, they do not belong to the primitive language of NBG, whose only terms are variables. Their use is justified by showing that formulas containing them can be translated into formulas of the original language.
+
+The Technical Appendix develops this translation, explains how nested class terms are handled without circularity, and establishes the formal admissibility of the membership and identity laws. In the main text, we may henceforth reason directly with class-builder notation using the rules established above.
