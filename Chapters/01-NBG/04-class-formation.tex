@@ -93,9 +93,9 @@ The rule requires that \(\zeta\) be free for \(\xi\) in \(\varphi\).
     \UnaryInfC{\(\forall\xi(\Set(\xi)\to\varphi)\)}
     \RightLabel{\(\forall\)-E}
     \UnaryInfC{\(\Set(\zeta)\to\varphi[\zeta/\xi]\)}
-
+%
     \AxiomC{\(\Set(\zeta)\)}
-
+%
     \RightLabel{\(\to\)-E}
     \BinaryInfC{\(\varphi[\zeta/\xi]\)}
 \end{prooftree}
@@ -129,20 +129,20 @@ The rule requires that \(\zeta\) be free for \(\xi\) in \(\varphi\).
 \begin{derivedrule}[Restricted Existential Elimination]
 \begin{prooftree}
     \AxiomC{\(\exists_S\xi\,\varphi\)}
-
+%
     \AxiomC{}
     \RightLabel{\(n\)}
     \UnaryInfC{\(\Set(\zeta)\)}
-
+%
     \AxiomC{}
     \RightLabel{\(m\)}
     \UnaryInfC{\(\varphi[\zeta/\xi]\)}
-
+%
     \noLine
     \BinaryInfC{\(\vdots\)}
     \noLine
     \UnaryInfC{\(\psi\)}
-
+%
     \RightLabel{\(\exists_S\)-E, \(n,m\)}
     \BinaryInfC{\(\psi\)}
 \end{prooftree}
@@ -156,24 +156,24 @@ The rule discharges assumptions \(n\) and \(m\) within the minor premise subderi
     \RightLabel{Def.}
     \dashedLine
     \UnaryInfC{\(\exists\xi(\Set(\xi)\land\varphi)\)}
-
+%
     \AxiomC{}
     \RightLabel{\(k\)}
     \UnaryInfC{\(\Set(\zeta)\land\varphi[\zeta/\xi]\)}
     \RightLabel{\(\land\)-E}
     \UnaryInfC{\(\Set(\zeta)\)}
-
+%
     \AxiomC{}
     \RightLabel{\(k\)}
     \UnaryInfC{\(\Set(\zeta)\land\varphi[\zeta/\xi]\)}
     \RightLabel{\(\land\)-E}
     \UnaryInfC{\(\varphi[\zeta/\xi]\)}
-
+%
     \noLine
     \BinaryInfC{\(\vdots\)}
     \noLine
     \UnaryInfC{\(\psi\)}
-
+%
     \RightLabel{\(\exists\)-E, \(k\)}
     \BinaryInfC{\(\psi\)}
 \end{prooftree}
@@ -238,7 +238,7 @@ since only sets can belong to classes such as $A$ and $B$. Thus, subclasshood ma
 
 
 
-\nbgpara{5}{Class Formation}
+\nbgpara{5}{}
 We can now introduce our second set-theoretic axiom.
 
 \begin{axiom}[\textbf{\hspace{-0.12cm}Class Formation Schema}]
@@ -281,7 +281,7 @@ The meaning is straightforward: for every admissible predicative condition \(\va
 \end{prooftree}
 
 
-\nbgpara{6}{Existence and Uniqueness}
+\nbgpara{6}{}
 We have already established that a membership condition can determine at most one class. Class Formation now supplies the missing existence claim for predicative conditions. Together, these results yield the following proposition.
 
 \begin{proposition}[Existence and Uniqueness of Predicatively Specified Classes]
