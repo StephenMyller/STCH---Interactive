@@ -1,0 +1,476 @@
+\subsection{Class-Builder Notation}
+\label{sec:technical-class-builders}
+
+The primitive language of NBG contains no terms other than variables.
+Nevertheless, the extended syntax introduced in this text permits
+expressions of the form
+\[
+\{\xi\mid\varphi\}
+\]
+to be used as though they were terms denoting classes. We now specify
+this extension and establish the formal basis for its use.
+
+The intended role of such an expression is to represent the class
+whose members are precisely the sets satisfying \(\varphi\). This
+requires two distinct justifications. First, every class-builder
+expression must represent a uniquely determined class. Second, every
+complete formula containing class-builder expressions must admit
+elimination in favor of a formula of the primitive language.
+
+There is a further requirement arising from the predicative restriction
+on Class Formation. A formula containing class-builder expressions may
+itself occur as the defining condition of another class-builder
+expression. We must therefore establish that the introduction of
+class-builder notation does not permit the formation of classes whose
+existence is not justified by the original Class Formation Schema.
+
+These requirements will be addressed through a construction organized
+by the complexity of class-builder expressions. We begin by specifying
+the expressions involved and the procedures by which they are connected
+to the existing language.
+
+\nbgpara{1}{General Class Terms}
+
+We extend the syntax by admitting a new category of expressions, called
+\emph{extended terms}.
+
+\begin{definition}[General Class Terms]
+\label{def:general-class-terms}
+Every variable is an extended term.
+
+If \(\varphi\) is a predicative extended formula and \(\xi\) is a
+variable, then
+\[
+\{\xi\mid\varphi\}
+\]
+is a \emph{general class term}, provided that every class term occurring
+in \(\varphi\) has already been admitted at an earlier stage of the
+construction.
+
+Every general class term is an extended term.
+
+If \(S\) and \(T\) are extended terms, then
+\[
+S\in T
+\qquad\text{and}\qquad
+S=T
+\]
+are atomic extended formulas.
+\end{definition}
+
+The ordinary formation rules for formulas extend to these atomic
+extended formulas. Thus, extended formulas containing class terms may
+be combined using the logical connectives and quantifiers, as well as
+previously admitted defined notation.
+
+The variable \(\xi\) in
+\[
+\{\xi\mid\varphi\}
+\]
+binds every occurrence of \(\xi\) free in \(\varphi\). The free
+variables of the resulting class term are therefore precisely the
+variables occurring free in \(\varphi\), other than \(\xi\).
+
+The conventions concerning free and bound occurrences, alphabetic
+variation, and substitution of variables for variables extend to
+class terms in the corresponding recursive manner. In particular,
+the bound variable of a class term may be renamed alphabetically
+to avoid capture. The compatibility of these operations with
+primitive expansion will be established below.
+
+The formation clauses do not yet license the substitution of arbitrary
+extended terms for variables. This more general operation will be
+justified separately, once the eliminability of class terms has been
+established.
+
+\nbgpara{2}{Bounded Class Terms}
+
+We also admit a bounded form of class-builder notation.
+
+\begin{definition}[Bounded Class Terms]
+\label{def:bounded-class-terms}
+If \(\xi\) and \(\eta\) are distinct variables and \(\varphi\) is a
+predicative extended formula whose class terms, if any, have already
+been admitted at earlier stages, then
+\[
+\{\xi\in\eta\mid\varphi\}
+\]
+is a \emph{bounded class term}.
+
+Bounded class terms are defined by the expansion
+\[
+\{\xi\in\eta\mid\varphi\}
+\defequiv
+\{\xi\mid(\xi\in\eta\land\varphi)\}.
+\]
+\end{definition}
+
+The variable \(\xi\) binds its free occurrences in \(\varphi\),
+but does not bind \(\eta\). Thus, the free variables of
+\[
+\{\xi\in\eta\mid\varphi\}
+\]
+are the variables free in \(\varphi\) other than \(\xi\), together
+with \(\eta\).
+
+Bounded class terms introduce no independent class-forming operation.
+Every occurrence is understood through its prescribed expansion into
+a general class term. In particular, the existence and uniqueness
+of the class represented by a bounded term will follow from the
+corresponding results for general class terms.
+
+The restriction to variable bounds is provisional. Once substitution
+of extended terms has been justified, bounded class-builder notation
+will be extended to arbitrary admitted extended terms as bounds.
+
+\nbgpara{3}{Builder Rank}
+
+Class terms may occur within the defining conditions of further class
+terms. To organize their introduction without circularity, we assign
+a \emph{builder rank} to extended expressions.
+
+\begin{definition}[Builder Rank]
+\label{def:builder-rank}
+Variables have builder rank \(0\). An extended formula containing no
+class term also has builder rank \(0\).
+
+If
+\[
+T=\{\xi\mid\varphi\},
+\]
+then
+\[
+\operatorname{br}(T)
+=
+\operatorname{br}(\varphi)+1.
+\]
+
+A bounded class term has the builder rank of the general class term
+to which it is expanded. Thus,
+\[
+\operatorname{br}
+\bigl(
+\{\xi\in\eta\mid\varphi\}
+\bigr)
+=
+\operatorname{br}(\varphi)+1.
+\]
+
+The builder rank of any other extended expression containing class
+terms is the greatest builder rank of the class terms occurring
+within it.
+\end{definition}
+
+The formation of class terms is understood inductively in builder
+rank.
+
+At rank \(0\), the extended terms are the variables, and the
+predicative extended formulas are those admitted before the
+introduction of class-builder notation.
+
+Suppose that class terms of rank at most \(n\), together with the
+predicative extended formulas containing them, have been admitted.
+A new class term
+\[
+\{\xi\mid\varphi\}
+\]
+may then be introduced if \(\varphi\) is predicative according to
+the reductions already justified at these earlier ranks. Its rank
+is
+\[
+\operatorname{br}(\varphi)+1.
+\]
+
+Consequently, a class term of rank \(n+1\) has a defining formula
+containing only class terms of rank at most \(n\).
+
+Predicativity and builder rank impose different requirements.
+Predicativity determines which defining conditions may be used
+in applications of Class Formation. Builder rank orders the
+justification of nested class terms, ensuring that the admissibility
+of a new term depends only upon results already established for
+terms of lower rank.
+
+The fact that this construction can be carried out through every
+finite rank will be established by the Class-Term Extension
+Metatheorem.
+
+\nbgpara{4}{Canonical Membership Conditions}
+
+We associate with each class term a formula expressing the condition
+under which a variable belongs to the class represented by that term.
+
+\begin{definition}[Canonical Membership Condition]
+\label{def:canonical-membership-condition}
+Let
+\[
+T=\{\xi\mid\varphi\}
+\]
+be a general class term, and let \(\zeta\) be a variable free for
+\(\xi\) in \(\varphi\). The \emph{canonical membership condition}
+of \(T\), with argument \(\zeta\), is
+\[
+\operatorname{Cond}_T(\zeta)
+\defequiv
+\Set(\zeta)\land\varphi[\zeta/\xi].
+\]
+\end{definition}
+
+The sethood condition is essential. Under the intended interpretation
+of NBG, every member of a class is a set. Thus, even if a proper class
+satisfies the defining formula \(\varphi\), it cannot thereby become a
+member of the class represented by \(T\).
+
+For a bounded class term
+\[
+T=\{\xi\in\eta\mid\varphi\},
+\]
+the canonical membership condition is determined through its
+expansion into a general class term:
+\[
+\operatorname{Cond}_T(\zeta)
+\defequiv
+\Set(\zeta)\land
+\bigl(
+\zeta\in\eta\land\varphi[\zeta/\xi]
+\bigr).
+\]
+Since membership in \(\eta\) already implies sethood, this condition
+is provably equivalent to
+\[
+\zeta\in\eta\land\varphi[\zeta/\xi].
+\]
+The resulting simplification will be used in the Membership Law for
+bounded class terms.
+
+The notation
+\[
+\operatorname{Cond}_T(\zeta)
+\]
+is metalinguistic. The expression ``\(\operatorname{Cond}\)''
+is not a symbol of the primitive language or of the extended
+syntax. It serves only to abbreviate the indicated extended formula.
+
+Whenever the substitution occurring in a canonical membership
+condition is not immediately legitimate, the bound variable of
+the class term may first be renamed alphabetically. In particular,
+a suitable canonical membership condition can always be formed
+using a variable not occurring in the class term.
+
+If \(T\) has builder rank \(n+1\), then
+\(\operatorname{Cond}_T(\zeta)\) contains only class terms of rank
+at most \(n\). This rank-lowering property will be fundamental
+to the subsequent construction.
+
+\nbgpara{5}{Realizations}
+
+A class term is connected to the existing language by specifying
+what it means for a variable to represent the class determined
+by its canonical membership condition.
+
+\begin{definition}[Realization of a Class Term]
+\label{def:realization-of-class-term}
+Let \(T\) be a general class term, and let \(\eta\) be a variable.
+Choose a variable \(\xi\) distinct from \(\eta\) and not occurring
+in \(T\). Then
+\[
+\Real_T(\eta)
+\defequiv
+\forall\xi
+\bigl(
+\xi\in\eta
+\leftrightarrow
+\operatorname{Cond}_T(\xi)
+\bigr).
+\]
+\end{definition}
+
+The formula
+\[
+\Real_T(\eta)
+\]
+expresses that \(\eta\) has precisely the members specified by
+the canonical membership condition of \(T\). When this formula
+holds, we say that \(\eta\) \emph{realizes} \(T\), or that
+\(\eta\) is a \emph{realization} of \(T\).
+
+The notation \(\Real_T(\eta)\) is metalinguistic, just like
+\(\operatorname{Cond}_T(\xi)\). It abbreviates an extended formula
+and introduces no additional symbol into the primitive language.
+Different legitimate choices of the bound variable \(\xi\)
+yield alphabetic variants.
+
+For bounded class terms, realization is defined through the
+prescribed expansion into a general class term. Thus, if
+\[
+T=\{\xi\in\eta\mid\varphi\},
+\]
+then
+\[
+\Real_T(\zeta)
+\]
+abbreviates
+\[
+\Real_{\{\xi\mid(\xi\in\eta\land\varphi)\}}(\zeta).
+\]
+
+The definition does not itself assert that a realization exists.
+In particular, an assertion of the form
+\[
+\exists\eta\,\Real_T(\eta)
+\]
+is intended to establish the existence of a class satisfying the
+membership condition determined by the fixed parameters of \(T\).
+For this purpose, \(\eta\) must not occur free in \(T\), since
+otherwise the existential quantifier would also bind occurrences
+belonging to those parameters.
+
+The Class-Term Extension Metatheorem will establish that every
+admitted class term has a realization, and that any two realizations
+of the same class term are equal.
+
+\nbgpara{6}{Contextual Elimination}
+
+The primitive language contains no non-variable terms. A class
+term therefore cannot itself be replaced by a term of the primitive
+language. Instead, it must be eliminated within the complete
+formula in which it occurs.
+
+The elimination procedure uses fresh variables to represent
+the classes specified by class terms.
+
+\begin{definition}[Contextual Elimination]
+\label{def:contextual-elimination}
+Before the procedure is applied, every bounded class term is
+expanded into its corresponding general class term.
+
+Let \(\varphi\) be an extended formula containing at least one
+class-term occurrence. Select the leftmost outermost such
+occurrence, say \(T\), where an occurrence is \emph{outermost}
+iff it does not lie within the defining formula of another
+class-term occurrence.
+
+The selected occurrence belongs to a unique atomic extended
+subformula \(\theta\) of \(\varphi\).
+
+Choose a variable \(\eta\) that does not occur in \(\varphi\),
+and let \(\theta'\) be obtained from \(\theta\) by replacing
+only the selected occurrence of \(T\) by \(\eta\).
+
+Let \(\varphi'\) be obtained from \(\varphi\) by replacing
+the selected occurrence of \(\theta\) with
+\[
+\exists\eta
+\bigl(
+\Real_T(\eta)\land\theta'
+\bigr).
+\]
+
+A single step of \emph{contextual elimination} prescribes
+\[
+\varphi
+\defequiv
+\varphi'.
+\]
+The surrounding logical context is otherwise unchanged.
+\end{definition}
+
+For example, an occurrence of
+\[
+T\in A
+\]
+is eliminated as
+\[
+\exists\eta
+\bigl(
+\Real_T(\eta)\land\eta\in A
+\bigr),
+\]
+whereas an occurrence of
+\[
+A\in T
+\]
+is eliminated as
+\[
+\exists\eta
+\bigl(
+\Real_T(\eta)\land A\in\eta
+\bigr).
+\]
+
+Similarly, an occurrence of
+\[
+A=T
+\]
+is eliminated as
+\[
+\exists\eta
+\bigl(
+\Real_T(\eta)\land A=\eta
+\bigr).
+\]
+
+Only the selected occurrence of a class term is replaced.
+If the same class term occurs more than once, its occurrences
+are eliminated separately, using fresh realization variables
+for each occurrence.
+
+The procedure is repeated until no class-term occurrence
+remains. Every step removes one class-builder occurrence:
+the selected outer builder disappears, while the class terms
+appearing in its canonical membership condition are precisely
+those already occurring within its defining formula. Hence
+the total number of class-builder occurrences decreases by one
+at each step, and the procedure terminates after finitely
+many steps.
+
+The resulting expression contains no class terms. All remaining
+defined notation can then be eliminated according to the
+primitive-expansion clauses established previously.
+
+\begin{definition}[Primitive Expansion of a Formula Containing Class Terms]
+\label{def:primitive-expansion-with-class-terms}
+A \emph{primitive expansion} of an extended formula containing
+class terms is obtained by repeatedly applying contextual
+elimination until no class terms remain, and then expanding
+all remaining defined notation until a formula of the
+primitive language is obtained.
+\end{definition}
+
+The procedure just specified applies to the extended formulas
+generated by the class-term formation clauses, together with
+the previously admitted logical and defined notation. The
+application of earlier defined predicates and relations to
+arbitrary class terms, where not yet licensed by their formation
+clauses, will be justified separately through extended-term
+substitution.
+
+Although termination follows directly from the construction,
+further properties require proof. In particular, we must show
+that legitimate choices of fresh variables yield primitive
+expansions differing only by alphabetic variation, and that
+the procedure respects free variables and capture-avoiding
+substitution.
+
+These properties will be established by the Class-Term Extension
+Metatheorem.
+
+Contextual elimination must also be distinguished from
+predicative reduction. The formula \(\Real_T(\eta)\) contains
+an unrestricted universal quantifier, and contextual
+elimination introduces an unrestricted existential quantifier.
+Consequently, primitive expansion does not by itself establish
+that a formula containing class terms may occur within a
+predicative defining condition.
+
+Separate predicative reductions will be required for that
+purpose. Unlike contextual elimination, these reductions
+will use only syntax admitted by Class Formation and will
+replace atomic formulas containing class terms by equivalent
+formulas involving terms of lower builder rank.
+
+Together, contextual elimination and predicative reduction
+will establish the two required aspects of class-builder
+notation: its complete eliminability in favor of the
+primitive language and its admissibility within the
+predicative conditions used to form further classes.
