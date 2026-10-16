@@ -375,15 +375,19 @@ A single step of \emph{contextual elimination} prescribes
 The surrounding logical context is otherwise unchanged.
 \end{definition}
 
-For example, an occurrence of \(T \in A\)
+\begin{example}
+An occurrence of \(T \in A\)
 is eliminated as
 \[
 \exists\eta
 \bigl(
 \Real_T(\eta)\land\eta\in A
-\bigr),
+\bigr).
 \]
-whereas an occurrence of \(A \in T\)
+\end{example}
+
+\begin{example}
+An occurrence of \(A \in T\)
 is eliminated as
 \[
 \exists\eta
@@ -391,8 +395,10 @@ is eliminated as
 \Real_T(\eta)\land A\in\eta
 \bigr).
 \]
+\end{example}
 
-Similarly, an occurrence of \(A=T\)
+\begin{example}
+An occurrence of \(A=T\)
 is eliminated as
 \[
 \exists\eta
@@ -400,6 +406,7 @@ is eliminated as
 \Real_T(\eta)\land A=\eta
 \bigr).
 \]
+\end{example}
 
 Only the selected occurrence of a class term is replaced.
 If the same class term occurs more than once, its occurrences
