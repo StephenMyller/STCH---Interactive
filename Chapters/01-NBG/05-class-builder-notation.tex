@@ -36,14 +36,14 @@ T=\{\xi\mid\varphi\}
 \]
 be a class term, and let \(\zeta\) be a variable. We define its \emph{canonical membership condition} by
 \[
-\operatorname{Cond}_T(\zeta)
+\Cond_T(\zeta)
 \defequiv
 \Set(\zeta)\land\varphi[\zeta/\xi],
 \]
 whenever the indicated substitution is defined.
 \end{definition}
 
-Thus, \(\operatorname{Cond}_T(\zeta)\) says that \(\zeta\) is a set satisfying the condition used to specify \(T\).
+Thus, \(\Cond_T(\zeta)\) says that \(\zeta\) is a set satisfying the condition used to specify \(T\).
 
 The explicit sethood requirement is essential. A proper class might satisfy \(\varphi\), but it cannot be a member of \(T\).
 
@@ -53,7 +53,7 @@ T=\{x\mid x\notin A\},
 \]
 then
 \[
-\operatorname{Cond}_T(y)
+\Cond_T(y)
 \defequiv
 \Set(y)\land y\notin A.
 \]
@@ -68,23 +68,23 @@ The canonical membership condition tells us which objects belong to the class de
 \label{def:realization-of-class-term}
 Let \(T\) be a class term and let \(A\) be a variable. We define
 \[
-\operatorname{Real}_T(A)
+\Real_T(A)
 \defequiv
 \forall\zeta
 \bigl(
 \zeta\in A
 \leftrightarrow
-\operatorname{Cond}_T(\zeta)
+\Cond_T(\zeta)
 \bigr),
 \]
 where \(\zeta\) is chosen distinct from \(A\) and fresh for \(T\).
 \end{definition}
 
-The formula \(\operatorname{Real}_T(A)\) says that \(A\) has exactly the members specified by \(T\). In this case, we say that \(A\) \emph{realizes} \(T\), or that \(A\) is a \emph{realization} of \(T\).
+The formula \(\Real_T(A)\) says that \(A\) has exactly the members specified by \(T\). In this case, we say that \(A\) \emph{realizes} \(T\), or that \(A\) is a \emph{realization} of \(T\).
 
 For our preceding example,
 \[
-\operatorname{Real}_T(B)
+\Real_T(B)
 \defequiv
 \forall y
 \bigl(
@@ -96,7 +96,7 @@ y\in B
 
 Thus, \(B\) realizes \(T\) precisely when its members are all and only the sets that do not belong to \(A\).
 
-Notice the difference between the two notions. The formula \(\operatorname{Cond}_T(y)\) specifies what it takes for an object to be a \emph{member} of \(T\). The formula \(\operatorname{Real}_T(B)\) specifies what it takes for a class to be \emph{identical} to \(T\).
+Notice the difference between the two notions. The formula \(\Cond_T(y)\) specifies what it takes for an object to be a \emph{member} of \(T\). The formula \(\Real_T(B)\) specifies what it takes for a class to be \emph{identical} to \(T\).
 
 \nbgpara{4}{Fundamental Laws}
 
@@ -108,22 +108,22 @@ Let \(T\) be a class term. Then, whenever the corresponding expressions are defi
 \[
 \zeta\in T
 \leftrightarrow
-\operatorname{Cond}_T(\zeta)
+\Cond_T(\zeta)
 \]
 and
 \[
 A=T
 \leftrightarrow
-\operatorname{Real}_T(A).
+\Real_T(A).
 \]
 \end{proposition}
 
 \begin{proof}
-By Proposition~\ref{prop:existence-uniqueness-class-formation}, the condition specifying \(T\) determines exactly one class. The formula \(\operatorname{Cond}_T(\zeta)\) expresses precisely the condition under which \(\zeta\) belongs to that class. This establishes the first equivalence.
+By Proposition~\ref{prop:existence-uniqueness-class-formation}, the condition specifying \(T\) determines exactly one class. The formula \(\Cond_T(\zeta)\) expresses precisely the condition under which \(\zeta\) belongs to that class. This establishes the first equivalence.
 
-For the second, suppose that \(A=T\). Then \(A\) and \(T\) have the same members, so \(A\) satisfies \(\operatorname{Real}_T(A)\).
+For the second, suppose that \(A=T\). Then \(A\) and \(T\) have the same members, so \(A\) satisfies \(\Real_T(A)\).
 
-Conversely, if \(\operatorname{Real}_T(A)\) holds, then \(A\) has exactly the members specified by \(T\). By the uniqueness of class specifications, \(A=T\).
+Conversely, if \(\Real_T(A)\) holds, then \(A\) has exactly the members specified by \(T\). By the uniqueness of class specifications, \(A=T\).
 \end{proof}
 
 The first equivalence is called the \emph{Membership Law}; the second is called the \emph{Identity Law}.
@@ -145,7 +145,7 @@ Each fundamental law provides two implications. We can therefore extract four de
 
 \begin{derivedrule}[Class-Builder Membership Introduction]
 \begin{prooftree}
-    \AxiomC{\(\operatorname{Cond}_T(\zeta)\)}
+    \AxiomC{\(\Cond_T(\zeta)\)}
     \RightLabel{\(\mathrm{CB}{\in}\text{-I}\)}
     \UnaryInfC{\(\zeta\in T\)}
 \end{prooftree}
@@ -158,10 +158,10 @@ Each fundamental law provides two implications. We can therefore extract four de
     \UnaryInfC{
         \(\zeta\in T
         \leftrightarrow
-        \operatorname{Cond}_T(\zeta)\)
+        \Cond_T(\zeta)\)
     }
 %
-    \AxiomC{\(\operatorname{Cond}_T(\zeta)\)}
+    \AxiomC{\(\Cond_T(\zeta)\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
     \BinaryInfC{\(\zeta\in T\)}
@@ -172,7 +172,7 @@ Each fundamental law provides two implications. We can therefore extract four de
 \begin{prooftree}
     \AxiomC{\(\zeta\in T\)}
     \RightLabel{\(\mathrm{CB}{\in}\text{-E}\)}
-    \UnaryInfC{\(\operatorname{Cond}_T(\zeta)\)}
+    \UnaryInfC{\(\Cond_T(\zeta)\)}
 \end{prooftree}
 \end{derivedrule}
 
@@ -183,13 +183,13 @@ Each fundamental law provides two implications. We can therefore extract four de
     \UnaryInfC{
         \(\zeta\in T
         \leftrightarrow
-        \operatorname{Cond}_T(\zeta)\)
+        \Cond_T(\zeta)\)
     }
 %
     \AxiomC{\(\zeta\in T\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
-    \BinaryInfC{\(\operatorname{Cond}_T(\zeta)\)}
+    \BinaryInfC{\(\Cond_T(\zeta)\)}
 \end{prooftree}
 \end{formalderivation}
 
@@ -199,7 +199,7 @@ The Identity Law similarly licenses two rules.
 
 \begin{derivedrule}[Class-Builder Identity Introduction]
 \begin{prooftree}
-    \AxiomC{\(\operatorname{Real}_T(A)\)}
+    \AxiomC{\(\Real_T(A)\)}
     \RightLabel{\(\mathrm{CB}{=}\text{-I}\)}
     \UnaryInfC{\(A=T\)}
 \end{prooftree}
@@ -212,10 +212,10 @@ The Identity Law similarly licenses two rules.
     \UnaryInfC{
         \(A=T
         \leftrightarrow
-        \operatorname{Real}_T(A)\)
+        \Real_T(A)\)
     }
 %
-    \AxiomC{\(\operatorname{Real}_T(A)\)}
+    \AxiomC{\(\Real_T(A)\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
     \BinaryInfC{\(A=T\)}
@@ -226,7 +226,7 @@ The Identity Law similarly licenses two rules.
 \begin{prooftree}
     \AxiomC{\(A=T\)}
     \RightLabel{\(\mathrm{CB}{=}\text{-E}\)}
-    \UnaryInfC{\(\operatorname{Real}_T(A)\)}
+    \UnaryInfC{\(\Real_T(A)\)}
 \end{prooftree}
 \end{derivedrule}
 
@@ -237,13 +237,13 @@ The Identity Law similarly licenses two rules.
     \UnaryInfC{
         \(A=T
         \leftrightarrow
-        \operatorname{Real}_T(A)\)
+        \Real_T(A)\)
     }
 %
     \AxiomC{\(A=T\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
-    \BinaryInfC{\(\operatorname{Real}_T(A)\)}
+    \BinaryInfC{\(\Real_T(A)\)}
 \end{prooftree}
 \end{formalderivation}
 
@@ -278,7 +278,7 @@ T=\{\xi\in A\mid\varphi\},
 \]
 then
 \[
-\operatorname{Cond}_T(\zeta)
+\Cond_T(\zeta)
 \defequiv
 \zeta\in A\land\varphi[\zeta/\xi].
 \]
@@ -296,7 +296,7 @@ Consequently, the Membership Law for bounded class terms becomes
 
 Likewise, the realization condition is
 \[
-\operatorname{Real}_T(B)
+\Real_T(B)
 \defequiv
 \forall\zeta
 \bigl(
