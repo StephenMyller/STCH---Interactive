@@ -4,6 +4,55 @@
 
 \subsection{Class Term Extension}
 
+The preceding section established the conditions under which
+Class Formation may be applied. We now turn to the class-builder
+notation itself. In ordinary mathematical practice, expressions
+such as
+\[
+\{\xi\mid\varphi\}
+\]
+are treated as terms denoting classes. We write that an object
+belongs to such a class, identify it with another class, and
+substitute it for variables in formulas and deductions. Strictly
+speaking, however, the primitive language of NBG contains no
+such terms: its only terms are variables. Our task is to justify
+this familiar practice without extending the underlying theory.
+
+There are two principal difficulties. First, we must establish
+that every admitted class term determines a unique class and
+that formulas containing such terms can be understood entirely
+in the original language. Second, class terms may themselves
+occur within the defining conditions of further class terms.
+We must therefore ensure that their introduction does not
+circumvent the predicativity restrictions of Class Formation.
+The construction developed below addresses both difficulties
+by introducing class terms in successive stages, using only
+previously justified reductions to establish the existence
+of the classes introduced at each new stage.
+
+We begin by specifying the extended syntax and its elimination
+procedure. The central Class-Term Extension Metatheorem then
+establishes the existence and uniqueness of realizations,
+together with the predicative reductions needed to admit
+further class terms. From these results we derive the
+fundamental Membership and Identity Laws and Class-Builder
+Congruence. We subsequently justify substitution of arbitrary
+extended terms and the corresponding extensions of the
+logical inference rules.
+
+The principal practical result is the extraction of four
+derived class-builder rules, governing the introduction and
+elimination of membership and identity statements involving
+class terms. These rules allow us to reason directly with
+class-builder expressions without repeatedly returning to
+their underlying membership specifications. Finally, we
+establish the corresponding laws for bounded class terms
+and prove that the entire extension is conservative: every
+deduction employing the new notation can be translated into
+a deduction using only the original language, axioms, and
+inference rules. Thus the convenience of class-builder
+notation comes at no cost in deductive strength.
+
 \subsubsection{Class-Term Syntax and Contextual Elimination}
 
 \nbgpara{1}{General Class Terms}
