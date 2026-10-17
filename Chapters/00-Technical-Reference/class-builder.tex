@@ -633,7 +633,7 @@ part of the section; they are not additional assumptions here.
 
 \medskip
 \noindent\emph{Predicative Reduction: Membership with a Variable
-on the left.}
+on the Left.}
 Let \(\zeta\) be a variable and \(T\) a class term. By
 \((\mathrm{M})\), we may prescribe
 \[
@@ -1164,14 +1164,43 @@ where the variables introduced on the right are fresh for the
 arguments. These definitions agree with the original ones for
 variable arguments.
 
-To obtain a primitive expansion, we first expand these defined
-relations into formulas involving the primitive atomic relations
-\(\in\) and \(=\). We then eliminate the class terms by contextual
-elimination and finally expand the remaining defined notation.
-This order ensures that contextual elimination is applied only
-where its defining clauses are available. Permission to use the
-extended relations in predicative conditions requires separate
-reductions.
+For primitive expansion, the order of operations requires
+some care. Contextual elimination must not descend into
+the defining condition of an uneliminated class term,
+since expanding defined notation within that condition
+could destroy its predicative form.
+
+We therefore proceed as follows. Select the leftmost
+outermost class-term occurrence, as prescribed by
+contextual elimination. If it occurs as an argument
+of a defined relation, first expand that relation
+sufficiently to expose the selected occurrence in
+an atomic formula involving \(\in\) or \(=\).
+Only the surrounding defined notation is expanded;
+the defining conditions of uneliminated class terms
+remain untouched. Contextual elimination can then
+proceed as usual. Repeat until all class terms have
+been eliminated, and finally expand the remaining
+defined notation.
+
+This combined procedure terminates. Each of the
+extended relations defined above has a finite,
+nonrecursive expansion that does not duplicate
+its class-term arguments. The preliminary expansion
+steps therefore preserve the number of builder
+occurrences and successively expose the selected
+occurrence in a primitive atomic formula. The
+subsequent contextual elimination removes one
+builder occurrence. Since the original formula
+contains only finitely many builders, the procedure
+terminates. The syntactic properties established
+in Part I extend to this procedure by the same
+arguments, together with the previously justified
+properties of the defined relations.
+
+Permission to use the extended relations in
+predicative conditions still requires separate
+predicative reductions.
 
 Recall from Part II that
 \[
@@ -1349,8 +1378,10 @@ justification of extended-term substitution.
 \label{meta:realization-invariance}
 Let \(\varphi\) be an admitted extended formula, \(\xi\) a
 variable, and \(T\) an admitted class term. Choose a variable
-\(\eta\) not occurring in \(\varphi\) or \(T\), and interpret
-all substitutions as capture-avoiding. Then
+\(\eta\) fresh for \(\varphi\), \(T\), and \(\xi\).
+Suppose that all indicated substitutions produce admitted
+extended expressions, and interpret them as capture-avoiding.
+Then
 \[
 \{\Real_T(\eta)\}
 \vdash
@@ -1373,15 +1404,18 @@ Consequently,
 
 \begin{proof}
 We prove \((\mathrm{RI})\) by simultaneous structural induction on
-extended terms and formulas. For a term \(U\), the accompanying
-induction claim is
+extended terms and formulas. For every admitted extended term
+\(U\) whose indicated substitution instances are admitted,
+the accompanying induction claim is
 \[
 \{\Real_T(\eta)\}\vdash
 U[T/\xi]=U[\eta/\xi].
 \tag{RT}
 \]
-The induction also permits any surrounding assumptions not
-containing the fresh variables introduced in its steps.
+The formula induction likewise concerns only admitted
+substitution instances. The induction also permits any
+surrounding assumptions not containing the fresh variables
+introduced in its steps.
 
 For a variable \(U\ne\xi\), \((\mathrm{RT})\) is an instance
 of identity reflexivity. If \(U=\xi\), it is precisely the
@@ -1828,17 +1862,18 @@ primitive formulas.
 \end{metatheorem}
 
 \begin{proof}
-First expand any defined relations admitting extended-term
-arguments into their prescribed formulas involving the
-primitive atomic relations \(\in\) and \(=\). Next perform
-contextual elimination, and finally expand the remaining
-defined notation.
+We employ the extended primitive-expansion procedure
+specified in Part IV. Thus defined relations are
+expanded only as needed to expose outermost class-term
+occurrences in primitive atomic formulas. No expansion
+is performed within the defining condition of an
+uneliminated class term.
 
-Consider one contextual elimination step. Let \(T\) be the
-selected class-term occurrence in an atomic subformula
-\(\theta\), and let \(\theta'\) be obtained by replacing
-that occurrence by a fresh variable \(\eta\).
-Realization Invariance gives
+Consider one contextual elimination step. Let \(T\)
+be the selected class-term occurrence in an atomic
+subformula \(\theta\), and let \(\theta'\) result
+from replacing that occurrence by a fresh variable
+\(\eta\). Realization Invariance gives
 \[
 \vdash_{\mathrm{ext}}
 \theta\leftrightarrow
@@ -1846,13 +1881,9 @@ Realization Invariance gives
 \Real_T(\eta)\land\theta'
 \bigr).
 \]
-This equivalence was justified using realizations and the
-original variable-based rules, without presupposing any
-new inference principle. Ordinary congruence for the
-logical connectives and quantifiers permits the replacement
-within the surrounding formula. Contextual elimination
-does not descend into the defining condition of an
-uneliminated class term.
+This equivalence was justified using realizations
+and the original variable-based rules, without
+presupposing any new inference principle.
 
 Repeating this argument yields an equivalence between
 \(\Phi\) and the formula obtained after all class terms
@@ -1901,67 +1932,253 @@ Consequently, for every primitive formula \(\chi\),
 \end{metatheorem}
 
 \begin{proof}
-We proceed by induction on the construction of an
-extended deduction. More precisely, we establish
-the following invariant: for every subdeduction
-\(\mathcal D\) with undischarged assumptions
-\(\Gamma\) and conclusion \(\Phi\), there is
-a deduction in the primitive system of
-\(\Phi^\circ\) from \(\Gamma^\circ\).
-The translation must preserve the discharge of
-assumptions and all variable conditions.
+We establish the translation of extended deductions by
+induction on their construction. Before carrying out this
+induction, we make explicit three properties of primitive
+expansion on which it depends.
 
-For an assumption, its primitive expansion serves
-as the corresponding assumption. Primitive axioms
-are unchanged. An admitted instance of Class
-Formation by Predicative Reduction is replaced
-by the derivation from the corresponding core
-predicative instance established in the Class
-Formation section. The rank induction of Part II
-guarantees that the reductions used in this
-derivation have already been justified.
+\medskip
+\noindent\emph{Logical Structure and Variable Substitution.}
+Primitive expansion respects the logical connectives and
+quantifiers, up to alphabetic variation. Thus, for example,
+\[
+(\varphi\land\psi)^\circ
+\equiv_\alpha
+\varphi^\circ\land\psi^\circ,
+\qquad
+(\forall\xi\,\varphi)^\circ
+\equiv_\alpha
+\forall\xi\,\varphi^\circ,
+\]
+and similarly for the remaining logical operations.
+This follows directly from the prescribed contextual
+elimination procedure, which operates within atomic
+subformulas and leaves their surrounding logical
+structure unchanged.
 
-For applications of the original logical rules,
-the induction hypothesis supplies primitive
-deductions of the expanded premises. The
-corresponding primitive inference then yields
-the expanded conclusion. In the quantifier
-cases, compatibility of primitive expansion
-with capture-avoiding variable substitution
-ensures that the required instances agree up
-to alphabetic variation. Preservation of free
-variables ensures that the side conditions
-of universal introduction and existential
-elimination remain satisfied. Auxiliary variables
-may be renamed fresh as necessary. Propositional
-assumption discharge is preserved directly.
+Moreover, the Syntactic Properties Metatheorem
+establishes that primitive expansion preserves free
+variables and commutes with capture-avoiding
+variable-for-variable substitution:
+\[
+(\varphi[\zeta/\xi])^\circ
+\equiv_\alpha
+\varphi^\circ[\zeta/\xi].
+\]
+These properties ensure that the original logical
+inferences, including their quantifier conditions,
+can be reproduced after expansion.
 
-For an application of a derived extended-term
-rule, we use its previously established derivation
-from the original variable-based rules. Unfolding
-the extended notation in that derivation supplies
-a primitive deduction from the expansions of
-its premises to the expansion of its conclusion.
-The same applies to the four fundamental
-class-builder rules, whose admissibility was
-established from the Membership and Identity
-Laws. Defined relations and bounded class terms
-are handled through their prescribed expansions.
+\medskip
+\noindent\emph{Primitive Justification of Realizations.}
+We next recall why the realization and reduction
+results used below have primitive derivations,
+independently of the present conservativity claim.
 
-Thus every inference in the extended deduction
-has a primitive replacement, and these
-replacements can be composed while preserving
-the translated undischarged assumptions.
-The induction yields
+For an admitted extended term \(T\), write
+\[
+R_T(\eta)\defequiv
+\bigl(\operatorname{Rep}_T(\eta)\bigr)^\circ,
+\]
+where \(\eta\) is fresh. This is a primitive formula.
+The construction of Part II, interpreted through
+primitive expansion, establishes
+\[
+\vdash_{\mathrm{NBG}}\exists\eta\,R_T(\eta)
+\]
+and uniqueness of representatives.
+
+To see that these assertions require no extended
+inference rules, reconsider the rank induction.
+At rank zero, representatives are specified by
+ordinary identity. At a successor rank, the
+defining condition of a new class term is reduced
+using only reductions justified at earlier ranks.
+Their primitive interpretations have already
+been established by the induction hypothesis.
+
+The resulting core predicative condition licenses
+an instance of the original Class Formation Schema.
+Here the schema is applied to the core predicative
+condition before its remaining defined notation
+is primitively expanded. The previously justified
+equivalences then yield the primitive expansion
+of the new realization condition. Uniqueness
+follows from primitive Extensionality.
+
+The new atomic reduction equivalences are
+subsequently obtained from these realizations
+using only variable-based logical rules.
+Thus, at every rank, the realization and
+reduction arguments can be unfolded into
+primitive deductions without appealing to
+conservativity or to the extended-term rules
+justified later.
+
+\medskip
+\noindent\emph{Primitive Representation Invariance.}
+We also require the following primitive counterpart
+of Realization Invariance. For every admitted
+extended formula \(\varphi\) and extended term \(T\),
+whenever the indicated substitutions are admitted,
+\[
+\{R_T(\eta)\}\vdash_{\mathrm{NBG}}
+(\varphi[T/\xi])^\circ
+\leftrightarrow
+(\varphi[\eta/\xi])^\circ,
+\tag{PRI}
+\]
+where \(\eta\) is fresh.
+
+This follows by simultaneous structural induction
+on extended terms and formulas. For atomic formulas,
+the claim follows from the unique representation
+of their arguments and primitive identity
+elimination. The propositional and quantifier
+cases follow by the ordinary congruence principles,
+with bound variables renamed as necessary.
+
+At a class-builder binder, the induction
+hypothesis establishes agreement of the defining
+conditions under the representation assumption.
+The primitive membership specifications of the
+resulting class terms therefore agree on all
+sets. Extensionality and uniqueness of realizations
+then establish the required identity of their
+representatives.
+
+This argument uses only the primitive realization
+results just established and the original logical
+rules. It therefore supplies a primitive
+justification of \((\mathrm{PRI})\), rather than
+presupposing that extended deductions can already
+be translated.
+
+\medskip
+\noindent\emph{Translation of Deductions.}
+We now proceed by induction on extended deductions.
+Our induction invariant is the following: if a
+subdeduction has undischarged assumptions \(\Gamma\)
+and conclusion \(\Phi\), then
+\[
+\Gamma^\circ\vdash_{\mathrm{NBG}}\Phi^\circ.
+\]
+The translation also preserves the discharge of
+assumptions and the variable conditions of the
+rules.
+
+An assumption is replaced by its primitive
+expansion. Primitive axioms remain available in
+the original system, with their defined notation
+expanded where necessary. Admitted applications
+of Class Formation by Predicative Reduction are
+replaced by the primitive derivations justified
+in the rankwise construction above.
+
+For propositional inferences, the induction
+hypothesis supplies the expanded premises.
+Since expansion respects the propositional
+connectives, the corresponding original rule
+yields the expanded conclusion. Assumptions
+are discharged exactly as in the extended
+deduction.
+
+For quantifier elimination and introduction,
+the substitution property established above
+identifies the expansion of a variable-substitution
+instance with the corresponding instance of the
+expanded formula. Thus the original quantifier
+rules apply.
+
+The side conditions are preserved as well.
+Because expansion preserves free variables,
+a variable not free in the undischarged
+assumptions remains absent from their expansions.
+Likewise, the fresh variable used in existential
+elimination remains absent from the expanded
+conclusion and the other undischarged assumptions.
+Auxiliary variables introduced by expansion
+can always be renamed to avoid conflicts.
+The discharge of the existential-elimination
+assumption is therefore preserved.
+
+For the extended-term quantifier rules, choose
+a fresh representative variable \(\eta\) for
+the substituted term \(T\). The primitive
+existence theorem supplies
+\[
+\exists\eta\,R_T(\eta).
+\]
+Under \(R_T(\eta)\), the variable-based quantifier
+rule applies to the expanded formula with
+\(\eta\) substituted for \(\xi\).
+The equivalence \((\mathrm{PRI})\) then yields
+the expansion of the required extended-term
+instance. Existential elimination discharges
+the representation assumption.
+
+Extended-term identity introduction follows
+from primitive reflexivity and existence of
+representatives. For identity elimination,
+choose representatives of the two terms.
+Their primitive representation specifications
+turn the assumed identity into an identity
+between the representatives. Primitive identity
+elimination, together with \((\mathrm{PRI})\),
+then yields the expanded conclusion. The
+representation assumptions are discharged
+using their primitive existence theorems.
+
+Applications of the four fundamental
+class-builder rules are replaced by the
+primitive derivations of the corresponding
+Membership and Identity Laws. These are
+available from the rankwise construction
+above. More explicitly, their primitive
+expansions establish
+\[
+\vdash_{\mathrm{NBG}}
+(\zeta\in T)^\circ
+\leftrightarrow
+(\operatorname{Cond}_T(\zeta))^\circ
+\]
+and
+\[
+\vdash_{\mathrm{NBG}}
+(\zeta=T)^\circ
+\leftrightarrow
+(\Real_T(\zeta))^\circ.
+\]
+The four rules follow by the original
+biconditional-elimination rule.
+
+Other derived rules are handled by unfolding
+their previously justified derivations.
+Defined relations and bounded class terms
+are handled by their prescribed expansions.
+All these replacements are finite and use
+only primitive derivations already available.
+
+Thus every extended inference has a primitive
+replacement from the expansions of its premises
+to the expansion of its conclusion. Composing
+these replacements according to the structure
+of the original deduction preserves all
+undischarged assumptions and their discharge
+conditions. The induction therefore establishes
 \[
 \Gamma^\circ\vdash_{\mathrm{NBG}}\Phi^\circ.
 \]
 
-If \(\chi\) is primitive, its expansion is
-\(\chi\) itself, up to alphabetic variation.
-Hence an extended proof of \(\chi\) without
-assumptions yields a proof of \(\chi\) in the
-original NBG system.
+Finally, if \(\chi\) is a primitive formula,
+then \(\chi^\circ\) is \(\chi\) itself, up to
+alphabetic variation. Hence
+\[
+\vdash_{\mathrm{ext}}\chi
+\quad\Longrightarrow\quad
+\vdash_{\mathrm{NBG}}\chi,
+\]
+as required.
 \end{proof}
 
 The technical justification is now complete. Class terms
