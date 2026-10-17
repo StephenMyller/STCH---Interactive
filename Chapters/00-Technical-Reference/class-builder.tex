@@ -1,55 +1,31 @@
-\subsection{Class-Builder Notation}
-\label{sec:technical-class-builders}
-
-The primitive language of NBG contains no terms other than variables.
-Nevertheless, the extended syntax introduced in this text permits
-expressions of the form
-\[
-\{\xi\mid\varphi\}
-\]
-to be used as though they were terms denoting classes. We now specify
-this extension and establish the formal basis for its use.
-
-The intended role of such an expression is to represent the class
-whose members are precisely the sets satisfying \(\varphi\). This
-requires two distinct justifications. First, every class-builder
-expression must represent a uniquely determined class. Second, every
-complete formula containing class-builder expressions must admit
-elimination in favor of a formula of the primitive language.
-
-There is a further requirement arising from the predicative restriction
-on Class Formation. A formula containing class-builder expressions may
-itself occur as the defining condition of another class-builder
-expression. We must therefore establish that the introduction of
-class-builder notation does not permit the formation of classes whose
-existence is not justified by the original Class Formation Schema.
-
-These requirements will be addressed through a construction organized
-by the complexity of class-builder expressions. We begin by specifying
-the expressions involved and the procedures by which they are connected
-to the existing language.
+\subsection{Class Term Extension}
 
 \subsubsection{Class-Term Syntax and Contextual Elimination}
 
 \nbgpara{1}{General Class Terms}
 
-We extend the syntax by admitting a new category of expressions, called
-\emph{extended terms}.
+The primitive language of NBG contains no terms other than variables.
+We nevertheless wish to use expressions such as
+\[
+\{\xi\mid\varphi\}
+\]
+as though they were terms denoting classes. Before establishing that
+this practice is legitimate, we must specify the expressions involved
+and explain how formulas containing them are to be understood in the
+original language.
 
 \begin{definition}[General Class Terms]
 \label{def:general-class-terms}
-Every variable is an extended term.
+Every variable is an \emph{extended term}.
 
 If \(\varphi\) is a predicative extended formula and \(\xi\) is a
 variable, then
 \[
 \{\xi\mid\varphi\}
 \]
-is a \emph{general class term}, provided that every class term occurring
-in \(\varphi\) has already been admitted at an earlier stage of the
-construction.
-
-Every general class term is an extended term.
+is a \emph{general class term}, provided that all class terms occurring
+in \(\varphi\) have already been admitted at an earlier stage of the
+construction. Every general class term is an extended term.
 
 If \(S\) and \(T\) are extended terms, then
 \[
@@ -60,147 +36,108 @@ S=T
 are atomic extended formulas.
 \end{definition}
 
-The ordinary formation rules for formulas extend to these atomic
-extended formulas. Thus, extended formulas containing class terms may
-be combined using the logical connectives and quantifiers, as well as
-previously admitted defined notation.
+The ordinary logical formation rules extend to these atomic formulas.
+Previously admitted defined notation may also be used in accordance
+with its formation clauses. In particular, the introduction of class
+terms does not by itself extend every previously defined predicate to
+arbitrary extended-term arguments. Such extensions will be justified
+separately where required.
 
-The variable \(\xi\) in
-\[
-\{\xi\mid\varphi\}
-\]
-binds every occurrence of \(\xi\) free in \(\varphi\). The free
-variables of the resulting class term are therefore precisely the
-variables occurring free in \(\varphi\), other than \(\xi\).
+In \(\{\xi\mid\varphi\}\), the variable \(\xi\) binds precisely its
+free occurrences in \(\varphi\). Thus the free variables of the class
+term are the free variables of \(\varphi\) other than \(\xi\).
+Alphabetic variation and substitution of variables for variables are
+extended recursively to class terms, with the usual precautions against
+capture. These operations are purely syntactic. Substitution of an
+arbitrary extended term for a variable will be introduced and justified
+later.
 
-The conventions concerning free and bound occurrences, alphabetic
-variation, and substitution of variables for variables extend to
-class terms in the corresponding recursive manner. In particular,
-the bound variable of a class term may be renamed alphabetically
-to avoid capture. The compatibility of these operations with
-primitive expansion will be established below.
-
-The formation clauses do not yet license the substitution of arbitrary
-extended terms for variables. This more general operation will be
-justified separately, once the eliminability of class terms has been
-established.
+The formation clause is understood stagewise. At any stage, only
+predicative reductions already justified at preceding stages may be
+used to admit further defining conditions. That the construction can
+indeed be continued through all finite stages is a result to be proved,
+not an assumption implicit in the definition.
 
 \nbgpara{2}{Bounded Class Terms}
 
-We also admit a bounded form of class-builder notation.
+It is convenient to introduce bounded notation at once, without giving
+it an independent formation rule.
 
 \begin{definition}[Bounded Class Terms]
 \label{def:bounded-class-terms}
-If \(\xi\) and \(\eta\) are distinct variables and \(\varphi\) is a
-predicative extended formula whose class terms, if any, have already
-been admitted at earlier stages, then
+Let \(S\) be an admitted extended term, let \(\xi\) be a variable not
+occurring free in \(S\), and let \(\varphi\) be an extended formula.
+Whenever the general class term on the right is admitted, we define
 \[
-\{\xi\in\eta\mid\varphi\}
-\]
-is a \emph{bounded class term}.
-
-Bounded class terms are defined by the expansion
-\[
-\{\xi\in\eta\mid\varphi\}
+\{\xi\in S\mid\varphi\}
 \defequiv
-\{\xi\mid(\xi\in\eta\land\varphi)\}.
+\{\xi\mid(\xi\in S\land\varphi)\}.
 \]
+The expression on the left is called a \emph{bounded class term}.
 \end{definition}
 
-The variable \(\xi\) binds its free occurrences in \(\varphi\),
-but does not bind \(\eta\). Thus, the free variables of
-\[
-\{\xi\in\eta\mid\varphi\}
-\]
-are the variables free in \(\varphi\) other than \(\xi\), together
-with \(\eta\).
+Thus bounded notation is available precisely when its unbounded
+expansion has a predicative defining condition. In particular, any
+class terms occurring in \(S\) or \(\varphi\) must already have been
+admitted, and the condition \(\xi\in S\land\varphi\) must be
+predicative according to the reductions then available.
 
-Bounded class terms introduce no independent class-forming operation.
-Every occurrence is understood through its prescribed expansion into
-a general class term. In particular, the existence and uniqueness
-of the class represented by a bounded term will follow from the
-corresponding results for general class terms.
-
-The restriction to variable bounds is provisional. Once substitution
-of extended terms has been justified, bounded class-builder notation
-will be extended to arbitrary admitted extended terms as bounds.
+The bound variable \(\xi\) binds its free occurrences in
+\(\varphi\), but none in \(S\). The condition on \(S\) prevents the
+expansion from binding an occurrence that was intended to be a
+parameter. A bounded class term is always understood through the
+displayed expansion; no separate existence or elimination theorem will
+be needed for it.
 
 \nbgpara{3}{Builder Rank}
 
-Class terms may occur within the defining conditions of further class
-terms. To organize their introduction without circularity, we assign
-a \emph{builder rank} to extended expressions.
+A class term may contain further class terms in its defining formula.
+To order their introduction, we associate a finite \emph{builder rank}
+with each extended expression.
 
 \begin{definition}[Builder Rank]
 \label{def:builder-rank}
-Variables have builder rank \(0\). An extended formula containing no
-class term also has builder rank \(0\).
-
-If
+Variables and formulas containing no class terms have builder rank
+\(0\). If
 \[
 T=\{\xi\mid\varphi\},
 \]
 then
 \[
-\operatorname{br}(T)
-=
-\operatorname{br}(\varphi)+1.
+\operatorname{br}(T)=\operatorname{br}(\varphi)+1.
 \]
-
-A bounded class term has the builder rank of the general class term
-to which it is expanded. Thus,
+The builder rank of any other extended formula is the greatest rank of
+the class-term occurrences within it, or \(0\) if there are none.
+Bounded class terms have the rank of their unbounded expansions. Hence
 \[
-\operatorname{br}
-\bigl(
-\{\xi\in\eta\mid\varphi\}
-\bigr)
+\operatorname{br}\bigl(\{\xi\in S\mid\varphi\}\bigr)
 =
-\operatorname{br}(\varphi)+1.
+1+\max\bigl\{\operatorname{br}(S),
+             \operatorname{br}(\varphi)\bigr\}.
 \]
-
-The builder rank of any other extended expression containing class
-terms is the greatest builder rank of the class terms occurring
-within it.
 \end{definition}
 
-The formation of class terms is understood inductively in builder
-rank.
+At rank \(0\), the available extended terms are variables, and the
+predicative formulas are those admitted before class-builder notation.
+Suppose that class terms up to rank \(n\) have been justified, together
+with the reductions required to use them in predicative conditions.
+A new general class term \(\{\xi\mid\varphi\}\) may be admitted if
+\(\varphi\) is predicative using only those resources and has builder
+rank at most \(n\). The new term then has rank at most \(n+1\).
+In particular, the defining formula of a term of rank \(n+1\) contains
+only class terms of rank at most \(n\).
 
-At rank \(0\), the extended terms are the variables, and the
-predicative extended formulas are those admitted before the
-introduction of class-builder notation.
-
-Suppose that class terms of rank at most \(n\), together with the
-predicative extended formulas containing them, have been admitted.
-A new class term
-\[
-\{\xi\mid\varphi\}
-\]
-may then be introduced if \(\varphi\) is predicative according to
-the reductions already justified at these earlier ranks. Its rank
-is
-\[
-\operatorname{br}(\varphi)+1.
-\]
-
-Consequently, a class term of rank \(n+1\) has a defining formula
-containing only class terms of rank at most \(n\).
-
-Predicativity and builder rank impose different requirements.
-Predicativity determines which defining conditions may be used
-in applications of Class Formation. Builder rank orders the
-justification of nested class terms, ensuring that the admissibility
-of a new term depends only upon results already established for
-terms of lower rank.
-
-The fact that this construction can be carried out through every
-finite rank will be established by the Class-Term Extension
-Metatheorem.
+Builder rank and predicativity have different functions. Rank keeps
+track of the dependence of one class term on others; predicativity
+determines which conditions Class Formation permits us to use. Rank
+alone cannot make a defining condition predicative. The proof that
+these two requirements can be met together will be given in the
+Class-Term Extension Metatheorem.
 
 \nbgpara{4}{Canonical Membership Conditions}
 
-We associate with each class term a formula expressing the condition
-under which a variable belongs to the class represented by that term.
+To associate a membership condition with a class term, we must take
+account of the fact that only sets can belong to classes.
 
 \begin{definition}[Canonical Membership Condition]
 \label{def:technical-canonical-membership-condition}
@@ -208,954 +145,1827 @@ Let
 \[
 T=\{\xi\mid\varphi\}
 \]
-be a general class term, and let \(\zeta\) be a variable free for
-\(\xi\) in \(\varphi\). The \emph{canonical membership condition}
-of \(T\), with argument \(\zeta\), is
+be a general class term, and let \(\zeta\) be any variable. Choose
+an alphabetic variant \(\varphi^*\) of \(\varphi\) in which
+\(\zeta\) is free for \(\xi\). The \emph{canonical membership
+condition} of \(T\), with argument \(\zeta\), is
 \[
 \operatorname{Cond}_T(\zeta)
 \defequiv
-\Set(\zeta)\land\varphi[\zeta/\xi].
+\Set(\zeta)\land\varphi^*[\zeta/\xi].
 \]
 \end{definition}
 
-The sethood condition is essential. Under the intended interpretation
-of NBG, every member of a class is a set. Thus, even if a proper class
-satisfies the defining formula \(\varphi\), it cannot thereby become a
-member of the class represented by \(T\).
+Such a variant can always be obtained by renaming bound variables
+within \(\varphi\) as necessary to avoid capture. Different
+legitimate choices produce alphabetic variants of the resulting
+condition. The notation \(\operatorname{Cond}_T(\zeta)\) is
+metalinguistic: it abbreviates an extended formula and introduces no
+additional symbol into the language.
 
-For a bounded class term
-\[
-T=\{\xi\in\eta\mid\varphi\},
-\]
-the canonical membership condition is determined through its
-expansion into a general class term:
+The conjunct \(\Set(\zeta)\) is essential. A defining condition may
+hold of a proper class, but this cannot make that proper class a
+member of the class being defined. If \(T\) has rank \(n+1\), then
+\(\operatorname{Cond}_T(\zeta)\) contains only class terms of rank at
+most \(n\). In particular, the construction of the membership
+condition does not reintroduce the outer builder.
+
+For a bounded term, the canonical membership condition is obtained
+from its unbounded expansion. Thus, if
+\(T=\{\xi\in S\mid\varphi\}\), then
 \[
 \operatorname{Cond}_T(\zeta)
 \defequiv
 \Set(\zeta)\land
-\bigl(
-\zeta\in\eta\land\varphi[\zeta/\xi]
-\bigr).
+\bigl(\zeta\in S\land\varphi^*[\zeta/\xi]\bigr),
 \]
-Since membership in \(\eta\) already implies sethood, this condition
-is provably equivalent to
-\[
-\zeta\in\eta\land\varphi[\zeta/\xi].
-\]
-The resulting simplification will be used in the Membership Law for
-bounded class terms.
-
-The notation
-\[
-\operatorname{Cond}_T(\zeta)
-\]
-is metalinguistic. The expression ``\(\operatorname{Cond}\)''
-is not a symbol of the primitive language or of the extended
-syntax. It serves only to abbreviate the indicated extended formula.
-
-Whenever the substitution occurring in a canonical membership
-condition is not immediately legitimate, the bound variable of
-the class term may first be renamed alphabetically. In particular,
-a suitable canonical membership condition can always be formed
-using a variable not occurring in the class term.
-
-If \(T\) has builder rank \(n+1\), then
-\(\operatorname{Cond}_T(\zeta)\) contains only class terms of rank
-at most \(n\). This rank-lowering property will be fundamental
-to the subsequent construction.
+with the same precautions against capture. We do not yet appeal to
+the generalized Membership Law to simplify this expression.
 
 \nbgpara{5}{Realizations}
 
-A class term is connected to the existing language by specifying
-what it means for a variable to represent the class determined
-by its canonical membership condition.
+We can now describe, without presupposing its existence, what a class
+realizing a class term would have to satisfy.
 
 \begin{definition}[Realization of a Class Term]
 \label{def:technical-realization-of-class-term}
-Let \(T\) be a general class term, and let \(\eta\) be a variable.
-Choose a variable \(\xi\) distinct from \(\eta\) and not occurring
-in \(T\). Then
+Let \(T\) be a general class term and \(\eta\) a variable. Choose a
+variable \(\alpha\) not occurring in \(T\) and distinct from
+\(\eta\). We define
 \[
 \Real_T(\eta)
 \defequiv
-\forall\xi
-\bigl(
-\xi\in\eta
+\forall\alpha\bigl(
+\alpha\in\eta
 \leftrightarrow
-\operatorname{Cond}_T(\xi)
+\operatorname{Cond}_T(\alpha)
 \bigr).
 \]
+For bounded class terms, \(\Real_T(\eta)\) is defined through the
+corresponding general class term.
 \end{definition}
 
-The formula
-\[
-\Real_T(\eta)
-\]
-expresses that \(\eta\) has precisely the members specified by
-the canonical membership condition of \(T\). When this formula
-holds, we say that \(\eta\) \emph{realizes} \(T\), or that
-\(\eta\) is a \emph{realization} of \(T\).
+Thus \(\Real_T(\eta)\) expresses that \(\eta\) has precisely the
+members specified by \(T\). The symbol \(\Real\), like
+\(\operatorname{Cond}\), is merely a metalinguistic abbreviation.
+Different legitimate choices of \(\alpha\) yield alphabetic variants.
 
-The notation \(\Real_T(\eta)\) is metalinguistic, just like
-\(\operatorname{Cond}_T(\xi)\). It abbreviates an extended formula
-and introduces no additional symbol into the primitive language.
-Different legitimate choices of the bound variable \(\xi\)
-yield alphabetic variants.
-
-For bounded class terms, realization is defined through the
-prescribed expansion into a general class term. Thus, if
+We have not asserted that any realization exists. That assertion will
+take the form
 \[
-T=\{\xi\in\eta\mid\varphi\},
+\vdash\exists\eta\,\Real_T(\eta),
 \]
-then
-\[
-\Real_T(\zeta)
-\]
-abbreviates
-\[
-\Real_{\{\xi\mid(\xi\in\eta\land\varphi)\}}(\zeta).
-\]
-
-The definition does not itself assert that a realization exists.
-In particular, an assertion of the form
-\[
-\exists\eta\,\Real_T(\eta)
-\]
-is intended to establish the existence of a class satisfying the
-membership condition determined by the fixed parameters of \(T\).
-For this purpose, \(\eta\) must not occur free in \(T\), since
-otherwise the existential quantifier would also bind occurrences
-belonging to those parameters.
-
-The Class-Term Extension Metatheorem will establish that every
-admitted class term has a realization, and that any two realizations
-of the same class term are equal.
+where \(\eta\) is chosen not to occur free in \(T\), so that the
+quantifier does not bind any of its parameters. Existence will require
+Class Formation, and uniqueness will follow from Extensionality.
+Neither result belongs to the present syntactic preliminaries.
 
 \nbgpara{6}{Contextual Elimination}
 
-The primitive language contains no non-variable terms. A class
-term therefore cannot itself be replaced by a term of the primitive
-language. Instead, it must be eliminated within the complete
-formula in which it occurs.
-
-The elimination procedure uses fresh variables to represent
-the classes specified by class terms.
+Since the primitive language has no non-variable terms, a class term
+cannot be replaced by a primitive term in isolation. We instead
+eliminate it in the formula in which it occurs, introducing a variable
+to stand for a realization.
 
 \begin{definition}[Contextual Elimination]
 \label{def:contextual-elimination}
-Before the procedure is applied, every bounded class term is
-expanded into its corresponding general class term.
+First expand all bounded class terms into general class terms. Let
+\(\Phi\) be an extended formula containing a class-term occurrence.
+Select the leftmost outermost occurrence \(T\), where
+\emph{outermost} means that the occurrence is not within the
+defining formula of another class term.
 
-Let \(\varphi\) be an extended formula containing at least one
-class-term occurrence. Select the leftmost outermost such
-occurrence, say \(T\), where an occurrence is \emph{outermost}
-iff it does not lie within the defining formula of another
-class-term occurrence.
-
-The selected occurrence belongs to a unique atomic extended
-subformula \(\theta\) of \(\varphi\).
-
-Choose a variable \(\eta\) that does not occur in \(\varphi\),
-and let \(\theta'\) be obtained from \(\theta\) by replacing
-only the selected occurrence of \(T\) by \(\eta\).
-
-Let \(\varphi'\) be obtained from \(\varphi\) by replacing
-the selected occurrence of \(\theta\) with
+The selected occurrence lies in a unique atomic extended subformula
+\(\theta\) of \(\Phi\). Choose a variable \(\eta\) not occurring in
+\(\Phi\) and let \(\theta'\) result from replacing just that
+occurrence of \(T\) in \(\theta\) by \(\eta\).
+Replace this occurrence of \(\theta\) in \(\Phi\) by
 \[
-\exists\eta
-\bigl(
+\exists\eta\bigl(
 \Real_T(\eta)\land\theta'
 \bigr).
 \]
-
-A single step of \emph{contextual elimination} prescribes
-\[
-\varphi
-\defequiv
-\varphi'.
-\]
-The surrounding logical context is otherwise unchanged.
+The resulting formula is one \emph{contextual elimination step} of
+\(\Phi\). The surrounding logical context is left unchanged.
 \end{definition}
 
-\begin{example}
-An occurrence of \(T \in A\)
-is eliminated as
+For example, the respective elimination steps for
+\(A\in T\), \(T\in A\), and \(A=T\), with \(A\) a variable, are
 \[
-\exists\eta
-\bigl(
-\Real_T(\eta)\land\eta\in A
-\bigr).
+\begin{aligned}
+A\in T
+&\quad\rightsquigarrow\quad
+\exists\eta(\Real_T(\eta)\land A\in\eta),\\
+T\in A
+&\quad\rightsquigarrow\quad
+\exists\eta(\Real_T(\eta)\land\eta\in A),\\
+A=T
+&\quad\rightsquigarrow\quad
+\exists\eta(\Real_T(\eta)\land A=\eta).
+\end{aligned}
 \]
-\end{example}
+Only the selected occurrence is replaced; other occurrences of the
+same term are treated separately. In particular, the procedure does
+not replace a class term inside the defining formula of another
+class term before eliminating that outer term. This observation will
+also matter when we later justify predicative reductions.
 
-\begin{example}
-An occurrence of \(A \in T\)
-is eliminated as
-\[
-\exists\eta
-\bigl(
-\Real_T(\eta)\land A\in\eta
-\bigr).
-\]
-\end{example}
+A contextual elimination step is a prescribed expansion of notation,
+not an application of an inference rule. Whether the class term has a
+realization is a separate question, to be settled after the syntactic
+procedure has been defined.
 
-\begin{example}
-An occurrence of \(A=T\)
-is eliminated as
-\[
-\exists\eta
-\bigl(
-\Real_T(\eta)\land A=\eta
-\bigr).
-\]
-\end{example}
-
-Only the selected occurrence of a class term is replaced.
-If the same class term occurs more than once, its occurrences
-are eliminated separately, using fresh realization variables
-for each occurrence.
-
-The procedure is repeated until no class-term occurrence
-remains. Every step removes one class-builder occurrence:
-the selected outer builder disappears, while the class terms
-appearing in its canonical membership condition are precisely
-those already occurring within its defining formula. Hence
-the total number of class-builder occurrences decreases by one
-at each step, and the procedure terminates after finitely
-many steps.
-
-The resulting expression contains no class terms. All remaining
-defined notation can then be eliminated according to the
-primitive-expansion clauses established previously.
+\nbgpara{7}{Primitive Expansion}
 
 \begin{definition}[Primitive Expansion of a Formula Containing Class Terms]
 \label{def:primitive-expansion-with-class-terms}
-A \emph{primitive expansion} of an extended formula containing
-class terms is obtained by repeatedly applying contextual
-elimination until no class terms remain, and then expanding
-all remaining defined notation until a formula of the
-primitive language is obtained.
+A \emph{primitive expansion} of an extended formula containing class
+terms is obtained by repeating contextual elimination until no class
+terms remain, and then expanding the remaining defined notation by
+the previously assigned clauses until a formula of the primitive
+language is obtained.
 \end{definition}
 
-The procedure just specified applies to the extended formulas
-generated by the class-term formation clauses, together with
-the previously admitted logical and defined notation. The
-application of earlier defined predicates and relations to
-arbitrary class terms, where not yet licensed by their formation
-clauses, will be justified separately through extended-term
-substitution.
+The procedure is specified here for formulas generated by the
+formation clauses already available. Defined predicates and relations
+whose application to arbitrary class terms has not yet been admitted
+are not thereby licensed. Their extensions, where wanted, will be
+treated later.
 
-Although termination follows directly from the construction,
-further properties require proof. In particular, we must show
-that legitimate choices of fresh variables yield primitive
-expansions differing only by alphabetic variation, and that
-the procedure respects free variables and capture-avoiding
-substitution.
+Primitive expansion must be distinguished from predicative reduction.
+Contextual elimination employs unrestricted quantifiers, both in
+\(\Real_T(\eta)\) and in the existential formula introduced at each
+step. It therefore establishes a way to remove class terms from
+formulas, not a way to admit formulas containing them as predicative
+conditions for further Class Formation instances. That second task
+will require independently justified predicative reductions.
 
-These properties will be established by the Class-Term Extension
-Metatheorem.
+\nbgpara{8}{Syntactic Properties of Contextual Elimination}
 
-Contextual elimination must also be distinguished from
-predicative reduction. The formula \(\Real_T(\eta)\) contains
-an unrestricted universal quantifier, and contextual
-elimination introduces an unrestricted existential quantifier.
-Consequently, primitive expansion does not by itself establish
-that a formula containing class terms may occur within a
-predicative defining condition.
+We first settle what can be established about primitive expansion
+without using any class-existence principle.
 
-Separate predicative reductions will be required for that
-purpose. Unlike contextual elimination, these reductions
-will use only syntax admitted by Class Formation and will
-replace atomic formulas containing class terms by equivalent
-formulas involving terms of lower builder rank.
+\begin{metatheorem}[Syntactic Properties of Contextual Elimination]
+\label{meta:syntactic-contextual-elimination}
+For every extended formula \(\Phi\) generated by the class-term
+formation clauses, contextual elimination has the following
+properties:
+\begin{enumerate}
+\item The procedure terminates after finitely many steps.
+\item Legitimate choices of fresh variables yield results that are
+alphabetic variants. Consequently, primitive expansion is determined
+up to alphabetic variation.
+\item Primitive expansion preserves the free variables of \(\Phi\).
+\item Primitive expansion is compatible with capture-avoiding
+substitution of variables for variables, in the sense required for
+extended syntax in the section on Definitions.
+\end{enumerate}
+These claims concern the syntax alone and require neither Class
+Formation nor the existence of realizations.
+\end{metatheorem}
 
-Together, contextual elimination and predicative reduction
-will establish the two required aspects of class-builder
-notation: its complete eliminability in favor of the
-primitive language and its admissibility within the
-predicative conditions used to form further classes.
+\begin{proof}
+We work with general class terms, bounded terms having first been
+expanded as prescribed.
 
-\subsubsection{Class-Builder Metatheorem}
+\medskip
+\noindent\emph{Termination.}
+Count all occurrences of general class builders in the complete
+formula, including those within the defining formulas of other
+builders. Every elimination step removes the selected outer builder.
+Its defining formula appears exactly once in
+\(\operatorname{Cond}_T(\alpha)\), and hence in
+\(\Real_T(\eta)\). Thus the builders occurring inside \(T\) are
+retained, but none is duplicated; no new builder is introduced.
+The total number of builder occurrences decreases by exactly one.
+Since this number is finite, contextual elimination terminates.
+The remaining defined notation is eliminated by the already assigned
+primitive-expansion procedures.
 
-\nbgpara{7}{A Membership Abbreviation}
+\medskip
+\noindent\emph{Alphabetic invariance.}
+For a fixed selected occurrence, different choices of the fresh
+realization variable and of the variables bound within its realization
+condition yield alphabetic variants. The selected occurrence itself
+is determined by the prescribed leftmost-outermost rule. Alphabetic
+variation preserves the arrangement of class-term occurrences, so it
+also preserves that selection. Induction on their number shows that
+all legitimate executions of contextual elimination yield alphabetic
+variants. The previously specified expansion clauses for the
+remaining notation preserve this property.
 
-To formulate the predicative reductions uniformly, we introduce
-an auxiliary metalinguistic abbreviation.
+\medskip
+\noindent\emph{Free variables.}
+If \(\alpha\) and \(\eta\) are fresh for \(T\), then
+\(\operatorname{Cond}_T(\alpha)\) has precisely the free variables
+of \(T\), together with \(\alpha\), and
+\(\Real_T(\eta)\) has precisely those of \(T\), together with
+\(\eta\). In an elimination step, the free variables contributed
+by the selected occurrence of \(T\) therefore reappear in its
+realization condition, while the new variable \(\eta\) is bound by
+the existential quantifier. No other free occurrences are altered.
+Each step preserves the free variables of the complete formula, as
+do the remaining primitive-expansion clauses.
 
-Let \(T\) be an extended term and let \(\zeta\) be a variable.
-We write
+
+\medskip
+\noindent\emph{Compatibility with substitution.}
+We first establish the compatibility of canonical membership
+conditions by simultaneous structural induction on extended
+terms and formulas.
+
+For atomic formulas, the claim follows from the recursive
+substitution clauses for their constituent terms; the
+propositional cases are immediate. At quantifier and
+class-builder binders, bound variables are renamed whenever
+necessary to avoid capture. The induction hypothesis then
+applies to the resulting bodies.
+
+In particular, let \(T=\{\xi\mid\varphi\}\), and consider
+substitution of \(\nu\) for \(\mu\). If \(\mu=\xi\), the
+substitution does not enter the defining formula, since
+\(\xi\) is bound by the builder. Otherwise, first rename
+\(\xi\), if necessary, to avoid \(\nu\). Choosing
+\(\alpha\) fresh for all expressions involved, the
+substitutions of \(\alpha\) for \(\xi\) and \(\nu\) for
+\(\mu\) then commute up to alphabetic variation. Hence
 \[
-M_T(\zeta)
+\operatorname{Cond}_{T[\nu/\mu]}(\alpha)
+ \qquad \text{and} \qquad
+\bigl(\operatorname{Cond}_T(\alpha)\bigr)[\nu/\mu]
 \]
-for the following extended formula:
+are alphabetic variants.
+
+The same property follows for \(\Real_T(\eta)\), with
+fresh \(\eta\). Consequently, a contextual elimination
+step commutes with variable substitution up to alphabetic
+variation: substitution preserves the selected class-term
+occurrence, and the corresponding realization conditions
+agree up to alphabetic variation.
+
+Induction on the number of remaining builder occurrences
+extends this result to the complete elimination procedure.
+The previously established substitution properties of
+ordinary defined notation then yield the corresponding
+claim for primitive expansion.
+\end{proof}
+
+The metatheorem establishes that class-term notation has a coherent
+primitive-expansion procedure. It does not establish that realizations
+exist, or that expressions containing class terms may be used as
+predicative defining conditions. These are the two substantive tasks
+of the Class-Term Extension Metatheorem that follows.
+
+
+
+
+
+\subsubsection{The Class-Term Extension Metatheorem}
+
+\nbgpara{1}{Membership Specifications}
+
+The syntactic preliminaries have supplied a primitive-expansion procedure
+for formulas containing class terms. They have not established that any
+class term has a realization, or that formulas containing such terms may
+be used as predicative conditions in further applications of Class
+Formation. We now establish these two properties together.
+
+It will be convenient to express the membership condition associated
+with an extended term without substituting arbitrary extended terms
+for variables.
+
+Let \(T\) be an admitted extended term and \(\zeta\) a variable. We use
+the following metalinguistic abbreviation:
 \[
 M_T(\zeta)
 \defequiv
 \begin{cases}
-\zeta\in T,
-&
-\text{if \(T\) is a variable},\\[2mm]
-\operatorname{Cond}_T(\zeta),
-&
-\text{if \(T\) is a class term}.
+\zeta\in T, & \text{if \(T\) is a variable},\\[2mm]
+\operatorname{Cond}_T(\zeta), & \text{if \(T\) is a class term}.
 \end{cases}
 \]
+For bounded class terms, the second clause is understood through their
+unbounded expansions. As usual, the alphabetic variations needed to
+avoid capture are made before forming canonical membership conditions.
 
-In the second case, the bound variable of \(T\) is renamed
-alphabetically whenever necessary to make the canonical membership
-condition legitimate.
-
-The abbreviation \(M_T(\zeta)\) expresses the membership condition
-associated with \(T\), without presupposing that arbitrary extended
-terms may already be substituted for variables.
-
-Two properties will be useful.
-
-First, if \(T\) is a class term of builder rank \(n+1\), then
-\(M_T(\zeta)\) contains class terms only of rank at most \(n\).
-If \(T\) is a variable, \(M_T(\zeta)\) contains no class terms.
-
-Second, in either case,
+We shall also write
 \[
-\vdash
-M_T(\zeta)\to\Set(\zeta).
+\operatorname{Spec}_T(h)
+\defequiv
+\forall_S a\bigl(a\in h\leftrightarrow M_T(a)\bigr),
 \]
-For variable terms, this follows from Set-I. For general class
-terms, it follows immediately from the definition of the
-canonical membership condition. The bounded case follows through
-its expansion into a general class term.
+where \(a\) is fresh for \(T\) and \(h\). When \(h\) is introduced
+as a representative of \(T\), it is also chosen fresh for \(T\).
+This too is only a metalinguistic abbreviation.
 
-These observations concern only formulas containing terms already
-admitted by the construction. They do not assert a general
-substitution principle for extended terms.
+Two elementary observations will be used throughout. For every
+admitted extended term \(T\),
+\[
+\vdash M_T(\zeta)\to\Set(\zeta).
+\]
+When \(T\) is a variable, this follows by Set-I; when \(T\) is a
+class term, it follows from the definition of
+\(\operatorname{Cond}_T\). Moreover, if \(T\) is a class term of
+builder rank \(n+1\), then the class terms occurring in
+\(M_T(\zeta)\) have rank at most \(n\). If \(T\) is a variable,
+\(M_T(\zeta)\) contains no class terms.
 
-\nbgpara{8}{The Class-Term Extension Metatheorem}
+Neither observation asserts the existence of realizations or the
+admissibility of substituting class terms for variables. The notation
+merely brings the relevant membership formulas into a common form.
 
-The definitions of the preceding paragraphs specify a stagewise
-extension of the syntax, but they do not yet establish that the
-construction can be continued through every finite builder rank.
+\nbgpara{2}{Class-Term Extension}
 
-In particular, the formation of a class term requires its defining
-condition to be predicative. We must therefore show that formulas
-containing previously admitted class terms have the predicative
-reductions required for their use in further definitions.
-
-At the same time, we must establish that each admitted term has a
-unique realization and that contextual elimination yields
-well-defined primitive expansions.
-
-These properties will be proved together.
+Recall that a class term of rank \(n+1\) is formed from a condition
+whose constituent class terms have rank at most \(n\), and whose
+predicative reductions must already have been justified. The
+existence of realizations and the availability of new reductions
+must therefore be established in that order at each rank.
 
 \begin{metatheorem}[Class-Term Extension]
 \label{meta:class-term-extension}
-
-The extension by general and bounded class terms is well defined
-at every finite builder rank. More precisely:
-
+The stagewise extension by general and bounded class terms is
+legitimate at every finite builder rank. More precisely:
 \begin{enumerate}
-
-\item Every admitted class term \(T\) has a realization.
-If \(\eta\) does not occur free in \(T\), then
+\item \emph{Existence and Uniqueness of Realizations.}
+For every admitted class term \(T\), and every variable \(\eta\)
+not occurring free in \(T\),
+\[
+\vdash\exists\eta\,\Real_T(\eta).
+\]
+Furthermore, for distinct variables \(\eta\) and \(\zeta\) for
+which the realization conditions are defined,
 \[
 \vdash
-\exists\eta\,\Real_T(\eta).
+\bigl(\Real_T(\eta)\land\Real_T(\zeta)\bigr)
+\to\eta=\zeta.
 \]
 
-Any two realizations of \(T\) are equal. Thus, whenever the
-displayed formulas are defined,
-\[
-\vdash
-\bigl(
-\Real_T(\eta)\land\Real_T(\zeta)
-\bigr)
-\to
-\eta=\zeta.
-\]
-
-\item Repeated contextual elimination terminates and assigns every
-extended formula containing class terms a primitive expansion,
-determined up to alphabetic variation.
-
-The expansion preserves the free variables of the original formula.
-It is compatible with capture-avoiding substitution of variables
-for variables, provided that freshly introduced bound variables
-are renamed where necessary.
-
-\item Every atomic extended formula containing a class term admits
-a justified predicative reduction to an extended formula whose
-class terms, if any, have strictly lower builder rank than the
-greatest builder rank occurring in the original atomic formula.
-
-The reduction introduces no new free variables.
-
-\item Repeated application of these atomic reductions terminates.
-Consequently, every formula constructed from the admitted
-predicative syntax and class terms can be reduced to a
-class-term-free predicative extended formula, and thence to a
-core predicative formula by the previously justified reductions.
-
-The resulting reduction is justified independently of any
-application of Class Formation whose availability depends upon
-that reduction.
-
+\item \emph{Predicative Reductions of Atomic Formulas.}
+Every atomic extended formula involving at least one class term has
+a justified predicative reduction to an equivalent extended formula.
+Every class term occurring in its prescribed reduct has strictly
+smaller builder rank than the greatest rank occurring in the
+original atomic formula. The reduction introduces no free variables
+and uses no unrestricted quantifiers.
 \end{enumerate}
+The reductions at a given rank are justified only after the
+realizations required at that rank have been established; no instance
+of Class Formation is justified by appeal to the very reduction whose
+correctness depends upon that instance.
 \end{metatheorem}
 
 \begin{proof}
-We proceed by induction on builder rank.
+We proceed by induction on builder rank. At each stage we also use
+the following consequence of the available atomic reductions: every
+formula of the admitted predicative syntax whose class terms have
+rank at most that stage can be reduced using those already justified
+clauses. To see this, reduce outer atomic occurrences before the
+class terms within them. Each atomic reduction removes at least one
+builder and retains its defining formula once, so the total number
+of builders decreases. The general result is stated separately after
+the induction. In particular, establishing the reductions at one
+rank makes them available for defining terms at the next.
 
-At rank \(0\), the extended terms are variables. The applicable
-formation rules, primitive-expansion procedures, and predicative
-reductions have already been established before the introduction
-of class-builder notation. Thus, the required properties hold
-at the initial stage.
+At rank \(0\), extended terms are variables. Predicative formulas
+and the relevant reductions have already been justified in the
+preceding sections, so the initial stage is available.
 
-Suppose that the construction has been justified through rank
-\(n\). In particular, assume that the class terms of rank at
-most \(n\) have unique realizations, that formulas containing
-them admit primitive expansions with the stated syntactic
-properties, and that the prescribed predicative reductions
-have been justified for atomic formulas containing those terms.
-
-We establish the corresponding results at rank \(n+1\).
+Suppose that the construction has been justified through rank \(n\),
+including the admissibility of predicative conditions formed using
+class terms of rank at most \(n\). We establish the results at rank
+\(n+1\).
 
 \medskip
-
-\noindent\textit{Existence and uniqueness of realizations.}
-
+\noindent\emph{Existence and Uniqueness.}
 Let
 \[
 T=\{\xi\mid\varphi\}
 \]
-be an admitted general class term of rank \(n+1\).
+be a general class term of rank \(n+1\). By its formation clause,
+\(\varphi\) is a predicative extended formula whose class terms have
+rank at most \(n\). Its reductions are thus justified by the
+induction hypothesis.
 
-By the formation condition for class terms, \(\varphi\) is
-predicative according to the reductions already justified
-at lower ranks. Moreover, every class term occurring in
-\(\varphi\) has rank at most \(n\).
+Choose \(\alpha\) and \(\eta\) distinct and fresh for \(T\).
+Capture-avoiding substitution of the fresh variable \(\alpha\) for
+\(\xi\) preserves predicative admissibility: the reductions already
+available for \(\varphi\) can be carried through after this
+variable-for-variable substitution, with bound variables renamed as
+necessary. Thus \(\varphi[\alpha/\xi]\) is predicative. This uses
+only the syntactic substitution properties established earlier, not
+substitution of arbitrary extended terms.
 
-Choose variables \(\alpha\) and \(\eta\) not occurring in \(T\),
-with \(\alpha\neq\eta\).
-
-By the induction hypothesis, capture-avoiding substitution of
-\(\alpha\) for \(\xi\) preserves the predicative admissibility
-of \(\varphi\). Consequently,
+Class Formation by Predicative Reduction now yields
 \[
-\operatorname{Cond}_T(\alpha)
-\defequiv
-\Set(\alpha)\land\varphi[\alpha/\xi]
+\vdash\exists\eta\,\forall_S\alpha
+\bigl(\alpha\in\eta\leftrightarrow
+\varphi[\alpha/\xi]\bigr).
 \]
-is predicative.
-
-The conditions of Class Formation by Predicative Reduction
-are therefore satisfied. Hence
+By the equivalence between restricted and unrestricted membership
+specifications, this implies
 \[
-\vdash
-\exists\eta\,\forall_S\alpha
-\bigl(
-\alpha\in\eta
-\leftrightarrow
-\operatorname{Cond}_T(\alpha)
+\vdash\exists\eta\,\forall\alpha
+\bigl(\alpha\in\eta\leftrightarrow
+(\Set(\alpha)\land\varphi[\alpha/\xi])\bigr).
+\]
+The formula within the unrestricted specification is precisely
+\(\operatorname{Cond}_T(\alpha)\). Hence
+\[
+\vdash\exists\eta\,\Real_T(\eta).
+\]
+
+If both \(\Real_T(\eta)\) and \(\Real_T(\zeta)\) hold, the two
+realization specifications imply
+\[
+\forall\alpha\bigl(
+\alpha\in\eta\leftrightarrow\alpha\in\zeta
 \bigr).
 \]
-
-By the equivalence between restricted and unrestricted
-membership specifications, this yields
-\[
-\vdash
-\exists\eta\,\forall\alpha
-\left(
-\alpha\in\eta
-\leftrightarrow
-\bigl(
-\Set(\alpha)\land
-\operatorname{Cond}_T(\alpha)
-\bigr)
-\right).
-\]
-
-Since
-\[
-\vdash
-\operatorname{Cond}_T(\alpha)
-\to
-\Set(\alpha),
-\]
-propositional reasoning simplifies the latter specification to
-\[
-\vdash
-\exists\eta\,\forall\alpha
-\bigl(
-\alpha\in\eta
-\leftrightarrow
-\operatorname{Cond}_T(\alpha)
-\bigr).
-\]
-
-By the definition of realization, this is
-\[
-\vdash
-\exists\eta\,\Real_T(\eta).
-\]
-
-Thus, \(T\) has a realization.
-
-For uniqueness, suppose that
-\[
-\Real_T(\eta)
-\qquad\text{and}\qquad
-\Real_T(\zeta).
-\]
-By their definitions,
-\[
-\forall\alpha
-\bigl(
-\alpha\in\eta
-\leftrightarrow
-\operatorname{Cond}_T(\alpha)
-\bigr)
-\]
-and
-\[
-\forall\alpha
-\bigl(
-\alpha\in\zeta
-\leftrightarrow
-\operatorname{Cond}_T(\alpha)
-\bigr).
-\]
-It follows that
-\[
-\forall\alpha
-\bigl(
-\alpha\in\eta
-\leftrightarrow
-\alpha\in\zeta
-\bigr).
-\]
-Extensionality therefore gives
-\[
-\eta=\zeta.
-\]
-
-Existence and uniqueness for bounded class terms follow through
-their prescribed expansions into general class terms.
+Extensionality gives \(\eta=\zeta\). Bounded class terms require
+no separate argument, since they are abbreviations of general
+class terms. Since \(T\) was arbitrary, existence and uniqueness
+have now been established for every new term of rank \(n+1\),
+before any new atomic reduction is assigned.
 
 \medskip
-
-\noindent\textit{Contextual elimination and primitive expansion.}
-
-Consider a formula whose class terms have rank at most \(n+1\).
-
-A single step of contextual elimination replaces a selected
-class-term occurrence \(T\) by a fresh variable \(\eta\) and
-introduces the formula
-\[
-\Real_T(\eta).
-\]
-
-The selected outer builder is thereby removed. The class terms
-occurring within \(\Real_T(\eta)\) are precisely those inherited
-from the defining formula of \(T\), and hence have strictly
-lower rank than \(T\).
-
-As already observed in the definition of contextual elimination,
-each step decreases the total number of class-builder occurrences
-by one. The procedure therefore terminates after finitely many
-steps.
-
-When no class terms remain, all remaining defined notation can
-be eliminated by the previously established expansion clauses.
-The result is a formula of the primitive language.
-
-The choice of a fresh realization variable does not affect this
-result except by alphabetic variation. Indeed, two legitimate
-choices introduce bound variables in corresponding positions,
-and the resulting formulas are immediate alphabetic variants
-after any necessary renaming of bound variables already
-occurring in the surrounding expression.
-
-Applying this observation successively to the finite elimination
-procedure shows that the resulting primitive expansion is
-determined up to alphabetic variation.
-
-The procedure also preserves free variables. Replacing \(T\)
-by \(\eta\) removes the free variables contributed by that
-occurrence of \(T\), but the formula \(\Real_T(\eta)\)
-reintroduces precisely those variables as free parameters.
-The new variable \(\eta\) is bound by the introduced existential
-quantifier. Thus, no free variable is gained or lost.
-
-Compatibility with substitution of variables for variables
-follows by induction on the formation of extended expressions.
-In the atomic cases, contextual elimination commutes with
-substitution after choosing its realization variables fresh
-for both the original expression and the variable being
-substituted. The logical connectives preserve this property
-immediately. At quantifiers and class-builder binders, bound
-variables are renamed alphabetically whenever necessary to
-avoid capture.
-
-The result is that substitution performed before contextual
-elimination and substitution performed after contextual
-elimination yield alphabetically variant primitive formulas,
-provided that the fresh bound variables in the latter
-expansion have first been chosen suitably.
-
-The same argument establishes the corresponding compatibility
-of alphabetic variation.
-
-Hence the primitive-expansion procedure has the required
-syntactic properties at rank \(n+1\).
-
-\medskip
-
-\noindent\textit{Membership and identity with variable arguments.}
-
-We next establish two equivalences needed to justify the
-predicative reductions.
-
-Let \(T\) be a class term whose existence and uniqueness
-have just been established, and let \(\zeta\) be a variable
-for which its canonical membership condition is defined.
-
+\noindent\emph{Membership and Identity with Variable Arguments.}
+Before assigning new reductions, we establish two equivalences for
+an arbitrary admitted class term \(T\) of rank at most \(n+1\). Let \(\zeta\) be any variable and
+choose a realization variable \(h\) fresh for the complete formula.
 By contextual elimination,
 \[
 \zeta\in T
-\defequiv
-\exists\eta
-\bigl(
-\Real_T(\eta)\land\zeta\in\eta
-\bigr),
+\quad\defequiv\quad
+\exists h\bigl(\Real_T(h)\land\zeta\in h\bigr).
 \]
-where \(\eta\) is fresh.
-
-If \(\zeta\in T\), existential elimination supplies a
-realization \(\eta\) with \(\zeta\in\eta\). The realization
-condition gives
+The realization specification entails
+\(\zeta\in h\leftrightarrow\operatorname{Cond}_T(\zeta)\).
+Conversely, a realization exists, and its membership specification
+supplies \(\zeta\in h\) whenever
+\(\operatorname{Cond}_T(\zeta)\) holds. Therefore
 \[
-\zeta\in\eta
+\vdash\zeta\in T\leftrightarrow M_T(\zeta).
+\tag{M}
+\]
+Here and below, the displayed extended formulas are understood by
+their contextual expansions.
+
+Similarly,
+\[
+\zeta=T
+\quad\defequiv\quad
+\exists h\bigl(\Real_T(h)\land\zeta=h\bigr).
+\]
+Identity elimination gives one direction of
+\[
+\vdash\zeta=T\leftrightarrow\Real_T(\zeta),
+\tag{I}
+\]
+and identity reflexivity and existential introduction give the
+other. Both equivalences use only variable-based logical rules.
+They will be stated separately as the fundamental laws in the next
+part of the section; they are not additional assumptions here.
+
+\medskip
+\noindent\emph{Predicative Reduction: Membership with a Variable
+on the left.}
+Let \(\zeta\) be a variable and \(T\) a class term. By
+\((\mathrm{M})\), we may prescribe
+\[
+\zeta\in T\quad\rightsquigarrow\quad M_T(\zeta).
+\]
+The equivalence is justified, and the reduct contains only class
+terms of rank below that of \(T\).
+
+\medskip
+\noindent\emph{Predicative Reduction: Membership with a Class
+Term on the Left.}
+Let \(S\) be a class term and \(T\) any admitted extended term.
+Choose \(h\) and \(a\) fresh for the complete formula. Eliminating
+the occurrence of \(S\) and applying \((\mathrm{M})\) when \(T\)
+is a class term gives
+\[
+\vdash
+S\in T
 \leftrightarrow
-\operatorname{Cond}_T(\zeta),
+\exists h\bigl(\Real_S(h)\land M_T(h)\bigr).
 \]
-and hence \(\operatorname{Cond}_T(\zeta)\).
+When \(T\) is a variable, \(M_T(h)\) is simply \(h\in T\), so the
+same equivalence holds.
 
-Conversely, suppose that
+Since \(M_S(a)\to\Set(a)\), the restricted and unrestricted
+membership specifications are equivalent:
 \[
-\operatorname{Cond}_T(\zeta).
+\vdash
+\Real_S(h)\leftrightarrow\operatorname{Spec}_S(h).
 \]
-Since a realization of \(T\) exists, existential elimination
-supplies a variable \(\eta\) satisfying \(\Real_T(\eta)\).
-The same membership equivalence yields
+Also \(\vdash M_T(h)\to\Set(h)\). Thus the unrestricted
+existential quantifier may be restricted to sets, yielding
 \[
-\zeta\in\eta.
+\vdash
+S\in T
+\leftrightarrow
+\exists_S h\bigl(
+\operatorname{Spec}_S(h)\land M_T(h)
+\bigr).
 \]
-Therefore,
+We therefore prescribe
 \[
-\exists\eta
-\bigl(
-\Real_T(\eta)\land\zeta\in\eta
-\bigr),
+S\in T
+\quad\rightsquigarrow\quad
+\exists_S h\left(
+\forall_S a\bigl(a\in h\leftrightarrow M_S(a)\bigr)
+\land M_T(h)
+\right).
 \]
-which is the contextual expansion of \(\zeta\in T\).
+The only class terms on the right are those occurring inside
+\(S\) or \(T\), each of strictly lower rank than the corresponding
+outer term. Both newly introduced quantifiers are restricted.
 
-We have thus established
+\medskip
+\noindent\emph{Predicative Reduction: Identity.}
+Let \(S\) and \(T\) be admitted extended terms, at least one of
+which is a class term, and let \(a\) be fresh for both. We establish
+\[
+\vdash
+S=T
+\leftrightarrow
+\forall_S a\bigl(M_S(a)\leftrightarrow M_T(a)\bigr).
+\tag{E}
+\]
+Suppose first that one argument is a variable, say \(S=\zeta\),
+and the other is a class term \(T\). By \((\mathrm{I})\),
+\[
+\vdash
+\zeta=T\leftrightarrow\Real_T(\zeta).
+\]
+The realization condition says that \(\zeta\) and \(T\) have
+exactly the same members. Since \(M_T(a)\to\Set(a)\), its
+unrestricted membership specification is equivalent to
+\[
+\forall_S a\bigl(a\in\zeta\leftrightarrow M_T(a)\bigr).
+\]
+This is the right-hand side of \((\mathrm{E})\), because
+\(M_\zeta(a)\) is \(a\in\zeta\). The case with the class term on
+the left follows by symmetry of identity, using the corresponding
+contextual expansion.
+
+Now suppose both \(S\) and \(T\) are class terms. Choose a
+variable \(h\) fresh for both. Contextual elimination of the
+left-hand term, followed by \((\mathrm{I})\) for the right-hand
+term, yields
+\[
+\vdash
+S=T
+\leftrightarrow
+\exists h\bigl(\Real_S(h)\land\Real_T(h)\bigr).
+\]
+If the existential formula holds, its two realization conditions
+imply agreement of \(M_S(a)\) and \(M_T(a)\) for every set
+\(a\), giving the right-hand side of \((\mathrm{E})\).
+Conversely, suppose that restricted agreement holds. By existence
+of realizations, choose \(h\) satisfying \(\Real_S(h)\).
+For every set \(a\), the assumed agreement and the realization
+condition for \(S\) give
+\[
+a\in h\leftrightarrow M_T(a).
+\]
+For an object that is not a set, both sides are false: membership
+implies sethood, and so does \(M_T(a)\). Hence the equivalence holds
+for every object, which is precisely \(\Real_T(h)\).
+Existential introduction gives the displayed existential formula,
+and thereby \(S=T\). This establishes \((\mathrm{E})\) without
+using a general substitution principle or Class-Builder Congruence.
+
+We accordingly prescribe
+\[
+S=T
+\quad\rightsquigarrow\quad
+\forall_S a\bigl(M_S(a)\leftrightarrow M_T(a)\bigr).
+\]
+Once again the reduct has only restricted quantifiers and contains
+no class terms at the maximal rank of the original atomic formula.
+
+These cases exhaust the atomic extended formulas involving class
+terms: the primitive atomic relations are \(\in\) and \(=\).
+The reductions introduce no free variables, since all auxiliary
+variables are bound and chosen fresh. Their equivalences were
+derived from realizations already established, without appeal to
+extended-term substitution, Class-Builder Congruence, or any
+predicative reduction whose justification depends on the present
+rank.
+
+At rank \(n+1\), the defining conditions of all newly admitted
+terms used only reductions justified at ranks at most \(n\). The
+new atomic reductions have now been justified and become available
+for forming terms at subsequent ranks. The induction step is
+complete, and the two assertions hold at every finite rank.
+\end{proof}
+
+\nbgpara{3}{Predicative Admissibility}
+
+The preceding metatheorem supplies reductions for atomic formulas.
+We must still verify that their repeated application produces
+predicative reducts of complete formulas and that the process is
+non-circular.
+
+\begin{metatheorem}[Predicative Admissibility of Class-Term Formulas]
+\label{meta:predicative-admissibility-of-class-term-formulas}
+Every extended formula formed from the admitted predicative syntax
+and admitted class terms has a justified core predicative reduct.
+Repeated application of the prescribed atomic class-term reductions
+terminates, introduces no free variables, and employs only
+reductions available at earlier stages of the construction when
+justifying the formation of a new class term.
+\end{metatheorem}
+
+\begin{proof}
+Expand bounded class terms into their general forms. Reduce atomic
+subformulas containing class terms, proceeding within the ordinary
+logical context of the current formula. Crucially, a reduction does
+not first descend into the defining formula of a class term: that
+formula becomes accessible only when an outer atomic formula
+containing the term has been reduced. Thus all replacements occur
+under logical connectives and quantifiers, where their equivalence
+is preserved by the previously established congruence principles.
+No appeal to Class-Builder Congruence is required.
+
+To see termination, count the occurrences of class builders in the
+complete formula, including those within the defining formulas of
+other class terms. Each of the three atomic reductions removes at
+least one outer class builder. The defining condition of each
+removed builder reappears exactly once in its membership condition;
+therefore its inner builder occurrences are retained without
+duplication. No new builder is introduced. The total number of
+builder occurrences strictly decreases at each step, so the process
+terminates after finitely many steps.
+
+The resulting formula contains no class terms and uses only the
+previously admitted predicative operations. Applying their already
+justified reductions produces a core predicative formula. Every
+intermediate replacement is justified by a derivable equivalence,
+and freshness of the new bound variables prevents capture or the
+introduction of free variables.
+
+Finally, there is no circular dependence on Class Formation. The
+formation of a term of rank \(n+1\) requires only reductions
+already justified for its constituent terms of rank at most \(n\).
+Class Formation then supplies the new realization; only afterward
+are the atomic reductions involving the new term established. Thus
+no reduction is used to justify the Class Formation instance on
+which the proof of that reduction depends.
+\end{proof}
+
+The Class-Term Extension Metatheorem establishes the existence of
+uniquely determined classes for all admitted class terms. The
+Predicative Admissibility Metatheorem establishes that such terms may
+occur in further predicative defining conditions, subject to the
+stagewise formation clauses. Together with the syntactic results
+proved in the preceding part, these facts justify the extension of
+class-forming notation. They do not yet justify arbitrary
+substitution of class terms for variables in deductions; that
+question will be treated separately below.
+
+
+
+\subsubsection{Fundamental Class-Builder Laws}
+
+\nbgpara{1}{Membership and Identity}
+
+The Class-Term Extension Metatheorem establishes that every admitted
+class term has a unique realization. It also justifies the atomic
+predicative reductions associated with membership and identity. We can
+now extract the fundamental laws governing general class terms.
+These are derived results: they do not add axioms or inference rules
+to the underlying system.
+
+\begin{metatheorem}[Membership Law for General Class Terms]
+\label{meta:membership-law-for-class-terms}
+Let \(T=\{\xi\mid\varphi\}\) be an admitted general class term,
+and let \(\zeta\) be any variable. With the usual alphabetic
+renamings to avoid capture,
 \[
 \vdash
 \zeta\in T
 \leftrightarrow
 \operatorname{Cond}_T(\zeta).
 \]
-
-Similarly, contextual elimination gives
+Equivalently,
 \[
-\zeta=T
-\defequiv
-\exists\eta
-\bigl(
-\Real_T(\eta)\land\zeta=\eta
-\bigr).
+\vdash
+\zeta\in\{\xi\mid\varphi\}
+\leftrightarrow
+\bigl(\Set(\zeta)\land\varphi[\zeta/\xi]\bigr).
 \]
+\end{metatheorem}
 
-From this existential formula, identity elimination yields
-\(\Real_T(\zeta)\). Conversely, from \(\Real_T(\zeta)\),
-identity reflexivity and existential introduction yield the
-displayed existential formula.
+\begin{proof}
+This is equivalence \((\mathrm{M})\) established in the proof of
+Metatheorem~\ref{meta:class-term-extension}, together with the
+definition of the canonical membership condition. The substitution
+on the right is capture-avoiding, as specified in the preceding part.
+\end{proof}
 
-Consequently,
+The occurrence of \(\Set(\zeta)\) is essential. Even if a defining
+condition holds of a proper class, that proper class cannot be a
+member of the class determined by the condition. Thus the
+Membership Law does not in general reduce to
+\(\zeta\in T\leftrightarrow\varphi[\zeta/\xi]\).
+
+The Identity Law gives the corresponding characterization of the
+class itself, rather than of its members.
+
+\begin{metatheorem}[Identity Law for General Class Terms]
+\label{meta:identity-law-for-class-terms}
+Let \(T=\{\xi\mid\varphi\}\) be an admitted general class term,
+and let \(\zeta\) be any variable. Then
 \[
 \vdash
 \zeta=T
 \leftrightarrow
 \Real_T(\zeta).
 \]
-
-Both arguments use only variable-based instances of the
-previously established inference rules. They do not presuppose
-the substitution of class terms for variables.
-
-The resulting equivalences will be stated separately as the
-fundamental Membership and Identity Laws below.
-
-\medskip
-
-\noindent\textit{Predicative reductions of atomic formulas.}
-
-We now assign reductions to atomic extended formulas containing
-class terms.
-
-There are three cases. Throughout, variables introduced by a
-reduction are chosen distinct from one another and absent from
-the surrounding formula.
-
-\smallskip
-
-\noindent\emph{Case 1. Membership with a variable on the left.}
-
-Let \(\zeta\) be a variable and \(T\) a class term.
-
-The membership equivalence just established gives
+In particular, choosing \(\alpha\) fresh for the displayed formula,
 \[
 \vdash
-\zeta\in T
+\zeta=\{\xi\mid\varphi\}
 \leftrightarrow
-M_T(\zeta).
+\forall\alpha\left(
+\alpha\in\zeta
+\leftrightarrow
+\bigl(\Set(\alpha)\land\varphi[\alpha/\xi]\bigr)
+\right).
 \]
+\end{metatheorem}
 
-We therefore prescribe
+\begin{proof}
+This is equivalence \((\mathrm{I})\) established in the proof of
+Metatheorem~\ref{meta:class-term-extension}. The displayed
+specification is the definition of \(\Real_T(\zeta)\) expanded.
+\end{proof}
+
+The two laws serve different purposes. The Membership Law determines
+which objects belong to the class denoted by a builder expression.
+The Identity Law determines when an arbitrary class is that class.
+Both are justified using the original variable-based rules,
+Class Formation, and Extensionality.
+
+We shall not yet extract rules permitting arbitrary extended terms
+to be substituted into these laws. In particular, an expression such
+as \(S\in\{\xi\mid\varphi\}\), with \(S\) itself a class term,
+has already received an interpretation and a predicative reduction,
+but the general substitution instance
+\(\varphi[S/\xi]\) has not yet been justified. That will be done
+in the part on extended-term substitution.
+
+\nbgpara{2}{Class-Builder Congruence}
+
+The identity reduction of the Class-Term Extension Metatheorem,
+together with the canonical membership conditions, yields a general
+criterion for equality between class-builder expressions. Their
+defining conditions need agree only on sets, since proper classes
+cannot be members of any class.
+
+\begin{metatheorem}[Class-Builder Congruence]
+\label{meta:class-builder-congruence}
+Let \(\varphi\) and \(\psi\) be predicative extended formulas such
+that \(\{\xi\mid\varphi\}\) and \(\{\xi\mid\psi\}\) are admitted
+general class terms. Then
 \[
-\boxed{
-\zeta\in T
-\quad\rightsquigarrow\quad
-M_T(\zeta).
-}
+\vdash
+\{\xi\mid\varphi\}
+=
+\{\xi\mid\psi\}
+\leftrightarrow
+\forall_S\xi\bigl(\varphi\leftrightarrow\psi\bigr).
+\]
+\end{metatheorem}
+
+\begin{proof}
+Put
+\[
+T=\{\xi\mid\varphi\},
+\qquad
+U=\{\xi\mid\psi\},
+\]
+and choose \(\alpha\) fresh for both terms. By the identity
+reduction established in
+Metatheorem~\ref{meta:class-term-extension},
+\[
+\vdash
+T=U
+\leftrightarrow
+\forall_S\alpha
+\bigl(M_T(\alpha)\leftrightarrow M_U(\alpha)\bigr).
+\]
+By the definitions of the membership specifications, the right-hand
+side is
+\[
+\forall_S\alpha\left(
+\bigl(\Set(\alpha)\land\varphi[\alpha/\xi]\bigr)
+\leftrightarrow
+\bigl(\Set(\alpha)\land\psi[\alpha/\xi]\bigr)
+\right).
+\]
+Under the restriction \(\Set(\alpha)\), the displayed
+biconditional is equivalent by propositional logic to
+\(\varphi[\alpha/\xi]\leftrightarrow
+\psi[\alpha/\xi]\). By the ordinary congruence of restricted
+universal quantification, we therefore obtain
+\[
+\vdash
+T=U
+\leftrightarrow
+\forall_S\alpha
+\bigl(
+\varphi[\alpha/\xi]
+\leftrightarrow
+\psi[\alpha/\xi]
+\bigr).
+\]
+Since \(\alpha\) is fresh, this last specification is an
+alphabetic variant of
+\(\forall_S\xi(\varphi\leftrightarrow\psi)\).
+This proves the claimed equivalence.
+\end{proof}
+
+In particular, if the defining conditions are provably equivalent
+for every set, then the corresponding class terms are provably equal:
+\[
+\vdash\forall_S\xi(\varphi\leftrightarrow\psi)
+\quad\Longrightarrow\quad
+\vdash\{\xi\mid\varphi\}=\{\xi\mid\psi\}.
+\]
+The stronger premise
+\(\vdash\forall\xi(\varphi\leftrightarrow\psi)\)
+is sufficient as well, since it implies the restricted
+specification. It is not necessary: the conditions may differ on
+proper classes without determining different classes.
+
+For bounded class terms, the corresponding laws and congruence
+principles will follow through their defining expansions, once the
+generalized substitution principles are available. Here we retain
+the general Class-Builder Congruence theorem because it will be
+needed in the proof of Realization Invariance. Nothing in the
+rankwise justification of class terms depended on this congruence
+result; it is a consequence of that construction, not a premise of it.
+
+
+
+
+\subsubsection{Extended-Term Substitution and Admissibility}
+\label{sec:extended-term-substitution}
+
+The preceding parts have justified the introduction of class terms,
+their use in predicative defining conditions, and the fundamental
+Membership and Identity Laws. None of this yet licenses substituting
+a class term for a variable in an arbitrary formula or inference rule.
+The primitive language still has variables as its only terms, and the
+logical rules were formulated for those terms alone.
+
+We now establish that extended terms nevertheless support the ordinary
+operations of substitution and identity. The essential device is to
+reason with variables representing the classes determined by extended
+terms. The resulting principles are derived from the original rules;
+they are not additions to the deductive system.
+
+\nbgpara{1}{Representation by Variables}
+
+A realization relates a class term to a variable denoting the same
+class. We extend that relation to variables themselves, so that the
+subsequent arguments need not repeatedly distinguish the two kinds of
+extended terms.
+
+\begin{definition}[Representation of Extended Terms]
+\label{def:representation-of-extended-terms}
+Let \(T\) be an admitted extended term and \(\eta\) a variable. Put
+\[
+\operatorname{Rep}_T(\eta)
+\defequiv
+\begin{cases}
+\eta=T, & \text{if \(T\) is a variable},\\[2mm]
+\Real_T(\eta), & \text{if \(T\) is a class term}.
+\end{cases}
+\]
+For a bounded class term, the second clause is understood through
+its prescribed expansion.
+\end{definition}
+
+This is metalinguistic notation. In particular, it does not extend
+\(\Real_T\) to arbitrary extended-term arguments.
+For every admitted extended term \(T\), if \(\eta\) is fresh for \(T\),
+\[
+\vdash\exists\eta\,\operatorname{Rep}_T(\eta).
+\tag{R1}
+\]
+Moreover, for distinct representative variables \(\eta\) and
+\(\zeta\),
+\[
+\vdash
+\bigl(
+\operatorname{Rep}_T(\eta)\land
+\operatorname{Rep}_T(\zeta)
+\bigr)\to\eta=\zeta.
+\tag{R2}
+\]
+For variables, these statements follow from the primitive identity
+rules; for class terms, they follow from the existence and uniqueness
+part of Metatheorem~\ref{meta:class-term-extension}.
+
+\begin{metatheorem}[Representation of Atomic Formulas]
+\label{meta:representation-of-atomic-formulas}
+Let \(S\) and \(T\) be admitted extended terms, and let \(\eta\)
+and \(\zeta\) be distinct variables fresh for both terms. Then
+\[
+\left\{
+\operatorname{Rep}_S(\eta),
+\operatorname{Rep}_T(\zeta)
+\right\}
+\vdash
+\bigl(S\in T\leftrightarrow\eta\in\zeta\bigr)
+\]
+and
+\[
+\left\{
+\operatorname{Rep}_S(\eta),
+\operatorname{Rep}_T(\zeta)
+\right\}
+\vdash
+\bigl(S=T\leftrightarrow\eta=\zeta\bigr).
+\]
+\end{metatheorem}
+
+\begin{proof}
+Expand the class terms in either atomic formula by contextual
+elimination. The result asserts that there are variables realizing
+the terms in the respective argument positions, together with the
+primitive membership or identity relation between those variables.
+Under the displayed representation assumptions, uniqueness of
+representatives identifies the introduced variables with \(\eta\)
+and \(\zeta\). The primitive identity rules then yield the indicated
+relation between \(\eta\) and \(\zeta\).
+
+Conversely, the assumed representatives witness the existential
+claims introduced by contextual elimination. If an argument is
+already a variable, its representation condition is simply an
+identity, and the same reasoning applies. All temporary realization
+variables are chosen fresh, so the existential-elimination conditions
+are satisfied.
+\end{proof}
+
+In particular, \(\vdash U=U\) already follows for every admitted
+extended term \(U\): choose representatives using \((\mathrm{R1})\),
+identify them by \((\mathrm{R2})\), and apply the atomic
+Representation Metatheorem. Thus extended-term reflexivity is
+available in the next proof, independently of the general inference
+rule to be extracted later.
+
+One consequence will be useful below. \emph{Atomic replacement by
+equals} is legitimate for extended terms: whenever \(S=S'\) and
+\(T=T'\) hold, we may infer
+\[
+(S\in T\leftrightarrow S'\in T')
+\qquad\text{and}\qquad
+(S=T\leftrightarrow S'=T').
+\tag{A}
+\]
+Indeed, choose fresh representatives of all four terms. The
+Representation Metatheorem turns the two assumed identities into
+identities between their representatives. Primitive identity
+elimination gives the corresponding equivalences between the atomic
+formulas involving those representatives; the Representation
+Metatheorem then transfers these back. Existence of representatives
+allows the auxiliary variables to be eliminated. Notice that this
+argument uses only primitive identity elimination, not the
+extended-term identity-elimination rule that is still to be proved.
+
+\nbgpara{2}{Basic Defined Relations with Extended-Term Arguments}
+
+Before introducing general substitution, we extend the defined
+relations needed most often in class-forming conditions. For admitted
+extended terms \(S\) and \(T\), we assign the expansions
+\[
+\Set(T)\defequiv\exists\eta\,(T\in\eta),
+\qquad
+\PC(T)\defequiv\neg\Set(T),
+\]
+and
+\[
+S\subseteq T
+\defequiv
+\forall\xi\,(\xi\in S\to\xi\in T),
+\]
+where the variables introduced on the right are fresh for the
+arguments. These definitions agree with the original ones for
+variable arguments.
+
+To obtain a primitive expansion, we first expand these defined
+relations into formulas involving the primitive atomic relations
+\(\in\) and \(=\). We then eliminate the class terms by contextual
+elimination and finally expand the remaining defined notation.
+This order ensures that contextual elimination is applied only
+where its defining clauses are available. Permission to use the
+extended relations in predicative conditions requires separate
+reductions.
+
+Recall from Part II that
+\[
+\operatorname{Spec}_T(\eta)
+\defequiv
+\forall_S\alpha
+\bigl(\alpha\in\eta\leftrightarrow M_T(\alpha)\bigr),
+\]
+with \(\alpha\) fresh for \(T\) and \(\eta\). We first observe
+that, for every extended term \(T\),
+\[
+\vdash
+\operatorname{Rep}_T(\eta)
+\leftrightarrow
+\operatorname{Spec}_T(\eta).
+\tag{S}
+\]
+If \(T\) is a class term, this is the equivalence of its restricted
+and unrestricted membership specifications, using
+\(M_T(\alpha)\to\Set(\alpha)\). If \(T\) is a variable,
+the implication from representation to specification follows by
+identity elimination; the converse follows by Extensionality, since
+only sets can be members of either class.
+
+\begin{metatheorem}[Predicative Reduction of Basic Term Relations]
+\label{meta:predicative-reduction-of-term-relations}
+For admitted extended terms \(S\) and \(T\), the following
+reductions are justified, with all auxiliary variables chosen fresh:
+\[
+\vdash
+\Set(T)
+\leftrightarrow
+\exists_S\eta\,\operatorname{Spec}_T(\eta)
+\]
+and
+\[
+\vdash
+S\subseteq T
+\leftrightarrow
+\forall_S\alpha
+\bigl(M_S(\alpha)\to M_T(\alpha)\bigr).
+\]
+\end{metatheorem}
+
+\begin{proof}
+For sethood, let \(\eta\) be a fresh representative of \(T\).
+The Representation Metatheorem, followed by the primitive
+characterization of sethood, establishes
+\[
+\vdash
+\Set(T)
+\leftrightarrow
+\exists\eta\bigl(
+\operatorname{Rep}_T(\eta)\land\Set(\eta)
+\bigr).
+\]
+Existence of representatives is needed in the direction from left
+to right; the other direction uses the membership equivalence under
+a representative. By \((\mathrm{S})\), the right-hand side is
+\(\exists_S\eta\,\operatorname{Spec}_T(\eta)\).
+
+For subclasshood, expand its definition. The variable-argument
+Membership Law from Part III, together with the variable case of
+\(M\), gives
+\[
+\vdash
+S\subseteq T
+\leftrightarrow
+\forall\alpha\bigl(
+M_S(\alpha)\to M_T(\alpha)
+\bigr).
+\]
+Because \(M_S(\alpha)\to\Set(\alpha)\) is derivable, the
+unrestricted and restricted universal specifications are equivalent.
+This yields the stated reduction.
+\end{proof}
+
+The reduction for \(\PC(T)\) is obtained by negating the reduction
+for \(\Set(T)\); analogous reductions apply to the negations of
+the other defined relations. The displayed reducts contain only
+restricted quantifiers and membership conditions of constituent,
+lower-ranked class terms. They therefore provide justified
+predicative reductions, not merely equivalent primitive expansions.
+Other defined relations may be extended to class-term arguments only
+when corresponding formation and reduction clauses have been
+justified.
+
+\nbgpara{3}{Substitution of Extended Terms}
+
+\begin{definition}[Extended-Term Substitution]
+\label{def:extended-term-substitution}
+Let \(\varphi\) be an extended formula, \(\xi\) a variable,
+and \(T\) an admitted extended term. We write
+\[
+\varphi[T/\xi]
+\]
+for the result of replacing every free occurrence of \(\xi\)
+in \(\varphi\) by \(T\). The operation is defined recursively
+for extended formulas and extended terms, with bound variables
+renamed alphabetically whenever required to prevent capture.
+\end{definition}
+
+At a quantifier or class-builder binder for \(\xi\), substitution
+does not enter the bound occurrences. At any other binder, it
+proceeds into the scope after the bound variable has, if necessary,
+been renamed to avoid capturing a free variable of \(T\). Bounded
+class terms and defined relations are treated through their
+prescribed expansions. Only free occurrences of \(\xi\) in the
+\emph{original} expression are replaced; occurrences within copies
+of the inserted term are not subjected to the same substitution.
+
+Substitution may increase builder rank. In particular, inserting a
+class term into the condition of another class term may produce a
+builder of greater rank than either expression had before
+substitution. We therefore need to establish closure under this
+operation, rather than assuming it from the rank definition.
+
+\begin{metatheorem}[Preservation of Predicative Admissibility]
+\label{meta:predicativity-under-term-substitution}
+Let \(\varphi\) be a predicative extended formula, \(\xi\) a
+variable, and \(T\) an admitted extended term. Suppose every item
+of defined notation occurring in \(\varphi\) admits extended-term
+arguments of the kinds produced by the substitution and has an
+already justified predicative-reduction clause for them. Then the
+capture-avoiding expression
+\[
+\varphi[T/\xi]
+\]
+is an admitted predicative extended formula. The same conclusion
+holds for the defining conditions of class terms occurring within
+\(\varphi\).
+\end{metatheorem}
+
+\begin{proof}
+Proceed by simultaneous structural induction on terms and
+predicative formulas, using the formation clauses rather than any
+particular sequence of reductions.
+
+Substitution into a primitive atomic formula produces an atomic
+extended formula. Its predicative reduction is justified by the
+Class-Term Extension Metatheorem, unless both arguments are
+variables, in which case it is already core predicative. For an
+admitted defined predicate, use its extended-term reduction clause.
+The propositional connectives and restricted quantifiers preserve
+predicativity; alphabetic renaming ensures that substitution does
+not change which occurrences are bound.
+
+Suppose the substitution enters a term
+\(U=\{\zeta\mid\psi\}\). If \(\zeta=\xi\), its bound
+occurrences are unaffected. Otherwise, rename \(\zeta\) fresh for
+\(T\) before substitution. By the induction hypothesis,
+\(\psi[T/\xi]\) is predicative. Every constituent term of that
+condition is admitted and has finite builder rank. Hence the
+formation clause admits
+\(\{\zeta\mid\psi[T/\xi]\}\) at the next rank. The bounded
+case follows from its general expansion. This completes the
+simultaneous induction.
+\end{proof}
+
+This result concerns substitution into \emph{predicative} syntax.
+It does not permit unrestricted quantification in a defining
+condition merely because it has been hidden within a definition.
+For arbitrary extended formulas, including formulas with unrestricted
+quantifiers, substitution is still a syntactic operation; its
+result need only be a well-formed extended formula, not a
+predicative one.
+
+\nbgpara{4}{Realization Invariance}
+
+We can now show that an extended formula does not distinguish a
+class term from a variable representing it. This is the central
+justification of extended-term substitution.
+
+\begin{metatheorem}[Realization Invariance]
+\label{meta:realization-invariance}
+Let \(\varphi\) be an admitted extended formula, \(\xi\) a
+variable, and \(T\) an admitted class term. Choose a variable
+\(\eta\) not occurring in \(\varphi\) or \(T\), and interpret
+all substitutions as capture-avoiding. Then
+\[
+\{\Real_T(\eta)\}
+\vdash
+\bigl(
+\varphi[T/\xi]\leftrightarrow
+\varphi[\eta/\xi]
+\bigr).
+\tag{RI}
+\]
+Consequently,
+\[
+\vdash
+\varphi[T/\xi]
+\leftrightarrow
+\exists\eta\bigl(
+\Real_T(\eta)\land\varphi[\eta/\xi]
+\bigr).
+\]
+\end{metatheorem}
+
+\begin{proof}
+We prove \((\mathrm{RI})\) by simultaneous structural induction on
+extended terms and formulas. For a term \(U\), the accompanying
+induction claim is
+\[
+\{\Real_T(\eta)\}\vdash
+U[T/\xi]=U[\eta/\xi].
+\tag{RT}
+\]
+The induction also permits any surrounding assumptions not
+containing the fresh variables introduced in its steps.
+
+For a variable \(U\ne\xi\), \((\mathrm{RT})\) is an instance
+of identity reflexivity. If \(U=\xi\), it is precisely the
+identity \(T=\eta\), which follows from \(\Real_T(\eta)\)
+by the variable-argument Identity Law, symmetry, and the
+contextual interpretation of the displayed equality.
+
+Let \(U=\{\zeta\mid\psi\}\). If \(\zeta=\xi\), the
+substitution does not change \(U\), so \((\mathrm{RT})\)
+follows by extended-term reflexivity as justified through
+representatives in Paragraph~1. (Equivalently, both sides have
+the same contextual expansion.) Otherwise, choose an alphabetic
+variant with \(\zeta\) fresh for \(T\), \(\eta\), and the
+surrounding formulas. By the formula induction hypothesis,
+\[
+\{\Real_T(\eta)\}\vdash
+\psi[T/\xi]\leftrightarrow\psi[\eta/\xi].
+\]
+Since \(\zeta\) is not free in \(\Real_T(\eta)\), restricted
+universal introduction and propositional reasoning give
+\[
+\{\Real_T(\eta)\}\vdash
+\forall_S\zeta\bigl(
+\psi[T/\xi]\leftrightarrow\psi[\eta/\xi]
+\bigr).
+\]
+Class-Builder Congruence
+(Metatheorem~\ref{meta:class-builder-congruence}) then yields
+\[
+\{\Real_T(\eta)\}\vdash
+\{\zeta\mid\psi[T/\xi]\}
+=
+\{\zeta\mid\psi[\eta/\xi]\}.
+\]
+Both terms are admitted by the preservation theorem immediately
+above; thus the application of Congruence is legitimate. The case
+of bounded terms is handled through their defining expansions.
+
+For an atomic formula \(U\in V\) or \(U=V\), the term
+induction hypothesis gives the identities relating the two
+versions of each argument. Atomic replacement by equals,
+\((\mathrm{A})\) from Paragraph~1, now yields the required
+biconditional between the atomic formulas. This invokes no
+extended-term identity-elimination rule. The propositional cases
+follow by ordinary reasoning. At quantifiers, rename the bound
+variable if necessary, use the induction hypothesis in its scope,
+and then apply the corresponding quantifier congruence; the
+freshness conditions ensure that no assumption is captured.
+Defined notation is handled through its expansion clauses.
+This completes the simultaneous induction.
+
+For the second assertion, existence gives
+\(\vdash\exists\eta\,\Real_T(\eta)\). Under an arbitrary
+realization assumption, \((\mathrm{RI})\) permits replacement
+of \(\varphi[T/\xi]\) by \(\varphi[\eta/\xi]\), and
+conversely. Applying existential introduction and elimination,
+with \(\eta\) fresh for the remaining assumptions and the
+conclusion, yields the displayed unconditional equivalence.
+\end{proof}
+
+The conclusion is stronger than a mere correspondence between
+primitive expansions. It gives a derivable equivalence allowing
+any occurrence of a substituted class term to be handled through
+a fresh variable and its realization condition. The proof uses
+Class-Builder Congruence, but does not use any extended-term
+substitution rule of inference.
+
+\nbgpara{5}{Admissible Rules and Generalized Laws}
+
+\begin{metatheorem}[Admissibility of Extended-Term Rules]
+\label{meta:extended-term-rules}
+Let \(S\) and \(T\) be admitted extended terms, \(\xi\) a
+variable, and \(\varphi\) an admitted extended formula. Whenever
+the indicated substitutions produce admitted expressions and
+are capture-avoiding, the variable-based rules admit the
+following extended-term instances:
+\[
+\frac{\forall\xi\,\varphi}{\varphi[T/\xi]}
+\quad\forall\text{-E},
+\qquad
+\frac{\varphi[T/\xi]}{\exists\xi\,\varphi}
+\quad\exists\text{-I},
+\]
+\[
+\frac{}{T=T}
+\quad =\text{-I},
+\qquad
+\frac{S=T\qquad\varphi[S/\xi]}
+{\varphi[T/\xi]}
+\quad =\text{-E}.
+\]
+These rules are admissible over the original variable-based
+deductive system; they add no new primitive inference rules.
+\end{metatheorem}
+
+\begin{proof}
+We first observe that the original variable-based rules
+remain admissible when their formulas contain extended
+notation. Indeed, such formulas may be replaced by their
+primitive expansions. The substitution-compatibility result
+of Part I ensures that variable-for-variable substitution
+commutes with expansion up to alphabetic variation. The
+corresponding inference can therefore be performed in the
+primitive language and its result read in the extended
+notation. This observation does not presuppose any of the
+extended-term rules presently being justified.
+
+If the substituted term is a variable, the assertions
+follow immediately from this observation. Suppose instead
+that \(T\) is a class term. Choose a variable \(\eta\)
+fresh for \(T\), \(\varphi\), and all undischarged
+assumptions. Existence of realizations gives
+\[
+\vdash\exists\eta\,\Real_T(\eta).
 \]
 
-Since \(M_T(\zeta)\) contains only class terms of lower rank
-than \(T\), this reduction strictly lowers builder rank.
+For universal elimination, under \(\Real_T(\eta)\)
+the variable-based rule yields \(\varphi[\eta/\xi]\)
+from \(\forall\xi\,\varphi\). Realization Invariance
+then yields \(\varphi[T/\xi]\). Existential elimination
+discharges the realization assumption.
 
-\smallskip
+For existential introduction, begin with
+\(\varphi[T/\xi]\). Existence of a realization and
+Realization Invariance supply
+\[
+\exists\eta\bigl(
+\Real_T(\eta)\land\varphi[\eta/\xi]
+\bigr).
+\]
+Under its witness, variable-based existential introduction
+applied to \(\varphi[\eta/\xi]\) gives
+\(\exists\xi\,\varphi\). The auxiliary witness is
+then eliminated.
 
-\noindent\emph{Case 2. Membership with a class term on the left.}
+For identity introduction, choose a fresh representative
+variable \(\eta\) for \(T\). Under
+\(\operatorname{Rep}_T(\eta)\), primitive identity
+introduction yields \(\eta=\eta\). The Atomic
+Representation Metatheorem then yields \(T=T\).
+Existence of representatives permits the representation
+assumption to be discharged.
 
-Let \(S\) be a class term and \(T\) any extended term.
+For identity elimination, take fresh representatives
+\(\alpha\) and \(\beta\) of \(S\) and \(T\).
+Under their representation assumptions, the Atomic
+Representation Metatheorem gives
+\[
+S=T\leftrightarrow\alpha=\beta.
+\]
 
-Choose fresh variables \(h\) and \(a\).
+We first establish representation invariance for variable
+terms. Let \(x\) be a variable, and let \(\alpha\)
+be fresh. Since
+\(\operatorname{Rep}_x(\alpha)\) is simply
+\(\alpha=x\), we have
+\[
+\{\operatorname{Rep}_x(\alpha)\}
+\vdash
+\varphi[x/\xi]\leftrightarrow\varphi[\alpha/\xi].
+\]
+To justify this without extended-term identity elimination,
+consider the primitive expansions of the displayed formulas.
+By substitution compatibility, these are alphabetic variants
+of
+\[
+\varphi^\circ[x/\xi]
+\quad\text{and}\quad
+\varphi^\circ[\alpha/\xi],
+\]
+respectively. Primitive identity elimination establishes
+their equivalence under \(\alpha=x\). Interpreting the
+extended formulas through their prescribed expansions
+gives the stated result.
 
-Contextual elimination of the occurrence of \(S\), followed
-by the variable-argument membership equivalence for \(T\),
+Together with Realization Invariance for class terms,
+this establishes representation invariance for arbitrary
+extended terms. Hence, under the representation assumptions,
+\[
+\varphi[S/\xi]\leftrightarrow\varphi[\alpha/\xi]
+\]
+and
+\[
+\varphi[T/\xi]\leftrightarrow\varphi[\beta/\xi].
+\]
+Given \(S=T\) and \(\varphi[S/\xi]\), we obtain
+\(\alpha=\beta\) and \(\varphi[\alpha/\xi]\).
+Primitive identity elimination, applied after expansion,
+yields \(\varphi[\beta/\xi]\), and representation
+invariance then yields \(\varphi[T/\xi]\).
+
+Finally, existence of representatives permits the
+auxiliary representation assumptions to be discharged
+by existential elimination. This establishes the
+extended-term identity-elimination rule.
+\end{proof}
+
+Consequently, previously derived rules may also be used
+with extended terms whenever their formation requirements
+are satisfied. For example, the derived Set-I rule permits
+\[
+\frac{S\in T}{\Set(S)}
+\quad\mathrm{Set}\text{-I}
+\]
+with arbitrary admitted extended terms \(S\) and \(T\).
+The same applies to the previously derived subclasshood
+rules. All such uses abbreviate deductions involving
+variables and representatives.
+
+\begin{metatheorem}[Generalized Membership and Identity Laws]
+\label{meta:generalized-class-term-laws}
+Let \(T=\{\xi\mid\varphi\}\) be an admitted general class
+term, and let \(S\) be an admitted extended term. Whenever
+the indicated substitutions are legitimate,
+\[
+\vdash
+S\in T
+\leftrightarrow
+\bigl(\Set(S)\land\varphi[S/\xi]\bigr)
+\]
+and, for \(\alpha\) fresh for both terms,
+\[
+\vdash
+S=T
+\leftrightarrow
+\forall\alpha\bigl(
+\alpha\in S
+\leftrightarrow
+\operatorname{Cond}_T(\alpha)
+\bigr).
+\]
+\end{metatheorem}
+
+\begin{proof}
+Choose a variable \(\zeta\) fresh for \(S\) and \(T\).
+The variable-argument Membership Law
+(Metatheorem~\ref{meta:membership-law-for-class-terms})
 gives
 \[
 \vdash
-S\in T
+\zeta\in T
 \leftrightarrow
-\exists h
-\bigl(
-\Real_S(h)\land M_T(h)
-\bigr).
+\bigl(\Set(\zeta)\land\varphi[\zeta/\xi]\bigr).
 \]
+Universal introduction on \(\zeta\) is legitimate
+because the formula is a theorem and \(\zeta\) is
+fresh for its parameters. The admissible extended-term
+universal-elimination rule then yields the stated
+membership equivalence with \(S\) in place of \(\zeta\).
 
-If \(T\) is a variable, the replacement of \(h\in T\) by
-\(M_T(h)\) is simply an instance of the definition of \(M\).
-If \(T\) is a class term, the replacement is justified by
-the membership equivalence established above.
-
-Now
-\[
-\vdash M_T(h)\to\Set(h).
-\]
-Furthermore, by the equivalence between restricted and
-unrestricted membership specifications and the fact that
-\(M_S(a)\) implies \(\Set(a)\), the realization condition
-\[
-\Real_S(h)
-\]
-is equivalent to
-\[
-\forall_S a
-\bigl(
-a\in h\leftrightarrow M_S(a)
-\bigr).
-\]
-
-It follows that
-\[
-\vdash
-S\in T
-\leftrightarrow
-\exists_S h
-\left(
-\forall_S a
-\bigl(
-a\in h\leftrightarrow M_S(a)
-\bigr)
-\land M_T(h)
-\right).
-\]
-
-We therefore prescribe
-\[
-\boxed{
-S\in T
-\quad\rightsquigarrow\quad
-\exists_S h
-\left(
-\forall_S a
-\bigl(
-a\in h\leftrightarrow M_S(a)
-\bigr)
-\land M_T(h)
-\right).
-}
-\]
-
-The reduction uses only restricted quantifiers. Every
-class term occurring on the right belongs to the defining
-formula of \(S\) or \(T\), and therefore has strictly lower
-rank than the corresponding outer class term.
-
-\smallskip
-
-\noindent\emph{Case 3. Identity of extended terms.}
-
-Let \(S\) and \(T\) be extended terms, at least one of which
-is a class term.
-
-Choose a fresh variable \(a\).
-
-We claim that
+For identity, the atomic identity reduction from
+Metatheorem~\ref{meta:class-term-extension} gives
 \[
 \vdash
 S=T
 \leftrightarrow
-\forall_S a
-\bigl(
-M_S(a)\leftrightarrow M_T(a)
-\bigr).
+\forall_S\alpha
+\bigl(M_S(\alpha)\leftrightarrow M_T(\alpha)\bigr).
 \]
+The variable-argument Membership Law identifies
+\(M_S(\alpha)\) with \(\alpha\in S\), whether \(S\)
+is a variable or a class term. Moreover,
+\(M_T(\alpha)\) is
+\(\operatorname{Cond}_T(\alpha)\) by definition.
 
-To establish this, consider the realizations of any class
-terms occurring in \(S\) and \(T\). Where one of these terms
-is a variable, that variable itself is used.
-
-By the variable-argument membership equivalence, the
-members of each represented class are precisely the objects
-satisfying its associated formula \(M_S(a)\) or \(M_T(a)\).
-
-If the represented classes are equal, identity elimination
-therefore gives agreement of their membership conditions.
-Universal introduction, followed by restriction to sets,
-establishes
-\[
-\forall_S a
-\bigl(
-M_S(a)\leftrightarrow M_T(a)
-\bigr).
-\]
-
-Conversely, suppose that this restricted universal formula
-holds.
-
-Every member of any class is a set, and both \(M_S(a)\) and
-\(M_T(a)\) imply \(\Set(a)\). Thus, the restricted equivalence
-establishes agreement of the two membership conditions for
-all objects.
-
-Extensionality gives equality of the corresponding
-realizations. Using the existence of realizations and
-contextual elimination, we obtain \(S=T\).
-
-Hence the claimed equivalence holds, and we prescribe
-\[
-\boxed{
-S=T
-\quad\rightsquigarrow\quad
-\forall_S a
-\bigl(
-M_S(a)\leftrightarrow M_T(a)
-\bigr).
-}
-\]
-
-Again, every class term occurring on the right has strictly
-lower rank than an outer class term occurring on the left.
-
-\medskip
-
-These three cases exhaust the atomic extended formulas
-containing class terms. The only atomic relation symbols are
-\(\in\) and \(=\), and the displayed cases cover every
-possible placement of class terms in their arguments.
-
-All three reductions are justified by derivable equivalences.
-They introduce no free variables, since their newly
-introduced variables are bound and chosen fresh for the
-surrounding formula.
-
-They also introduce no unrestricted quantifiers. Their
-right-hand sides are constructed using the atomic and
-previously admitted predicative notation, logical
-connectives, restricted quantifiers, and class terms of
-lower rank.
-
-\medskip
-
-\noindent\textit{Termination and predicative admissibility.}
-
-It remains to establish that the prescribed reductions
-can be applied repeatedly without circularity.
-
-Consider the multiset of builder ranks of all class-term
-occurrences in a finite extended formula.
-
-Every atomic reduction removes the outer class terms
-occurring in the selected atomic formula and replaces them
-with formulas containing only their lower-ranked constituent
-terms. Consequently, each application strictly decreases
-the multiset of builder ranks under the standard multiset
-ordering.
-
-Since this ordering is well founded on finite multisets
-of natural numbers, repeated reduction terminates.
-
-More concretely, one may reduce all atomic occurrences
-containing terms of the greatest rank, then those
-containing terms of the next lower rank, and so on.
-No reduction introduces a term of the rank just eliminated
-or of any higher rank.
-
-When no class terms remain, the resulting formula belongs
-to the previously established extended syntax.
-
-If the original formula was constructed using only the
-admitted predicative operations, its class-term-free
-reduct is predicative according to the reductions already
-justified before class-builder notation was introduced.
-Repeated application of those reductions therefore yields
-a core predicative formula.
-
-The equivalence of the original formula and its reduct
-follows by successive applications of the atomic
-equivalences, together with the established congruence
-principles for the logical connectives and quantifiers.
-
-All variable choices are made fresh for the surrounding
-formula, so no reduction introduces additional free
-variables or captures existing free occurrences. The
-prescribed order of reduction determines the result up
-to alphabetic variation.
-
-Finally, the construction is non-circular. At rank
-\(n+1\), the existence of realizations was established
-using only predicative reductions justified at ranks at
-most \(n\). The membership and identity equivalences
-were then derived from those realizations. Only afterward
-were the new atomic reductions justified.
-
-Thus, no application of Class Formation depends upon
-a reduction whose justification presupposes that same
-application.
-
-The induction step is complete. By induction, the stated
-properties hold at every finite builder rank.
+Both membership conditions imply \(\Set(\alpha)\).
+Consequently, their biconditional holds automatically
+when \(\alpha\) is not a set, and the restriction
+on the universal quantifier may be removed. This
+establishes the second law.
 \end{proof}
+
+
+\nbgpara{6}{Derived Class-Builder Rules}
+
+The four fundamental class-builder rules are extracted from the
+variable-argument Membership and Identity Laws established in
+Part III. Their formulation uses the canonical membership condition
+and the realization condition introduced in Part I. The subsequent
+justification of extended-term substitution does not change the
+statement of these rules.
+
+\begin{metatheorem}[Derived Class-Builder Rules]
+\label{meta:derived-class-builder-rules}
+Let \(T\) be an admitted class term and \(\zeta\) a variable.
+Whenever the indicated conditions are defined, the following rules
+are admissible:
+\[
+\frac{\zeta\in T}
+{\operatorname{Cond}_T(\zeta)}
+\quad\mathrm{CB}{\in}\text{-E}
+\qquad
+\frac{\operatorname{Cond}_T(\zeta)}
+{\zeta\in T}
+\quad\mathrm{CB}{\in}\text{-I}.
+\]
+\[
+\frac{\zeta=T}
+{\Real_T(\zeta)}
+\quad\mathrm{CB}{=}\text{-E}
+\qquad
+\frac{\Real_T(\zeta)}
+{\zeta=T}
+\quad\mathrm{CB}{=}\text{-I}.
+\]
+The class-builder variable and any auxiliary bound variables are
+renamed as necessary to avoid capture.
+\end{metatheorem}
+
+\begin{proof}
+The Membership Law gives
+\(\vdash\zeta\in T\leftrightarrow
+\operatorname{Cond}_T(\zeta)\), and the Identity Law gives
+\(\vdash\zeta=T\leftrightarrow\Real_T(\zeta)\).
+Each rule follows by Biconditional Elimination and the established
+rule-extraction principle. Hence none introduces new deductive power.
+\end{proof}
+
+The four rules are deliberately stated with a variable argument,
+as required by the definitions of \(\operatorname{Cond}_T\) and
+\(\Real_T\). Uses involving arbitrary extended terms are supported
+by the generalized laws and admissibility results of this part;
+they do not require expressions such as \(\Real_T(S)\), which have
+not been defined.
+
+
+
+
+\subsubsection{Bounded Class-Builder Laws and Conservativity}
+\label{sec:bounded-builder-laws-and-conservativity}
+
+The preceding parts have established the fundamental Membership and
+Identity Laws, justified substitution of extended terms, and extracted
+the four class-builder rules. Two matters remain. First, we record the
+particularly simple laws governing bounded class terms. Second, we
+make explicit why the extended notation and the rules justified for
+it introduce no new deductive power.
+
+\nbgpara{1}{Fundamental Laws for Bounded Class Terms}
+
+Bounded class terms were introduced in Part I as abbreviations of
+general class terms. They therefore require neither a new formation
+principle nor a second existence proof. The generalized laws from
+Part IV now give their familiar membership and identity conditions,
+even when the bound and the argument are themselves class terms.
+
+\begin{metatheorem}[Generalized Bounded Class-Builder Laws]
+\label{meta:generalized-bounded-builder-laws}
+Let
+\[
+T=\{\xi\in S\mid\varphi\}
+\]
+be an admitted bounded class term, where \(S\) is an admitted
+extended term and \(\xi\) does not occur free in \(S\). Let \(U\)
+be an admitted extended term, and suppose that the substitutions
+below are legitimate. Then
+\[
+\vdash
+U\in T
+\leftrightarrow
+\bigl(U\in S\land\varphi[U/\xi]\bigr).
+\tag{BM}
+\]
+Moreover, if \(\alpha\) is a variable fresh for all the displayed
+expressions, then
+\[
+\vdash
+U=T
+\leftrightarrow
+\forall\alpha\bigl(
+\alpha\in U
+\leftrightarrow
+(\alpha\in S\land\varphi[\alpha/\xi])
+\bigr).
+\tag{BI}
+\]
+\end{metatheorem}
+
+\begin{proof}
+By the definition of bounded notation,
+\[
+T\defequiv\{\xi\mid(\xi\in S\land\varphi)\}.
+\]
+The Generalized Membership Law, together with capture-avoiding
+substitution, gives
+\[
+\vdash
+U\in T
+\leftrightarrow
+\bigl(\Set(U)\land U\in S\land\varphi[U/\xi]\bigr).
+\]
+The extended-term instance of Set-I establishes
+\(\vdash U\in S\to\Set(U)\). Hence the sethood conjunct is
+redundant, which proves \((\mathrm{BM})\).
+
+For identity, the Generalized Identity Law yields
+\[
+\vdash
+U=T
+\leftrightarrow
+\forall\alpha\bigl(
+\alpha\in U
+\leftrightarrow
+\bigl(\Set(\alpha)\land\alpha\in S
+\land\varphi[\alpha/\xi]\bigr)
+\bigr).
+\]
+Since \(\alpha\in S\to\Set(\alpha)\) is derivable, the same
+simplification within the universal specification gives
+\((\mathrm{BI})\).
+\end{proof}
+
+In particular, no explicit sethood condition is needed in the
+membership law for bounded class terms: membership in the bounding
+class already implies sethood. Equality between two admitted bounded
+terms may likewise be characterized by applying Class-Builder
+Congruence to their unbounded expansions. No additional congruence
+principle is required.
+
+\nbgpara{2}{Eliminability and Conservativity}
+
+Syntactic termination alone does not establish conservativity.
+We must also establish that primitive expansion preserves the
+content of extended formulas, and that deductions employing
+extended notation can be replaced by deductions in the
+primitive language. The realization and admissibility results
+established above provide the necessary justification.
+
+\begin{metatheorem}[Adequacy of Primitive Expansion]
+\label{meta:adequacy-of-primitive-expansion}
+Let \(\Phi\) be an admitted extended formula and let
+\(\Phi^\circ\) be any of its prescribed primitive expansions.
+Then
+\[
+\vdash_{\mathrm{ext}}
+\Phi\leftrightarrow\Phi^\circ.
+\]
+Here the equivalence is understood within the justified
+extension of the original notation. In particular, the
+assertion does not mean that the displayed biconditional
+is itself a formula of the primitive language. Different
+legitimate expansions yield alphabetically variant
+primitive formulas.
+\end{metatheorem}
+
+\begin{proof}
+First expand any defined relations admitting extended-term
+arguments into their prescribed formulas involving the
+primitive atomic relations \(\in\) and \(=\). Next perform
+contextual elimination, and finally expand the remaining
+defined notation.
+
+Consider one contextual elimination step. Let \(T\) be the
+selected class-term occurrence in an atomic subformula
+\(\theta\), and let \(\theta'\) be obtained by replacing
+that occurrence by a fresh variable \(\eta\).
+Realization Invariance gives
+\[
+\vdash_{\mathrm{ext}}
+\theta\leftrightarrow
+\exists\eta\bigl(
+\Real_T(\eta)\land\theta'
+\bigr).
+\]
+This equivalence was justified using realizations and the
+original variable-based rules, without presupposing any
+new inference principle. Ordinary congruence for the
+logical connectives and quantifiers permits the replacement
+within the surrounding formula. Contextual elimination
+does not descend into the defining condition of an
+uneliminated class term.
+
+Repeating this argument yields an equivalence between
+\(\Phi\) and the formula obtained after all class terms
+have been eliminated. The remaining expansion clauses
+are justified definitions and preserve equivalence.
+Termination and alphabetic invariance follow from the
+Syntactic Properties Metatheorem
+\ref{meta:syntactic-contextual-elimination}.
+Combining the successive equivalences establishes
+the assertion.
+\end{proof}
+
+The preceding metatheorem concerns equivalence within the
+extended notation. Conservativity requires a further
+step: the translation must preserve derivability using
+only the original axioms and inference rules.
+
+\begin{metatheorem}[Conservativity of Class-Term Notation]
+\label{meta:conservativity-of-class-term-notation}
+Suppose a deduction in the extended notation uses only
+admitted class terms and defined relations, the original
+logical and NBG axioms, justified instances of Class
+Formation by Predicative Reduction, and the derived
+extended-term inference rules established above.
+
+Then the deduction can be replaced by a deduction using
+only primitive formulas and the original axioms and
+inference rules.
+
+More precisely, if
+\[
+\Gamma\vdash_{\mathrm{ext}}\Phi,
+\]
+then, writing \(\Gamma^\circ\) for primitive expansions
+of the undischarged assumptions and \(\Phi^\circ\) for
+a primitive expansion of the conclusion,
+\[
+\Gamma^\circ\vdash_{\mathrm{NBG}}\Phi^\circ.
+\]
+Consequently, for every primitive formula \(\chi\),
+\[
+\vdash_{\mathrm{ext}}\chi
+\quad\Longrightarrow\quad
+\vdash_{\mathrm{NBG}}\chi.
+\]
+\end{metatheorem}
+
+\begin{proof}
+We proceed by induction on the construction of an
+extended deduction. More precisely, we establish
+the following invariant: for every subdeduction
+\(\mathcal D\) with undischarged assumptions
+\(\Gamma\) and conclusion \(\Phi\), there is
+a deduction in the primitive system of
+\(\Phi^\circ\) from \(\Gamma^\circ\).
+The translation must preserve the discharge of
+assumptions and all variable conditions.
+
+For an assumption, its primitive expansion serves
+as the corresponding assumption. Primitive axioms
+are unchanged. An admitted instance of Class
+Formation by Predicative Reduction is replaced
+by the derivation from the corresponding core
+predicative instance established in the Class
+Formation section. The rank induction of Part II
+guarantees that the reductions used in this
+derivation have already been justified.
+
+For applications of the original logical rules,
+the induction hypothesis supplies primitive
+deductions of the expanded premises. The
+corresponding primitive inference then yields
+the expanded conclusion. In the quantifier
+cases, compatibility of primitive expansion
+with capture-avoiding variable substitution
+ensures that the required instances agree up
+to alphabetic variation. Preservation of free
+variables ensures that the side conditions
+of universal introduction and existential
+elimination remain satisfied. Auxiliary variables
+may be renamed fresh as necessary. Propositional
+assumption discharge is preserved directly.
+
+For an application of a derived extended-term
+rule, we use its previously established derivation
+from the original variable-based rules. Unfolding
+the extended notation in that derivation supplies
+a primitive deduction from the expansions of
+its premises to the expansion of its conclusion.
+The same applies to the four fundamental
+class-builder rules, whose admissibility was
+established from the Membership and Identity
+Laws. Defined relations and bounded class terms
+are handled through their prescribed expansions.
+
+Thus every inference in the extended deduction
+has a primitive replacement, and these
+replacements can be composed while preserving
+the translated undischarged assumptions.
+The induction yields
+\[
+\Gamma^\circ\vdash_{\mathrm{NBG}}\Phi^\circ.
+\]
+
+If \(\chi\) is primitive, its expansion is
+\(\chi\) itself, up to alphabetic variation.
+Hence an extended proof of \(\chi\) without
+assumptions yields a proof of \(\chi\) in the
+original NBG system.
+\end{proof}
+
+The technical justification is now complete. Class terms
+may be used as ordinary mathematical terms within the
+admitted syntax, and the four fundamental class-builder
+rules may be employed directly in deductions. Their
+admissibility rests on the existence and uniqueness of
+realizations, the justified predicative reductions, and
+the representation and substitution results established
+above. Neither the notation nor its associated rules
+enlarges the underlying theory.

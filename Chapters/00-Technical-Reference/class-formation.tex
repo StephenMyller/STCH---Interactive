@@ -134,9 +134,11 @@ Not all defined notation is included among the formation operations for core pre
 
 \begin{definition}[Predicative Reduction]
 \label{def:predicative-reduction}
-A \emph{predicative reduction} for an item of defined notation is a prescribed replacement of that notation by an extended formula constructed using only the core predicative syntax and notation whose predicative reductions have already been assigned.
+A \emph{predicative reduction} is a prescribed replacement of a formula of a specified form by an extended formula constructed using only the core predicative syntax and notation whose predicative reductions have already been assigned.
 
-Any bound variables introduced by a reduction must be chosen fresh for the surrounding formula. Moreover, a reduction must not introduce free variables that were absent from the original expression.
+The replacement need not consist merely in expanding a single item of defined notation. It may instead apply to a formula as a whole.
+
+Any bound variables introduced by a reduction must be chosen fresh for the surrounding formula. Moreover, a reduction must not introduce free variables that were absent from the original formula.
 \end{definition}
 
 The requirement that a reduction may use only previously admitted notation makes the assignments well-founded. Repeated reduction therefore terminates in a core predicative formula. The result is determined up to alphabetic variation arising from the choice of fresh bound variables.
