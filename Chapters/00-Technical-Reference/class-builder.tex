@@ -1086,6 +1086,57 @@ result; it is a consequence of that construction, not a premise of it.
 
 
 
+\nbgpara{3}{Derived Class-Builder Rules}
+
+The four fundamental class-builder rules are extracted from the
+variable-argument Membership and Identity Laws established above. Their formulation uses the canonical membership condition
+and the realization condition introduced in E.1. 
+
+\begin{metatheorem}[Derived Class-Builder Rules]
+\label{meta:derived-class-builder-rules}
+Let \(T\) be an admitted class term and \(\zeta\) a variable.
+Whenever the indicated conditions are defined, the following rules
+are admissible:
+\[
+\frac{\zeta\in T}
+{\operatorname{Cond}_T(\zeta)}
+\quad\mathrm{CB}{\in}\text{-E}
+\qquad
+\frac{\operatorname{Cond}_T(\zeta)}
+{\zeta\in T}
+\quad\mathrm{CB}{\in}\text{-I}.
+\]
+\[
+\frac{\zeta=T}
+{\Real_T(\zeta)}
+\quad\mathrm{CB}{=}\text{-E}
+\qquad
+\frac{\Real_T(\zeta)}
+{\zeta=T}
+\quad\mathrm{CB}{=}\text{-I}.
+\]
+The class-builder variable and any auxiliary bound variables are
+renamed as necessary to avoid capture.
+\end{metatheorem}
+
+\begin{proof}
+The Membership Law gives
+\(\vdash\zeta\in T\leftrightarrow
+\operatorname{Cond}_T(\zeta)\), and the Identity Law gives
+\(\vdash\zeta=T\leftrightarrow\Real_T(\zeta)\).
+Each rule follows by Biconditional Elimination and the established
+rule-extraction principle. Hence none introduces new deductive power.
+\end{proof}
+
+The four rules are deliberately stated with a variable argument,
+as required by the definitions of \(\operatorname{Cond}_T\) and
+\(\Real_T\). Uses involving arbitrary extended terms are supported
+by the generalized laws and admissibility results of this part;
+they do not require expressions such as \(\Real_T(S)\), which have
+not been defined.
+
+
+
 
 \subsubsection{Extended-Term Substitution and Admissibility}
 \label{sec:extended-term-substitution}
@@ -1105,31 +1156,36 @@ they are not additions to the deductive system.
 
 \nbgpara{1}{Representation by Variables}
 
-A realization relates a class term to a variable denoting the same
-class. We extend that relation to variables themselves, so that the
-subsequent arguments need not repeatedly distinguish the two kinds of
-extended terms.
-
-\begin{definition}[Representation of Extended Terms]
-\label{def:representation-of-extended-terms}
-Let \(T\) be an admitted extended term and \(\eta\) a variable. Put
+The uniform realization condition \(\Real_T^+(\eta)\), introduced
+in Part II, already allows a variable to represent any admitted
+extended term \(T\). Recall that
 \[
-\operatorname{Rep}_T(\eta)
+\Real_T^+(\eta)
 \defequiv
-\begin{cases}
-\eta=T, & \text{if \(T\) is a variable},\\[2mm]
-\Real_T(\eta), & \text{if \(T\) is a class term}.
-\end{cases}
+\forall_S\alpha\bigl(
+\alpha\in\eta\leftrightarrow\Cond_T^+(\alpha)
+\bigr),
 \]
-For a bounded class term, the second clause is understood through
-its prescribed expansion.
-\end{definition}
+where \(\alpha\) is fresh for \(T\) and \(\eta\).
 
-This is metalinguistic notation. In particular, it does not extend
-\(\Real_T\) to arbitrary extended-term arguments.
+For a variable \(x\), this condition specifies a class with exactly
+the members of \(x\); for a class term \(T\), it specifies its
+realization using restricted quantification. More precisely,
+\[
+\vdash\Real_x^+(\eta)\leftrightarrow\eta=x,
+\qquad
+\vdash\Real_T^+(\eta)\leftrightarrow\Real_T(\eta)
+\quad\text{(\(T\) a class term)}.
+\tag{R}
+\]
+The first equivalence follows by Extensionality and the primitive
+identity rules, since only sets can be class members. The second
+follows from the Restricted and Unrestricted Membership Specifications
+Metatheorem, because \(\Cond_T^+(\alpha)\) implies \(\Set(\alpha)\).
+
 For every admitted extended term \(T\), if \(\eta\) is fresh for \(T\),
 \[
-\vdash\exists\eta\,\operatorname{Rep}_T(\eta).
+\vdash\exists\eta\,\Real^+_T(\eta).
 \tag{R1}
 \]
 Moreover, for distinct representative variables \(\eta\) and
@@ -1137,14 +1193,15 @@ Moreover, for distinct representative variables \(\eta\) and
 \[
 \vdash
 \bigl(
-\operatorname{Rep}_T(\eta)\land
-\operatorname{Rep}_T(\zeta)
+\Real^+_T(\eta)\land
+\Real^+_T(\zeta)
 \bigr)\to\eta=\zeta.
 \tag{R2}
 \]
-For variables, these statements follow from the primitive identity
-rules; for class terms, they follow from the existence and uniqueness
-part of Metatheorem~\ref{meta:class-term-extension}.
+For variables, these statements follow from \((\mathrm{R})\)
+and the primitive identity rules; for class terms, they follow
+from \((\mathrm{R})\) and the existence and uniqueness part of
+Metatheorem~\ref{meta:class-term-extension}.
 
 \begin{metatheorem}[Representation of Atomic Formulas]
 \label{meta:representation-of-atomic-formulas}
@@ -1152,8 +1209,8 @@ Let \(S\) and \(T\) be admitted extended terms, and let \(\eta\)
 and \(\zeta\) be distinct variables fresh for both terms. Then
 \[
 \left\{
-\operatorname{Rep}_S(\eta),
-\operatorname{Rep}_T(\zeta)
+\Real^+_S(\eta),
+\Real^+_T(\zeta)
 \right\}
 \vdash
 \bigl(S\in T\leftrightarrow\eta\in\zeta\bigr)
@@ -1161,8 +1218,8 @@ and \(\zeta\) be distinct variables fresh for both terms. Then
 and
 \[
 \left\{
-\operatorname{Rep}_S(\eta),
-\operatorname{Rep}_T(\zeta)
+\Real^+_S(\eta),
+\Real^+_T(\zeta)
 \right\}
 \vdash
 \bigl(S=T\leftrightarrow\eta=\zeta\bigr).
@@ -1181,10 +1238,10 @@ relation between \(\eta\) and \(\zeta\).
 
 Conversely, the assumed representatives witness the existential
 claims introduced by contextual elimination. If an argument is
-already a variable, its representation condition is simply an
-identity, and the same reasoning applies. All temporary realization
-variables are chosen fresh, so the existential-elimination conditions
-are satisfied.
+already a variable, its representation condition is equivalent to
+an identity by \((\mathrm{R})\), and the same reasoning applies.
+All temporary realization variables are chosen fresh, so the
+existential-elimination conditions are satisfied.
 \end{proof}
 
 In particular, \(\vdash U=U\) already follows for every admitted
@@ -1271,29 +1328,6 @@ Permission to use the extended relations in
 predicative conditions still requires separate
 predicative reductions.
 
-Recall from Part II that
-\[
-\Real^+_T(\eta)
-\defequiv
-\forall_S\alpha
-\bigl(\alpha\in\eta\leftrightarrow \Cond_T^{+}(\alpha)\bigr),
-\]
-with \(\alpha\) fresh for \(T\) and \(\eta\). We first observe
-that, for every extended term \(T\),
-\[
-\vdash
-\operatorname{Rep}_T(\eta)
-\leftrightarrow
-\Real^+_T(\eta).
-\tag{S}
-\]
-If \(T\) is a class term, this is the equivalence of its restricted
-and unrestricted membership specifications, using
-\(\Cond_T^{+}(\alpha)\to\Set(\alpha)\). If \(T\) is a variable,
-the implication from representation to specification follows by
-identity elimination; the converse follows by Extensionality, since
-only sets can be members of either class.
-
 \begin{metatheorem}[Predicative Reduction of Basic Term Relations]
 \label{meta:predicative-reduction-of-term-relations}
 For admitted extended terms \(S\) and \(T\), the following
@@ -1310,41 +1344,49 @@ and
 S\subseteq T
 \leftrightarrow
 \forall_S\alpha
-\bigl(\Real^+_S(\alpha)\to \Cond_T^{+}(\alpha)\bigr).
+\bigl(\Cond_S^{+}(\alpha)\to \Cond_T^{+}(\alpha)\bigr).
 \]
 \end{metatheorem}
 
 \begin{proof}
-For sethood, let \(\eta\) be a fresh representative of \(T\).
-The Representation Metatheorem, followed by the primitive
-characterization of sethood, establishes
+For sethood, choose a fresh representative variable \(\eta\).
+The Atomic Representation Metatheorem and the primitive definition
+of sethood give
 \[
 \vdash
 \Set(T)
 \leftrightarrow
 \exists\eta\bigl(
-\operatorname{Rep}_T(\eta)\land\Set(\eta)
+\Real^+_T(\eta)\land\Set(\eta)
 \bigr).
 \]
-Existence of representatives is needed in the direction from left
-to right; the other direction uses the membership equivalence under
-a representative. By \((\mathrm{S})\), the right-hand side is
-\(\exists_S\eta\,\Real^+_T(\eta)\).
+The forward direction uses existence of representatives; the reverse
+direction uses the membership equivalence under a representative.
+By the definition of restricted existential quantification, the
+right-hand side is \(\exists_S\eta\,\Real^+_T(\eta)\).
 
-For subclasshood, expand its definition. The variable-argument
-Membership Law from Part III, together with the variable case of
-\(M\), gives
+For subclasshood, expand its definition. For any variable \(\alpha\),
+the variable-argument Membership Law (or the variable clause in
+the definition of \(\Cond^+\)) gives
+\[
+\vdash
+\alpha\in S\leftrightarrow\Cond_S^+(\alpha),
+\qquad
+\vdash
+\alpha\in T\leftrightarrow\Cond_T^+(\alpha).
+\]
+Consequently,
 \[
 \vdash
 S\subseteq T
 \leftrightarrow
 \forall\alpha\bigl(
-\Real^+_S(\alpha)\to \Cond_T^{+}(\alpha)
+\Cond_S^{+}(\alpha)\to\Cond_T^{+}(\alpha)
 \bigr).
 \]
-Because \(\Real^+_S(\alpha)\to\Set(\alpha)\) is derivable, the
-unrestricted and restricted universal specifications are equivalent.
-This yields the stated reduction.
+Since \(\Cond_S^+(\alpha)\to\Set(\alpha)\) is derivable,
+restriction of the universal quantifier to sets does not change
+the condition. This yields the stated reduction.
 \end{proof}
 
 The reduction for \(\PC(T)\) is obtained by negating the reduction
@@ -1487,10 +1529,14 @@ surrounding assumptions not containing the fresh variables
 introduced in its steps.
 
 For a variable \(U\ne\xi\), \((\mathrm{RT})\) is an instance
-of identity reflexivity. If \(U=\xi\), it is precisely the
-identity \(T=\eta\), which follows from \(\Real_T(\eta)\)
-by the variable-argument Identity Law, symmetry, and the
-contextual interpretation of the displayed equality.
+of identity reflexivity. If \(U=\xi\), the claim is \(T=\eta\). Under
+\(\Real_T(\eta)\), its contextual expansion
+\[
+\exists h\bigl(\Real_T(h)\land h=\eta\bigr)
+\]
+follows by taking \(h=\eta\) and applying primitive
+identity introduction. This avoids invoking extended-term
+identity symmetry before its admissibility has been established.
 
 Let \(U=\{\zeta\mid\psi\}\). If \(\zeta=\xi\), the
 substitution does not change \(U\), so \((\mathrm{RT})\)
@@ -1622,7 +1668,7 @@ then eliminated.
 
 For identity introduction, choose a fresh representative
 variable \(\eta\) for \(T\). Under
-\(\operatorname{Rep}_T(\eta)\), primitive identity
+\(\Real^+_T(\eta)\), primitive identity
 introduction yields \(\eta=\eta\). The Atomic
 Representation Metatheorem then yields \(T=T\).
 Existence of representatives permits the representation
@@ -1638,11 +1684,11 @@ S=T\leftrightarrow\alpha=\beta.
 
 We first establish representation invariance for variable
 terms. Let \(x\) be a variable, and let \(\alpha\)
-be fresh. Since
-\(\operatorname{Rep}_x(\alpha)\) is simply
-\(\alpha=x\), we have
+be fresh. By \((\mathrm{R})\), the condition
+\(\Real_x^+(\alpha)\) is provably equivalent to
+\(\alpha=x\). Hence we have
 \[
-\{\operatorname{Rep}_x(\alpha)\}
+\{\Real^+_x(\alpha)\}
 \vdash
 \varphi[x/\xi]\leftrightarrow\varphi[\alpha/\xi].
 \]
@@ -1656,7 +1702,7 @@ of
 \varphi^\circ[\alpha/\xi],
 \]
 respectively. Primitive identity elimination establishes
-their equivalence under \(\alpha=x\). Interpreting the
+their equivalence under \(\alpha=x.\) Interpreting the
 extended formulas through their prescribed expansions
 gives the stated result.
 
@@ -1742,10 +1788,10 @@ Metatheorem~\ref{meta:class-term-extension} gives
 S=T
 \leftrightarrow
 \forall_S\alpha
-\bigl(\Real^+_S(\alpha)\leftrightarrow \Cond_T^{+}(\alpha)\bigr).
+\bigl(\Cond_S^+(\alpha)\leftrightarrow \Cond_T^{+}(\alpha)\bigr).
 \]
 The variable-argument Membership Law identifies
-\(\Real^+_S(\alpha)\) with \(\alpha\in S\), whether \(S\)
+\(\Cond_S^+(\alpha)\) with \(\alpha\in S\), whether \(S\)
 is a variable or a class term. Moreover,
 \(\Cond_T^{+}(\alpha)\) is
 \(\operatorname{Cond}_T(\alpha)\) by definition.
@@ -1757,58 +1803,6 @@ on the universal quantifier may be removed. This
 establishes the second law.
 \end{proof}
 
-
-\nbgpara{6}{Derived Class-Builder Rules}
-
-The four fundamental class-builder rules are extracted from the
-variable-argument Membership and Identity Laws established in
-Part III. Their formulation uses the canonical membership condition
-and the realization condition introduced in Part I. The subsequent
-justification of extended-term substitution does not change the
-statement of these rules.
-
-\begin{metatheorem}[Derived Class-Builder Rules]
-\label{meta:derived-class-builder-rules}
-Let \(T\) be an admitted class term and \(\zeta\) a variable.
-Whenever the indicated conditions are defined, the following rules
-are admissible:
-\[
-\frac{\zeta\in T}
-{\operatorname{Cond}_T(\zeta)}
-\quad\mathrm{CB}{\in}\text{-E}
-\qquad
-\frac{\operatorname{Cond}_T(\zeta)}
-{\zeta\in T}
-\quad\mathrm{CB}{\in}\text{-I}.
-\]
-\[
-\frac{\zeta=T}
-{\Real_T(\zeta)}
-\quad\mathrm{CB}{=}\text{-E}
-\qquad
-\frac{\Real_T(\zeta)}
-{\zeta=T}
-\quad\mathrm{CB}{=}\text{-I}.
-\]
-The class-builder variable and any auxiliary bound variables are
-renamed as necessary to avoid capture.
-\end{metatheorem}
-
-\begin{proof}
-The Membership Law gives
-\(\vdash\zeta\in T\leftrightarrow
-\operatorname{Cond}_T(\zeta)\), and the Identity Law gives
-\(\vdash\zeta=T\leftrightarrow\Real_T(\zeta)\).
-Each rule follows by Biconditional Elimination and the established
-rule-extraction principle. Hence none introduces new deductive power.
-\end{proof}
-
-The four rules are deliberately stated with a variable argument,
-as required by the definitions of \(\operatorname{Cond}_T\) and
-\(\Real_T\). Uses involving arbitrary extended terms are supported
-by the generalized laws and admissibility results of this part;
-they do not require expressions such as \(\Real_T(S)\), which have
-not been defined.
 
 
 
