@@ -124,16 +124,16 @@ This characterization gives rise to two derived rules.
     \AxiomC{}
     \RightLabel{\(n\)}
     \UnaryInfC{\(z\in y\)}
-
+%
     \AxiomC{}
     \RightLabel{\(m\)}
     \UnaryInfC{\(y\in A\)}
-
+%
     \noLine
     \BinaryInfC{\(\vdots\)}
     \noLine
     \UnaryInfC{\(z\in A\)}
-
+%
     \RightLabel{Trans-I, \(n,m\)}
     \UnaryInfC{\(\Trans(A)\)}
 \end{prooftree}
@@ -146,16 +146,16 @@ The rule discharges assumptions \(n\) and \(m\). The variables \(y\) and \(z\) m
     \AxiomC{}
     \RightLabel{\(n\)}
     \UnaryInfC{\(z\in y\)}
-
+%
     \AxiomC{}
     \RightLabel{\(m\)}
     \UnaryInfC{\(y\in A\)}
-
+%
     \noLine
     \BinaryInfC{\(\vdots\)}
     \noLine
     \UnaryInfC{\(z\in A\)}
-
+%
     \RightLabel{\(\subseteq\)-I, \(n\)}
     \UnaryInfC{\(y\subseteq A\)}
     \RightLabel{\(\to\)-I, \(m\)}
@@ -188,14 +188,14 @@ Conversely, if a class is transitive, a two-step membership chain through that c
     \UnaryInfC{\(\forall x(x\in A\to x\subseteq A)\)}
     \RightLabel{\(\forall\)-E}
     \UnaryInfC{\(y\in A\to y\subseteq A\)}
-
+%
     \AxiomC{\(y\in A\)}
-
+%
     \RightLabel{\(\to\)-E}
     \BinaryInfC{\(y\subseteq A\)}
-
+%
     \AxiomC{\(z\in y\)}
-
+%
     \RightLabel{\(\subseteq\)-E}
     \BinaryInfC{\(z\in A\)}
 \end{prooftree}
@@ -303,7 +303,7 @@ Suppose that \(x\in\varnothing\). The Membership Law then gives \(x\neq x\), con
     \AxiomC{}
     \RightLabel{\(=\)-I}
     \UnaryInfC{\(a=a\)}
-
+%
     \AxiomC{}
     \RightLabel{\(1\)}
     \UnaryInfC{\(a\in\varnothing\)}
@@ -311,7 +311,7 @@ Suppose that \(x\in\varnothing\). The Membership Law then gives \(x\neq x\), con
     \UnaryInfC{\(\Set(a)\land a\neq a\)}
     \RightLabel{\(\land\)-E}
     \UnaryInfC{\(a\neq a\)}
-
+%
     \RightLabel{\(\neg\)-E}
     \BinaryInfC{\(\bot\)}
     \RightLabel{\(\neg\)-I, \(1\)}
@@ -447,7 +447,7 @@ Suppose that \(R\in R\). By the Membership Law, membership in \(R\) entails fail
     \AxiomC{}
     \RightLabel{\(1\)}
     \UnaryInfC{\(R\in R\)}
-
+%
     \AxiomC{}
     \RightLabel{\(1\)}
     \UnaryInfC{\(R\in R\)}
@@ -455,7 +455,7 @@ Suppose that \(R\in R\). By the Membership Law, membership in \(R\) entails fail
     \UnaryInfC{\(\Set(R)\land R\notin R\)}
     \RightLabel{\(\land\)-E}
     \UnaryInfC{\(R\notin R\)}
-
+%
     \RightLabel{\(\neg\)-E}
     \BinaryInfC{\(\bot\)}
     \RightLabel{\(\neg\)-I, \(1\)}
@@ -494,16 +494,16 @@ This contradicts \(R\notin R\). Hence \(R\) is not a set, and therefore is a pro
     \AxiomC{}
     \RightLabel{\(1\)}
     \UnaryInfC{\(\Set(R)\)}
-
+%
     \AxiomC{\(R\notin R\)}
-
+%
     \RightLabel{\(\land\)-I}
     \BinaryInfC{\(\Set(R)\land R\notin R\)}
     \RightLabel{\(\mathrm{CB}{\in}\text{-I}\)}
     \UnaryInfC{\(R\in R\)}
-
+%
     \AxiomC{\(R\notin R\)}
-
+%
     \RightLabel{\(\neg\)-E}
     \BinaryInfC{\(\bot\)}
     \RightLabel{\(\neg\)-I, \(1\)}
@@ -595,11 +595,11 @@ First, \(B\) cannot belong to itself:
     \UnaryInfC{\(B\in A\land B\notin B\)}
     \RightLabel{\(\land\)-E}
     \UnaryInfC{\(B\notin B\)}
-
+%
     \AxiomC{}
     \RightLabel{\(1\)}
     \UnaryInfC{\(B\in B\)}
-
+%
     \RightLabel{\(\neg\)-E}
     \BinaryInfC{\(\bot\)}
     \RightLabel{\(\neg\)-I, \(1\)}
@@ -614,16 +614,16 @@ Using this result, membership of \(B\) in \(A\) would force membership of \(B\) 
     \AxiomC{}
     \RightLabel{\(2\)}
     \UnaryInfC{\(B\in A\)}
-
+%
     \AxiomC{\(B\notin B\)}
-
+%
     \RightLabel{\(\land\)-I}
     \BinaryInfC{\(B\in A\land B\notin B\)}
     \RightLabel{\(\mathrm{CB}{\in}\text{-I}\)}
     \UnaryInfC{\(B\in B\)}
-
+%
     \AxiomC{\(B\notin B\)}
-
+%
     \RightLabel{\(\neg\)-E}
     \BinaryInfC{\(\bot\)}
     \RightLabel{\(\neg\)-I, \(2\)}
