@@ -1,0 +1,683 @@
+
+\subsection{The First Classes}
+\label{sec:consequences-of-class-formation}
+
+We now examine some immediate consequences of Class Formation. Although the axiom allows us to specify classes by a great variety of membership conditions, even the simplest conditions yield important results. In particular, they allow us to introduce the universe of all sets, the empty class, and classes defined by self-membership. The last of these will lead us to Russell's paradox and an important general theorem about subclasses.
+
+\nbgpara{1}{The Universe \(\bm{V}\)}
+
+Consider the condition
+\[
+x=x.
+\]
+Every object satisfies this condition, and it is plainly predicative. Class Formation therefore guarantees the existence of the class
+\[
+\{x\mid x=x\}.
+\]
+
+\begin{definition}[The Universe]
+\label{def:universe}
+The \emph{universe}, denoted by \(V\), is the class
+\[
+V \quad \defequiv \quad \{x\mid x=x\}.
+\]
+\end{definition}
+
+What belongs to \(V\)? Since every object satisfies \(x=x\), the only restriction imposed by its canonical membership condition is sethood. Thus, the Membership Law immediately gives us the following characterization.
+
+\begin{proposition}[Membership in the Universe]
+\label{prop:membership-in-V}
+\[
+\forall x
+\bigl(
+x\in V\leftrightarrow\Set(x)
+\bigr).
+\]
+\end{proposition}
+
+\begin{proof}
+By the Membership Law,
+\[
+x\in V
+\leftrightarrow
+\bigl(\Set(x)\land x=x\bigr).
+\]
+Since \(x=x\) follows from reflexivity of identity, the right-hand side is equivalent to \(\Set(x)\).
+\end{proof}
+
+In other words, \emph{the members of \(V\) are exactly the sets}. This is why \(V\) is also called the \emph{universal class} or the \emph{class of all sets}.
+
+We already know that membership in any class entails sethood. Proposition~\ref{prop:membership-in-V} supplies the converse for \(V\), licensing a useful derived rule:
+
+\begin{derivedrule}[Universe Membership Introduction]
+\begin{prooftree}
+    \AxiomC{\(\Set(a)\)}
+    \RightLabel{\(\mathrm{V}\text{-I}\)}
+    \UnaryInfC{\(a\in V\)}
+\end{prooftree}
+\end{derivedrule}
+
+Together with Set-I, this means that we can pass freely between \(\Set(a)\) and \(a\in V\).
+
+\nbgpara{1.1}{}
+The universe has a fundamental relationship to every other class.
+
+\begin{proposition}[Every Class Is a Subclass of the Universe]
+\label{prop:every-class-subclass-of-V}
+\[
+\forall A(A\subseteq V).
+\]
+\end{proposition}
+
+\begin{proof}
+Let \(A\) be an arbitrary class. Every member of \(A\) is a set, and every set belongs to \(V\). Hence every member of \(A\) also belongs to \(V\), so \(A\subseteq V\).
+\end{proof}
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(a\in A\)}
+    \RightLabel{Set-I}
+    \UnaryInfC{\(\Set(a)\)}
+    \RightLabel{\(\mathrm{V}\text{-I}\)}
+    \UnaryInfC{\(a\in V\)}
+    \RightLabel{\(\subseteq\)-I, \(1\)}
+    \UnaryInfC{\(A\subseteq V\)}
+\end{prooftree}
+\end{formalderivation}
+
+Thus, \(V\) is the \emph{greatest class under subclasshood}: every class is a subclass of \(V\).
+
+Here we must be careful to distinguish subclasshood from membership. The proposition says that every class is a \emph{subclass} of \(V\), not that every class is a \emph{member} of \(V\). A proper class is a subclass of \(V\), but cannot belong to \(V\), since only sets can be members of classes.
+
+This gives us a precise way of thinking about the relationship between sets and classes. Every class collects objects drawn from the same universe \(V\), but a class need not itself be one of those objects.
+
+\nbgpara{1.2}{Transitive Classes}
+
+The fact that every class is a subclass of \(V\) has a further consequence. To express it, we introduce an important property of classes.
+
+\begin{definition}[Transitive Class]
+\label{def:transitive-class}
+A class \(A\) is called \emph{transitive} iff every member of \(A\) is a subclass of \(A\):
+\[
+\Trans(A)
+\defequiv
+\forall y(y\in A\to y\subseteq A).
+\]
+\end{definition}
+
+Thus, a class is transitive if, whenever it contains an object \(y\), it also contains every member of \(y\). Equivalently, if
+\[
+x\in y
+\qquad\text{and}\qquad
+y\in A,
+\]
+then \(x\in A\).
+
+Informally, transitivity means that passing from a member of \(A\) to one of its members never takes us outside \(A\).
+
+This characterization gives rise to two derived rules.
+
+\begin{derivedrule}[Transitivity Introduction]
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(n\)}
+    \UnaryInfC{\(z\in y\)}
+
+    \AxiomC{}
+    \RightLabel{\(m\)}
+    \UnaryInfC{\(y\in A\)}
+
+    \noLine
+    \BinaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(z\in A\)}
+
+    \RightLabel{Trans-I, \(n,m\)}
+    \UnaryInfC{\(\Trans(A)\)}
+\end{prooftree}
+\end{derivedrule}
+
+The rule discharges assumptions \(n\) and \(m\). The variables \(y\) and \(z\) must be chosen so that the corresponding applications of Subclass Introduction and Universal Introduction satisfy their usual side conditions. In particular, neither may occur free in any remaining undischarged assumption on which the derivation depends.
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(n\)}
+    \UnaryInfC{\(z\in y\)}
+
+    \AxiomC{}
+    \RightLabel{\(m\)}
+    \UnaryInfC{\(y\in A\)}
+
+    \noLine
+    \BinaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(z\in A\)}
+
+    \RightLabel{\(\subseteq\)-I, \(n\)}
+    \UnaryInfC{\(y\subseteq A\)}
+    \RightLabel{\(\to\)-I, \(m\)}
+    \UnaryInfC{\(y\in A\to y\subseteq A\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall y(y\in A\to y\subseteq A)\)}
+    \RightLabel{Def.}
+    \dashedLine
+    \UnaryInfC{\(\Trans(A)\)}
+\end{prooftree}
+\end{formalderivation}
+
+Conversely, if a class is transitive, a two-step membership chain through that class can be collapsed:
+
+\begin{derivedrule}[Transitivity Elimination]
+\begin{prooftree}
+    \AxiomC{\(\Trans(A)\)}
+    \AxiomC{\(z\in y\)}
+    \AxiomC{\(y\in A\)}
+    \RightLabel{Trans-E}
+    \TrinaryInfC{\(z\in A\)}
+\end{prooftree}
+\end{derivedrule}
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{\(\Trans(A)\)}
+    \RightLabel{Def.}
+    \dashedLine
+    \UnaryInfC{\(\forall x(x\in A\to x\subseteq A)\)}
+    \RightLabel{\(\forall\)-E}
+    \UnaryInfC{\(y\in A\to y\subseteq A\)}
+
+    \AxiomC{\(y\in A\)}
+
+    \RightLabel{\(\to\)-E}
+    \BinaryInfC{\(y\subseteq A\)}
+
+    \AxiomC{\(z\in y\)}
+
+    \RightLabel{\(\subseteq\)-E}
+    \BinaryInfC{\(z\in A\)}
+\end{prooftree}
+\end{formalderivation}
+
+\nbgpara{1.3}{}
+The universe provides our first example of a transitive class.
+
+\begin{proposition}[Transitivity of the Universe]
+\label{prop:V-transitive}
+\[
+\Trans(V).
+\]
+\end{proposition}
+
+\begin{proof}
+By Proposition~\ref{prop:every-class-subclass-of-V}, every class is a subclass of \(V\). In particular, every member of \(V\) is a subclass of \(V\). Hence \(V\) is transitive.
+\end{proof}
+
+This expresses an important feature of our theory: every member of a set is itself a set. Indeed, if \(y\in V\) and \(x\in y\), transitivity gives \(x\in V\), and therefore \(\Set(x)\).
+
+There are no objects of some different kind hidden among the members of sets. This property is often called the \emph{purity} of set theory. In our present framework, it requires no additional axiom: the underlying fact that only sets can be members was established earlier, and Class Formation has now supplied the universe \(V\) in which to express it.
+
+\nbgpara{1.4}{}
+Since membership in \(V\) characterizes sethood, we can also characterize proper classes in relation to the universe.
+
+\begin{proposition}[Proper Classes Are Outside the Universe]
+\label{prop:proper-classes-outside-V}
+\[
+\forall A
+\bigl(
+\PC(A)\leftrightarrow A\notin V
+\bigr).
+\]
+\end{proposition}
+
+\begin{proof}
+By definition, \(\PC(A)\) means \(\neg\Set(A)\). Proposition~\ref{prop:membership-in-V} tells us that \(\Set(A)\) is equivalent to \(A\in V\). Negating both sides gives the result.
+\end{proof}
+
+Thus, the distinction between sets and proper classes can be expressed entirely in terms of the universe: a class is a set exactly when it belongs to \(V\), and a proper class exactly when it does not.
+
+\nbgpara{1.5}{}
+Finally, every class can be recovered by selecting its members from \(V\).
+
+\begin{proposition}[Every Class Can Be Carved Out of the Universe]
+\label{prop:every-class-carved-out-of-V}
+\[
+\forall A
+\bigl(
+A=\{x\in V\mid x\in A\}
+\bigr).
+\]
+\end{proposition}
+
+\begin{proof}
+Let \(A\) be arbitrary. By the Membership Law for bounded class terms,
+\[
+x\in\{y\in V\mid y\in A\}
+\leftrightarrow
+(x\in V\land x\in A).
+\]
+But \(x\in A\) already implies \(x\in V\), since every class is a subclass of \(V\). Hence
+\[
+x\in\{y\in V\mid y\in A\}
+\leftrightarrow
+x\in A.
+\]
+The two classes have exactly the same members, and are therefore identical by Extensionality.
+\end{proof}
+
+This shows that bounded class-builder notation with \(V\) is sufficiently general to describe any class. In this sense, Class Formation allows us to carve classes out of the universe by imposing suitable membership conditions.
+
+\nbgpara{2}{The Empty Class \(\bm{\varnothing}\)}
+
+The universe was obtained from a condition that every set satisfies. We now consider the opposite case: a condition that no object can satisfy.
+
+Take
+\[
+x\neq x.
+\]
+By reflexivity of identity, this condition is always false. Nevertheless, it is predicative, so Class Formation guarantees a class consisting of all sets satisfying it.
+
+\begin{definition}[The Empty Class]
+\label{def:empty-class}
+The \emph{empty class}, denoted by \(\varnothing\), is the class
+\[
+\varnothing\defequiv\{x\mid x\neq x\}.
+\]
+\end{definition}
+
+\begin{proposition}[Nothing Belongs to the Empty Class]
+\label{prop:nothing-belongs-to-empty-class}
+\[
+\forall x(x\notin\varnothing).
+\]
+\end{proposition}
+
+\begin{proof}
+Suppose that \(x\in\varnothing\). The Membership Law then gives \(x\neq x\), contradicting reflexivity of identity. Thus, no object belongs to \(\varnothing\).
+\end{proof}
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(=\)-I}
+    \UnaryInfC{\(a=a\)}
+
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(a\in\varnothing\)}
+    \RightLabel{\(\mathrm{CB}{\in}\text{-E}\)}
+    \UnaryInfC{\(\Set(a)\land a\neq a\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(a\neq a\)}
+
+    \RightLabel{\(\neg\)-E}
+    \BinaryInfC{\(\bot\)}
+    \RightLabel{\(\neg\)-I, \(1\)}
+    \UnaryInfC{\(a\notin\varnothing\)}
+\end{prooftree}
+\end{formalderivation}
+
+The proposition licenses a simple derived rule: assuming membership in the empty class leads immediately to contradiction.
+
+\begin{derivedrule}[Empty Class Elimination]
+\begin{prooftree}
+    \AxiomC{\(a\in\varnothing\)}
+    \RightLabel{\(\varnothing\text{-E}\)}
+    \UnaryInfC{\(\bot\)}
+\end{prooftree}
+\end{derivedrule}
+
+\nbgpara{2.1}{}
+The emptiness of \(\varnothing\) has a familiar but important consequence.
+
+\begin{proposition}[The Empty Class Is a Subclass of Every Class]
+\label{prop:empty-class-subclass-of-every-class}
+\[
+\forall A(\varnothing\subseteq A).
+\]
+\end{proposition}
+
+\begin{proof}
+Let \(A\) be any class. To establish \(\varnothing\subseteq A\), we must show that every member of \(\varnothing\) belongs to \(A\). But \(\varnothing\) has no members, so there can be no counterexample. The condition is therefore satisfied.
+\end{proof}
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(a\in\varnothing\)}
+    \RightLabel{\(\varnothing\text{-E}\)}
+    \UnaryInfC{\(\bot\)}
+    \RightLabel{\(\bot\)-E}
+    \UnaryInfC{\(a\in A\)}
+    \RightLabel{\(\subseteq\)-I, \(1\)}
+    \UnaryInfC{\(\varnothing\subseteq A\)}
+\end{prooftree}
+\end{formalderivation}
+
+This illustrates what mathematicians call \emph{vacuous truth}. A universal claim about the members of an empty collection is true because there are no members that could violate it. The Gentzen derivation expresses the same point: from the impossible assumption \(a\in\varnothing\), any conclusion follows.
+
+Thus, \(\varnothing\) is the \emph{least class under subclasshood}. Together with the earlier result concerning \(V\), we have
+\[
+\varnothing\subseteq A\subseteq V
+\]
+for every class \(A\).
+
+\nbgpara{2.2}{}
+We can also characterize the empty class without referring to its defining condition.
+
+\begin{proposition}[Characterization of the Empty Class]
+\label{prop:characterization-of-empty-class}
+\[
+\forall A
+\left(
+A=\varnothing
+\leftrightarrow
+\forall x(x\notin A)
+\right).
+\]
+\end{proposition}
+
+\begin{proof}
+If \(A=\varnothing\), then \(A\) has no members, since \(\varnothing\) has none.
+
+Conversely, suppose that \(A\) has no members. Then \(A\) and \(\varnothing\) have exactly the same members, namely none. By Extensionality, \(A=\varnothing\).
+\end{proof}
+
+The empty class is therefore not merely one example of a class without members. It is the \emph{unique} class with that property.
+
+Notice, however, that we have not established that \(\varnothing\) is a set. Class Formation guarantees its existence as a class, but does not establish that it belongs to any class. Its sethood will require further axioms.
+
+\nbgpara{3}{The Class of Self-Membered Sets}
+
+So far, our defining conditions have involved identity. We now turn to the other atomic relation of our primitive language: membership.
+
+Consider
+\[
+x\in x.
+\]
+
+There is nothing syntactically problematic about this condition. It is atomic, and therefore predicative. Class Formation consequently guarantees the class
+\[
+\{x\mid x\in x\},
+\]
+whose members are exactly the sets that belong to themselves.
+
+Unlike the conditions \(x=x\) and \(x\neq x\), however, the truth of \(x\in x\) is not settled by logic alone. The axioms introduced so far do not establish whether any self-membered sets exist. Thus, we cannot yet determine whether this class has members or is identical to \(\varnothing\).
+
+The distinction is worth emphasizing. A condition involving self-membership is not inherently contradictory. What matters is the relationship between the defining condition of a class and the possibility that the class itself satisfies that condition.
+
+This becomes clearer when we turn to the opposite condition.
+
+\nbgpara{4}{The Russell Class}
+
+Consider
+\[
+x\notin x.
+\]
+This condition selects precisely those sets that are not members of themselves. It is predicative, so Class Formation guarantees the corresponding class.
+
+\begin{definition}[The Russell Class]
+\label{def:russell-class}
+The \emph{Russell class}, denoted by \(R\), is the class
+\[
+R\defequiv\{x\mid x\notin x\}.
+\]
+\end{definition}
+
+This is the condition at the heart of Russell's famous paradox. In an unrestricted theory of collections, it leads to the question whether the collection of all objects that do not contain themselves contains itself.
+
+Our theory gives the question a precise answer.
+
+\begin{proposition}[The Russell Class Is Not Self-Membered]
+\label{prop:russell-not-self-membered}
+\[
+R\notin R.
+\]
+\end{proposition}
+
+\begin{proof}
+Suppose that \(R\in R\). By the Membership Law, membership in \(R\) entails failure of self-membership. Hence \(R\notin R\), contradicting our assumption. Therefore \(R\notin R\).
+\end{proof}
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(R\in R\)}
+
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(R\in R\)}
+    \RightLabel{\(\mathrm{CB}{\in}\text{-E}\)}
+    \UnaryInfC{\(\Set(R)\land R\notin R\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(R\notin R\)}
+
+    \RightLabel{\(\neg\)-E}
+    \BinaryInfC{\(\bot\)}
+    \RightLabel{\(\neg\)-I, \(1\)}
+    \UnaryInfC{\(R\notin R\)}
+\end{prooftree}
+\end{formalderivation}
+
+At first glance, this conclusion might seem puzzling. After all, \(R\) consists of everything that does not belong to itself, and we have just proved that \(R\) does not belong to itself. Should \(R\) not therefore belong to \(R\)?
+
+The answer lies in the sethood restriction built into class-builder notation. The defining condition of \(R\) is
+\[
+\operatorname{Cond}_R(x)
+\defequiv
+\Set(x)\land x\notin x.
+\]
+
+Thus, failure of self-membership is not by itself sufficient for membership in \(R\). The object in question must also be a set.
+
+This observation leads directly to our next result.
+
+\begin{proposition}[The Russell Class Is a Proper Class]
+\label{prop:russell-class-proper}
+\[
+\PC(R).
+\]
+\end{proposition}
+
+\begin{proof}
+Suppose that \(R\) is a set. We have already established that \(R\notin R\). Together with \(\Set(R)\), this satisfies the canonical membership condition of \(R\), so the Membership Law gives \(R\in R\).
+
+This contradicts \(R\notin R\). Hence \(R\) is not a set, and therefore is a proper class.
+\end{proof}
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(\Set(R)\)}
+
+    \AxiomC{\(R\notin R\)}
+
+    \RightLabel{\(\land\)-I}
+    \BinaryInfC{\(\Set(R)\land R\notin R\)}
+    \RightLabel{\(\mathrm{CB}{\in}\text{-I}\)}
+    \UnaryInfC{\(R\in R\)}
+
+    \AxiomC{\(R\notin R\)}
+
+    \RightLabel{\(\neg\)-E}
+    \BinaryInfC{\(\bot\)}
+    \RightLabel{\(\neg\)-I, \(1\)}
+    \UnaryInfC{\(\neg\Set(R)\)}
+    \RightLabel{Def.}
+    \dashedLine
+    \UnaryInfC{\(\PC(R)\)}
+\end{prooftree}
+\end{formalderivation}
+
+We have thus established the existence of a proper class.
+
+Russell's paradox has not forced us to abandon the class specified by \(x\notin x\). Class Formation guarantees that the class exists, while Russell's argument shows that it cannot itself be a set.
+
+The contradiction arises only if we assume that \(R\) is eligible to be a member of a class. Once this assumption is rejected, there is no inconsistency: \(R\) exists as a proper class, and it is not a member of itself.
+
+This illustrates the central distinction between sets and proper classes. Both are classes, but only sets can occur as members. Russell's argument proves that this distinction is not merely terminological; proper classes are genuinely required by the theory.
+
+\nbgpara{5}{The Missing Subclass}
+
+Russell's argument concerns the class of all sets that do not belong to themselves. We can now ask whether the same construction yields a more general result.
+
+Let \(A\) be an arbitrary class. Using bounded class-builder notation, form
+\[
+B=\{x\in A\mid x\notin x\}.
+\]
+
+The class \(B\) contains precisely those members of \(A\) that are not members of themselves. By construction, \(B\subseteq A\).
+
+But can \(B\) itself belong to \(A\)?
+
+\begin{proposition}[The Missing Subclass]
+\label{prop:missing-subclass}
+For every class \(A\), the class
+\[
+B=\{x\in A\mid x\notin x\}
+\]
+satisfies
+\[
+B\subseteq A
+\qquad\text{and}\qquad
+B\notin A.
+\]
+
+Consequently,
+\[
+\forall A\exists B
+\bigl(
+B\subseteq A\land B\notin A
+\bigr).
+\]
+\end{proposition}
+
+\begin{proof}
+Let \(A\) be arbitrary and put
+\[
+B=\{x\in A\mid x\notin x\}.
+\]
+
+The Membership Law gives
+\[
+x\in B
+\leftrightarrow
+(x\in A\land x\notin x).
+\]
+In particular, every member of \(B\) belongs to \(A\), so \(B\subseteq A\).
+
+We next show that \(B\notin B\). If \(B\in B\), the Membership Law would imply \(B\notin B\), a contradiction.
+
+Now suppose that \(B\in A\). Since \(B\notin B\), we would have
+\[
+B\in A\land B\notin B.
+\]
+But this is precisely the membership condition for \(B\). The Membership Law would therefore give \(B\in B\), again a contradiction.
+
+Hence \(B\notin A\). Since \(A\) was arbitrary, every class has a subclass that is not one of its members.
+\end{proof}
+
+The two steps of the diagonal argument can be displayed explicitly.
+
+First, \(B\) cannot belong to itself:
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(B\in B\)}
+    \RightLabel{\(\mathrm{CB}{\in}\text{-E}\)}
+    \UnaryInfC{\(B\in A\land B\notin B\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(B\notin B\)}
+
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(B\in B\)}
+
+    \RightLabel{\(\neg\)-E}
+    \BinaryInfC{\(\bot\)}
+    \RightLabel{\(\neg\)-I, \(1\)}
+    \UnaryInfC{\(B\notin B\)}
+\end{prooftree}
+\end{formalderivation}
+
+Using this result, membership of \(B\) in \(A\) would force membership of \(B\) in itself:
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(2\)}
+    \UnaryInfC{\(B\in A\)}
+
+    \AxiomC{\(B\notin B\)}
+
+    \RightLabel{\(\land\)-I}
+    \BinaryInfC{\(B\in A\land B\notin B\)}
+    \RightLabel{\(\mathrm{CB}{\in}\text{-I}\)}
+    \UnaryInfC{\(B\in B\)}
+
+    \AxiomC{\(B\notin B\)}
+
+    \RightLabel{\(\neg\)-E}
+    \BinaryInfC{\(\bot\)}
+    \RightLabel{\(\neg\)-I, \(2\)}
+    \UnaryInfC{\(B\notin A\)}
+\end{prooftree}
+\end{formalderivation}
+
+The Missing Subclass theorem is a generalization of Russell's argument. It tells us that \emph{no class contains all its subclasses as members}. Given any class \(A\), we can construct a particular subclass of \(A\) that is not a member of \(A\).
+
+The result is not limited to enormous collections such as the universe. It applies to every class, regardless of whether that class is itself a set or a proper class.
+
+Notice also what it does \emph{not} say. The missing subclass \(B\) need not be a proper class. The theorem tells us that \(B\notin A\), not that \(B\) belongs to no class whatsoever.
+
+\nbgpara{5.1}{}
+Taking \(A=V\) recovers Russell's class. Indeed, since \(x\in V\) is equivalent to \(\Set(x)\), we have
+\[
+\{x\in V\mid x\notin x\}
+=
+\{x\mid x\notin x\}
+=
+R.
+\]
+
+The Missing Subclass theorem therefore tells us that
+\[
+R\notin V,
+\]
+which is exactly the assertion that \(R\) is a proper class.
+
+Russell's paradox is thus not an isolated difficulty associated with a single exceptional collection. It reveals a general limitation: however a class is constituted, there is always some subclass that it fails to contain as a member.
+
+\nbgpara{6}{A First Survey}
+
+Our investigation has followed a systematic pattern. Among parameter-free, quantifier-free formulas of the primitive language in which \(x\) is the only variable, there are just two atomic formulas:
+\[
+x=x
+\qquad\text{and}\qquad
+x\in x.
+\]
+
+Since \(x=x\) is always true, every formula constructed from these two atomic formulas using logical connectives is equivalent to one of four basic conditions:
+\[
+x=x,\qquad
+x\neq x,\qquad
+x\in x,\qquad
+x\notin x.
+\]
+
+These conditions give rise, respectively, to the universe, the empty class, the class of self-membered sets, and the Russell class.
+
+The first two are completely determined by the logical properties of identity. The latter two involve self-membership, and therefore raise questions that logic alone does not settle in the same way. In particular, the condition \(x\notin x\) allows the resulting class to be tested against its own defining condition, leading to Russell's argument and the Missing Subclass theorem.
+
+Adding further logical connectives to these parameter-free conditions produces no essentially new cases. Introducing parameters or quantifiers, however, allows us to specify many additional classes.
+
+Class Formation guarantees that these classes exist, but it does not generally determine whether they have members, whether they are sets or proper classes, or what further properties they possess. Such conclusions require additional mathematical arguments and, in many cases, further set-theoretic axioms.
+
+We have therefore reached a natural stopping point in our study of the immediate consequences of Class Formation. The axiom provides a general method of specifying classes; the results established here show both its elementary constructive power and the fundamental limits imposed by the distinction between sets and proper classes.
