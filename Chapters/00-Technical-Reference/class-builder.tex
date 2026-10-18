@@ -259,7 +259,7 @@ corresponding general class term.
 \end{definition}
 
 Thus \(\Real_T(\eta)\) expresses that \(\eta\) has precisely the
-members specified by \(T\). The symbol \(\Real\), like
+members specified by \(T\). The symbol \(\Real,\) like
 \(\operatorname{Cond}\), is merely a metalinguistic abbreviation.
 Different legitimate choices of \(\alpha\) yield alphabetic variants.
 
@@ -396,7 +396,7 @@ The remaining defined notation is eliminated by the already assigned
 primitive-expansion procedures.
 
 \medskip
-\noindent\emph{Alphabetic invariance.}
+\noindent\emph{Alphabetic Invariance.}
 For a fixed selected occurrence, different choices of the fresh
 realization variable and of the variables bound within its realization
 condition yield alphabetic variants. The selected occurrence itself
@@ -408,7 +408,7 @@ variants. The previously specified expansion clauses for the
 remaining notation preserve this property.
 
 \medskip
-\noindent\emph{Free variables.}
+\noindent\emph{Free Variables.}
 If \(\alpha\) and \(\eta\) are fresh for \(T\), then
 \(\operatorname{Cond}_T(\alpha)\) has precisely the free variables
 of \(T\), together with \(\alpha\), and
@@ -422,7 +422,7 @@ do the remaining primitive-expansion clauses.
 
 
 \medskip
-\noindent\emph{Compatibility with substitution.}
+\noindent\emph{Compatibility with Substitution.}
 We first establish the compatibility of canonical membership
 conditions by simultaneous structural induction on extended
 terms and formulas.
@@ -490,38 +490,58 @@ for variables.
 Let \(T\) be an admitted extended term and \(\zeta\) a variable. We use
 the following metalinguistic abbreviation:
 \[
-M_T(\zeta)
+\Cond_T^{+}(\zeta)
 \defequiv
 \begin{cases}
 \zeta\in T, & \text{if \(T\) is a variable},\\[2mm]
 \operatorname{Cond}_T(\zeta), & \text{if \(T\) is a class term}.
 \end{cases}
 \]
+Thus \(\Cond_T^{+}(\zeta)\) expresses the condition for
+\(\zeta\) to be a member of the class represented by \(T\).
+It extends the earlier notion of a canonical membership condition
+to arbitrary extended terms: for class terms, it coincides with
+\(\Cond_T(\zeta)\), while for variables, it is simply the
+ordinary membership formula. The superscript \(+\) indicates
+this generalization.
+
 For bounded class terms, the second clause is understood through their
 unbounded expansions. As usual, the alphabetic variations needed to
 avoid capture are made before forming canonical membership conditions.
 
 We shall also write
 \[
-\operatorname{Spec}_T(h)
+\Real^+_T(h)
 \defequiv
-\forall_S a\bigl(a\in h\leftrightarrow M_T(a)\bigr),
+\forall_S a\bigl(a\in h\leftrightarrow \Cond_T^{+}(a)\bigr),
 \]
 where \(a\) is fresh for \(T\) and \(h\). When \(h\) is introduced
 as a representative of \(T\), it is also chosen fresh for \(T\).
 This too is only a metalinguistic abbreviation.
 
+Whereas \(\Cond_T^{+}(\zeta)\) characterizes an individual
+member, \(\Real_T^{+}(h)\) characterizes an entire class:
+it says that \(h\) has exactly those sets as members which
+satisfy the membership condition associated with \(T\).
+It thus extends the idea behind \(\Real_T(h)\) to arbitrary
+extended terms. For class terms, it expresses the same
+realization condition using restricted quantification;
+for variables, it expresses that \(h\) has exactly the
+same members as \(T\). In either case, it specifies what
+it means for \(h\) to represent \(T\), without asserting
+that such a representative exists.
+
 Two elementary observations will be used throughout. For every
 admitted extended term \(T\),
 \[
-\vdash M_T(\zeta)\to\Set(\zeta).
+\vdash \Cond_T^{+}(\zeta)\to\Set(\zeta).
 \]
 When \(T\) is a variable, this follows by Set-I; when \(T\) is a
 class term, it follows from the definition of
 \(\operatorname{Cond}_T\). Moreover, if \(T\) is a class term of
 builder rank \(n+1\), then the class terms occurring in
-\(M_T(\zeta)\) have rank at most \(n\). If \(T\) is a variable,
-\(M_T(\zeta)\) contains no class terms.
+\(\Cond_T^{+}(\zeta)\) have rank at most \(n\). If \(T\) is a variable,
+\(\Cond_T^{+}(\zeta)\) contains no class terms.
 
 Neither observation asserts the existence of realizations or the
 admissibility of substituting class terms for variables. The notation
@@ -658,7 +678,7 @@ Conversely, a realization exists, and its membership specification
 supplies \(\zeta\in h\) whenever
 \(\operatorname{Cond}_T(\zeta)\) holds. Therefore
 \[
-\vdash\zeta\in T\leftrightarrow M_T(\zeta).
+\vdash\zeta\in T\leftrightarrow \Cond_T^{+}(\zeta).
 \tag{M}
 \]
 Here and below, the displayed extended formulas are understood by
@@ -686,7 +706,7 @@ on the Left.}
 Let \(\zeta\) be a variable and \(T\) a class term. By
 \((\mathrm{M})\), we may prescribe
 \[
-\zeta\in T\quad\rightsquigarrow\quad M_T(\zeta).
+\zeta\in T\quad\rightsquigarrow\quad \Cond_T^{+}(\zeta).
 \]
 The equivalence is justified, and the reduct contains only class
 terms of rank below that of \(T\).
@@ -702,25 +722,25 @@ is a class term gives
 \vdash
 S\in T
 \leftrightarrow
-\exists h\bigl(\Real_S(h)\land M_T(h)\bigr).
+\exists h\bigl(\Real_S(h)\land \Cond_T^{+}(h)\bigr).
 \]
-When \(T\) is a variable, \(M_T(h)\) is simply \(h\in T\), so the
+When \(T\) is a variable, \(\Cond_T^{+}(h)\) is simply \(h\in T\), so the
 same equivalence holds.
 
-Since \(M_S(a)\to\Set(a)\), the restricted and unrestricted
+Since \(\Real^+_S(a)\to\Set(a)\), the restricted and unrestricted
 membership specifications are equivalent:
 \[
 \vdash
-\Real_S(h)\leftrightarrow\operatorname{Spec}_S(h).
+\Real_S(h)\leftrightarrow\Real^+_S(h).
 \]
-Also \(\vdash M_T(h)\to\Set(h)\). Thus the unrestricted
+Also \(\vdash \Cond_T^{+}(h)\to\Set(h)\). Thus the unrestricted
 existential quantifier may be restricted to sets, yielding
 \[
 \vdash
 S\in T
 \leftrightarrow
 \exists_S h\bigl(
-\operatorname{Spec}_S(h)\land M_T(h)
+\Real^+_S(h)\land \Cond_T^{+}(h)
 \bigr).
 \]
 We therefore prescribe
@@ -728,8 +748,8 @@ We therefore prescribe
 S\in T
 \quad\rightsquigarrow\quad
 \exists_S h\left(
-\forall_S a\bigl(a\in h\leftrightarrow M_S(a)\bigr)
-\land M_T(h)
+\forall_S a\bigl(a\in h\leftrightarrow \Real^+_S(a)\bigr)
+\land \Cond_T^{+}(h)
 \right).
 \]
 The only class terms on the right are those occurring inside
@@ -744,7 +764,7 @@ which is a class term, and let \(a\) be fresh for both. We establish
 \vdash
 S=T
 \leftrightarrow
-\forall_S a\bigl(M_S(a)\leftrightarrow M_T(a)\bigr).
+\forall_S a\bigl(\Real^+_S(a)\leftrightarrow \Cond_T^{+}(a)\bigr).
 \tag{E}
 \]
 Suppose first that one argument is a variable, say \(S=\zeta\),
@@ -754,13 +774,13 @@ and the other is a class term \(T\). By \((\mathrm{I})\),
 \zeta=T\leftrightarrow\Real_T(\zeta).
 \]
 The realization condition says that \(\zeta\) and \(T\) have
-exactly the same members. Since \(M_T(a)\to\Set(a)\), its
+exactly the same members. Since \(\Cond_T^{+}(a)\to\Set(a)\), its
 unrestricted membership specification is equivalent to
 \[
-\forall_S a\bigl(a\in\zeta\leftrightarrow M_T(a)\bigr).
+\forall_S a\bigl(a\in\zeta\leftrightarrow \Cond_T^{+}(a)\bigr).
 \]
 This is the right-hand side of \((\mathrm{E})\), because
-\(M_\zeta(a)\) is \(a\in\zeta\). The case with the class term on
+\(\Real^+_\zeta(a)\) is \(a\in\zeta\). The case with the class term on
 the left follows by symmetry of identity, using the corresponding
 contextual expansion.
 
@@ -775,17 +795,17 @@ S=T
 \exists h\bigl(\Real_S(h)\land\Real_T(h)\bigr).
 \]
 If the existential formula holds, its two realization conditions
-imply agreement of \(M_S(a)\) and \(M_T(a)\) for every set
+imply agreement of \(\Real^+_S(a)\) and \(\Cond_T^{+}(a)\) for every set
 \(a\), giving the right-hand side of \((\mathrm{E})\).
 Conversely, suppose that restricted agreement holds. By existence
 of realizations, choose \(h\) satisfying \(\Real_S(h)\).
 For every set \(a\), the assumed agreement and the realization
 condition for \(S\) give
 \[
-a\in h\leftrightarrow M_T(a).
+a\in h\leftrightarrow \Cond_T^{+}(a).
 \]
 For an object that is not a set, both sides are false: membership
-implies sethood, and so does \(M_T(a)\). Hence the equivalence holds
+implies sethood, and so does \(\Cond_T^{+}(a)\). Hence the equivalence holds
 for every object, which is precisely \(\Real_T(h)\).
 Existential introduction gives the displayed existential formula,
 and thereby \(S=T\). This establishes \((\mathrm{E})\) without
@@ -795,7 +815,7 @@ We accordingly prescribe
 \[
 S=T
 \quad\rightsquigarrow\quad
-\forall_S a\bigl(M_S(a)\leftrightarrow M_T(a)\bigr).
+\forall_S a\bigl(\Real^+_S(a)\leftrightarrow \Cond_T^{+}(a)\bigr).
 \]
 Once again the reduct has only restricted quantifiers and contains
 no class terms at the maximal rank of the original atomic formula.
@@ -1010,7 +1030,7 @@ Metatheorem~\ref{meta:class-term-extension},
 T=U
 \leftrightarrow
 \forall_S\alpha
-\bigl(M_T(\alpha)\leftrightarrow M_U(\alpha)\bigr).
+\bigl(\Cond_T^{+}(\alpha)\leftrightarrow \Real^+_U(\alpha)\bigr).
 \]
 By the definitions of the membership specifications, the right-hand
 side is
@@ -1253,10 +1273,10 @@ predicative reductions.
 
 Recall from Part II that
 \[
-\operatorname{Spec}_T(\eta)
+\Real^+_T(\eta)
 \defequiv
 \forall_S\alpha
-\bigl(\alpha\in\eta\leftrightarrow M_T(\alpha)\bigr),
+\bigl(\alpha\in\eta\leftrightarrow \Cond_T^{+}(\alpha)\bigr),
 \]
 with \(\alpha\) fresh for \(T\) and \(\eta\). We first observe
 that, for every extended term \(T\),
@@ -1264,12 +1284,12 @@ that, for every extended term \(T\),
 \vdash
 \operatorname{Rep}_T(\eta)
 \leftrightarrow
-\operatorname{Spec}_T(\eta).
+\Real^+_T(\eta).
 \tag{S}
 \]
 If \(T\) is a class term, this is the equivalence of its restricted
 and unrestricted membership specifications, using
-\(M_T(\alpha)\to\Set(\alpha)\). If \(T\) is a variable,
+\(\Cond_T^{+}(\alpha)\to\Set(\alpha)\). If \(T\) is a variable,
 the implication from representation to specification follows by
 identity elimination; the converse follows by Extensionality, since
 only sets can be members of either class.
@@ -1282,7 +1302,7 @@ reductions are justified, with all auxiliary variables chosen fresh:
 \vdash
 \Set(T)
 \leftrightarrow
-\exists_S\eta\,\operatorname{Spec}_T(\eta)
+\exists_S\eta\,\Real^+_T(\eta)
 \]
 and
 \[
@@ -1290,7 +1310,7 @@ and
 S\subseteq T
 \leftrightarrow
 \forall_S\alpha
-\bigl(M_S(\alpha)\to M_T(\alpha)\bigr).
+\bigl(\Real^+_S(\alpha)\to \Cond_T^{+}(\alpha)\bigr).
 \]
 \end{metatheorem}
 
@@ -1309,7 +1329,7 @@ characterization of sethood, establishes
 Existence of representatives is needed in the direction from left
 to right; the other direction uses the membership equivalence under
 a representative. By \((\mathrm{S})\), the right-hand side is
-\(\exists_S\eta\,\operatorname{Spec}_T(\eta)\).
+\(\exists_S\eta\,\Real^+_T(\eta)\).
 
 For subclasshood, expand its definition. The variable-argument
 Membership Law from Part III, together with the variable case of
@@ -1319,10 +1339,10 @@ Membership Law from Part III, together with the variable case of
 S\subseteq T
 \leftrightarrow
 \forall\alpha\bigl(
-M_S(\alpha)\to M_T(\alpha)
+\Real^+_S(\alpha)\to \Cond_T^{+}(\alpha)
 \bigr).
 \]
-Because \(M_S(\alpha)\to\Set(\alpha)\) is derivable, the
+Because \(\Real^+_S(\alpha)\to\Set(\alpha)\) is derivable, the
 unrestricted and restricted universal specifications are equivalent.
 This yields the stated reduction.
 \end{proof}
@@ -1722,12 +1742,12 @@ Metatheorem~\ref{meta:class-term-extension} gives
 S=T
 \leftrightarrow
 \forall_S\alpha
-\bigl(M_S(\alpha)\leftrightarrow M_T(\alpha)\bigr).
+\bigl(\Real^+_S(\alpha)\leftrightarrow \Cond_T^{+}(\alpha)\bigr).
 \]
 The variable-argument Membership Law identifies
-\(M_S(\alpha)\) with \(\alpha\in S\), whether \(S\)
+\(\Real^+_S(\alpha)\) with \(\alpha\in S\), whether \(S\)
 is a variable or a class term. Moreover,
-\(M_T(\alpha)\) is
+\(\Cond_T^{+}(\alpha)\) is
 \(\operatorname{Cond}_T(\alpha)\) by definition.
 
 Both membership conditions imply \(\Set(\alpha)\).
