@@ -2,7 +2,7 @@
 \subsection{The First Classes}
 \label{sec:consequences-of-class-formation}
 
-We now examine some immediate consequences of Class Formation. Although the axiom allows us to specify classes by a great variety of membership conditions, even the simplest conditions yield important results. In particular, they allow us to introduce the universe of all sets, the empty class, and classes defined by self-membership. The last of these will lead us to Russell's paradox and an important general theorem about subclasses.
+Class Formation provides us with central insights into the ontology of NBG. Although the axiom allows us to specify classes by a great variety of membership conditions, even the simplest conditions yield important results. In particular, they allow us to introduce the universe of all sets, the empty class, and classes defined by self-membership.
 
 \nbgpara{1}{The Universe \(\bm{V}\)}
 
@@ -23,7 +23,7 @@ V \quad \defequiv \quad \{x\mid x=x\}.
 \]
 \end{definition}
 
-What belongs to \(V\)? Since every object satisfies \(x=x\), the only restriction imposed by its canonical membership condition is sethood. Thus, the Membership Law immediately gives us the following characterization.
+What belongs to \(V\)? Since every object satisfies \(x=x\), the only restriction imposed by its canonical membership condition is sethood. Thus, the Membership Law (Proposition \ref{prop:fundamental-class-builder-laws}) immediately gives us the following characterization.
 
 \begin{proposition}[Membership in the Universe]
 \label{prop:membership-in-V}
@@ -44,6 +44,80 @@ x\in V
 \]
 Since \(x=x\) follows from reflexivity of identity, the right-hand side is equivalent to \(\Set(x)\).
 \end{proof}
+
+\begin{formalderivation}
+\begin{proof}
+\begin{derivationnote}
+    Choose a variable \(a\). We first derive
+\end{derivationnote}
+\[
+\vdash
+a\in V\to\Set(a).
+\]
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(a\in V\)}
+    \RightLabel{Set-I}
+    \UnaryInfC{\(\Set(a)\)}
+    \RightLabel{\(\to\)-I, \(1\)}
+    \UnaryInfC{\(a\in V\to\Set(a)\)}
+\end{prooftree}
+\vspace{0.3cm}
+
+\begin{derivationnote}
+Conversely, we derive
+\end{derivationnote}
+\[
+\vdash
+\Set(a)\to a\in V.
+\]
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(2\)}
+    \UnaryInfC{\(\Set(a)\)}
+
+    \AxiomC{}
+    \RightLabel{\(=\)-I}
+    \UnaryInfC{\(a=a\)}
+
+    \RightLabel{\(\land\)-I}
+    \BinaryInfC{\(\Set(a)\land a=a\)}
+    \RightLabel{\(\mathrm{CB}{\in}\text{-I}\)}
+    \UnaryInfC{\(a\in V\)}
+    \RightLabel{\(\to\)-I, \(2\)}
+    \UnaryInfC{\(\Set(a)\to a\in V\)}
+\end{prooftree}
+\vspace{0.3cm}
+
+\begin{derivationnote}
+By Metatheorem~\ref{meta:proof-by-mutual-implication},
+\end{derivationnote}
+\[
+\vdash
+a\in V
+\leftrightarrow
+\Set(a).
+\]
+
+\begin{derivationnote}
+
+Applying Contextual Universal Generalization gives
+\end{derivationnote}
+\[
+\vdash
+\forall x
+\bigl(
+x\in V
+\leftrightarrow
+\Set(x)
+\bigr).
+\qedhere
+\]
+\end{proof}
+\end{formalderivation}
 
 In other words, \emph{the members of \(V\) are exactly the sets}. This is why \(V\) is also called the \emph{universal class} or the \emph{class of all sets}.
 
@@ -283,7 +357,7 @@ By reflexivity of identity, this condition is always false. Nevertheless, it is 
 \label{def:empty-class}
 The \emph{empty class}, denoted by \(\varnothing\), is the class
 \[
-\varnothing\defequiv\{x\mid x\neq x\}.
+\varnothing \quad \defequiv \quad \{x\mid x\neq x\}.
 \]
 \end{definition}
 
@@ -423,7 +497,7 @@ This condition selects precisely those sets that are not members of themselves. 
 \label{def:russell-class}
 The \emph{Russell class}, denoted by \(R\), is the class
 \[
-R\defequiv\{x\mid x\notin x\}.
+R \quad \defequiv \quad \{x\mid x\notin x\}.
 \]
 \end{definition}
 
