@@ -36,7 +36,7 @@ x\in V\leftrightarrow\Set(x)
 \end{proposition}
 
 \begin{proof}
-By the Membership Law,
+By the Membership Law (Proposition \ref{prop:fundamental-class-builder-laws}),
 \[
 x\in V
 \leftrightarrow
@@ -48,7 +48,7 @@ Since \(x=x\) follows from reflexivity of identity, the right-hand side is equiv
 \begin{formalderivation}
 \begin{proof}
 \begin{derivationnote}
-    Choose a variable \(a\). We first derive
+    First, we derive
 \end{derivationnote}
 \[
 \vdash
@@ -59,8 +59,10 @@ a\in V\to\Set(a).
     \AxiomC{}
     \RightLabel{\(1\)}
     \UnaryInfC{\(a\in V\)}
-    \RightLabel{Set-I}
-    \UnaryInfC{\(\Set(a)\)}
+    \RightLabel{CB$\in$-E}
+    \UnaryInfC{\(\Set(a) \land a=a\)}
+    \RightLabel{$\land$-E}
+    \UnaryInfC{$\Set(a)$}
     \RightLabel{\(\to\)-I, \(1\)}
     \UnaryInfC{\(a\in V\to\Set(a)\)}
 \end{prooftree}
@@ -78,11 +80,11 @@ Conversely, we derive
     \AxiomC{}
     \RightLabel{\(2\)}
     \UnaryInfC{\(\Set(a)\)}
-
+%
     \AxiomC{}
     \RightLabel{\(=\)-I}
     \UnaryInfC{\(a=a\)}
-
+%
     \RightLabel{\(\land\)-I}
     \BinaryInfC{\(\Set(a)\land a=a\)}
     \RightLabel{\(\mathrm{CB}{\in}\text{-I}\)}
@@ -93,7 +95,7 @@ Conversely, we derive
 \vspace{0.3cm}
 
 \begin{derivationnote}
-By Metatheorem~\ref{meta:proof-by-mutual-implication},
+Together, these give us
 \end{derivationnote}
 \[
 \vdash
@@ -104,7 +106,7 @@ a\in V
 
 \begin{derivationnote}
 
-Applying Contextual Universal Generalization gives
+Applying Universal Generalization gives
 \end{derivationnote}
 \[
 \vdash
@@ -114,14 +116,15 @@ x\in V
 \leftrightarrow
 \Set(x)
 \bigr).
-\qedhere
 \]
 \end{proof}
 \end{formalderivation}
 
-In other words, \emph{the members of \(V\) are exactly the sets}. This is why \(V\) is also called the \emph{universal class} or the \emph{class of all sets}.
+\nbgpara{1.1}{} Note that the definition of a set--being a member of some class, in this case $V$--already gives us the implication, while the Class Builder Membership Law--and thus both Extensionality and Class Formation--are necessary for the converse. In the first derivation to the right, this can be seen by the fact that CB$\in$-E followed by $\land$-E can be replaced by Set-I.
 
-We already know that membership in any class entails sethood. Proposition~\ref{prop:membership-in-V} supplies the converse for \(V\), licensing a useful derived rule:
+\nbgpara{1.2}{} The above proposition tells us that \emph{the members of \(V\) are exactly the sets}. This is why \(V\) is also called the \emph{universal class} or the \emph{class of all sets}. Readers familiar with standard Zermelo-Fraenkel set theory (ZFC) will note a profound shift here. In ZFC, the collection of all sets is too large to be a formal object within the theory itself; it can only be discussed informally from the outside. NBG, by introducing classes alongside sets, allows us to bring the universal class \(V\) directly inside the formal mathematics as a rigorous object of study.
+
+\nbgpara{1.3}{} The converse of Proposition~\ref{prop:membership-in-V} licenses a useful derived rule:
 
 \begin{derivedrule}[Universe Membership Introduction]
 \begin{prooftree}
@@ -131,9 +134,9 @@ We already know that membership in any class entails sethood. Proposition~\ref{p
 \end{prooftree}
 \end{derivedrule}
 
-Together with Set-I, this means that we can pass freely between \(\Set(a)\) and \(a\in V\).
+This means that we can pass freely between \(\Set(a)\) and \(a\in V\).
 
-\nbgpara{1.1}{}
+\nbgpara{2}{}
 The universe has a fundamental relationship to every other class.
 
 \begin{proposition}[Every Class Is a Subclass of the Universe]
@@ -163,9 +166,7 @@ Let \(A\) be an arbitrary class. Every member of \(A\) is a set, and every set b
 
 Thus, \(V\) is the \emph{greatest class under subclasshood}: every class is a subclass of \(V\).
 
-Here we must be careful to distinguish subclasshood from membership. The proposition says that every class is a \emph{subclass} of \(V\), not that every class is a \emph{member} of \(V\). A proper class is a subclass of \(V\), but cannot belong to \(V\), since only sets can be members of classes.
-
-This gives us a precise way of thinking about the relationship between sets and classes. Every class collects objects drawn from the same universe \(V\), but a class need not itself be one of those objects.
+\nbgpara{2.1}{} Here we must be careful to distinguish subclasshood from membership. The proposition says that every class is a \emph{subclass} of \(V\), not that every class is a \emph{member} of \(V\). A proper class is a subclass of \(V\), but cannot belong to \(V\), since only sets can be members of classes. This gives us a precise way of thinking about the relationship between sets and classes. Every class collects objects drawn from the same universe \(V\), but a class need not itself be one of those objects.
 
 \nbgpara{1.2}{Transitive Classes}
 
