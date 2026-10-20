@@ -120,11 +120,11 @@ x\in V
 \end{proof}
 \end{formalderivation}
 
-\nbgpara{1.1}{} Note that the definition of a set--being a member of some class, in this case $V$--already gives us the implication, while the Class Builder Membership Law--and thus both Extensionality and Class Formation--are necessary for the converse. In the first derivation to the right, this can be seen by the fact that CB$\in$-E followed by $\land$-E can be replaced by Set-I.
+\nbgpara{1.1}{} Note that the definition of a set--being a member of some class, in this case $V$---already gives us the implication, while the Class Builder Membership Law---and thus both Extensionality and Class Formation--are necessary for the converse. In the first derivation to the right, this can be seen by the fact that CB$\in$-E followed by $\land$-E can be replaced by Set-I.
 
 \nbgpara{1.2}{} The above proposition tells us that \emph{the members of \(V\) are exactly the sets}. This is why \(V\) is also called the \emph{universal class} or the \emph{class of all sets}. Readers familiar with standard Zermelo-Fraenkel set theory (ZFC) will note a profound shift here. In ZFC, the collection of all sets is too large to be a formal object within the theory itself; it can only be discussed informally from the outside. NBG, by introducing classes alongside sets, allows us to bring the universal class \(V\) directly inside the formal mathematics as a rigorous object of study.
 
-\nbgpara{1.3}{} The converse of Proposition~\ref{prop:membership-in-V} licenses a useful derived rule:
+\nbgpara{1.3}{} The converse of Proposition \ref{prop:membership-in-V} licenses a useful derived rule:
 
 \begin{derivedrule}[Universe Membership Introduction]
 \begin{prooftree}
@@ -134,9 +134,9 @@ x\in V
 \end{prooftree}
 \end{derivedrule}
 
-This means that we can pass freely between \(\Set(a)\) and \(a\in V\).
+Together with Set-I, this means that we can pass freely between \(\Set(a)\) and \(a\in V\).
 
-\nbgpara{2}{}
+\nbgpara{1.4}{}
 The universe has a fundamental relationship to every other class.
 
 \begin{proposition}[Every Class Is a Subclass of the Universe]
@@ -166,9 +166,9 @@ Let \(A\) be an arbitrary class. Every member of \(A\) is a set, and every set b
 
 Thus, \(V\) is the \emph{greatest class under subclasshood}: every class is a subclass of \(V\).
 
-\nbgpara{2.1}{} Here we must be careful to distinguish subclasshood from membership. The proposition says that every class is a \emph{subclass} of \(V\), not that every class is a \emph{member} of \(V\). A proper class is a subclass of \(V\), but cannot belong to \(V\), since only sets can be members of classes. This gives us a precise way of thinking about the relationship between sets and classes. Every class collects objects drawn from the same universe \(V\), but a class need not itself be one of those objects.
+\nbgpara{1.41}{} Here we must be careful to distinguish subclasshood from membership. The proposition says that every class is a \emph{subclass} of \(V\), not that every class is a \emph{member} of \(V\). A proper class is a subclass of \(V\), but cannot belong to \(V\), since only sets can be members of classes. This gives us a precise way of thinking about the relationship between sets and classes. Every class collects objects drawn from the same universe \(V\), but a class need not itself be one of those objects.
 
-\nbgpara{1.2}{Transitive Classes}
+\nbgpara{1.5}{Transitive Classes}
 
 The fact that every class is a subclass of \(V\) has a further consequence. To express it, we introduce an important property of classes.
 
@@ -177,22 +177,21 @@ The fact that every class is a subclass of \(V\) has a further consequence. To e
 A class \(A\) is called \emph{transitive} iff every member of \(A\) is a subclass of \(A\):
 \[
 \Trans(A)
-\defequiv
+\qquad \defequiv \qquad
 \forall y(y\in A\to y\subseteq A).
 \]
 \end{definition}
 
 Thus, a class is transitive if, whenever it contains an object \(y\), it also contains every member of \(y\). Equivalently, if
-\[
+\begin{gather*}
 x\in y
 \qquad\text{and}\qquad
-y\in A,
-\]
-then \(x\in A\).
+y\in A, \\ \text{then } x \in A.
+\end{gather*}
 
 Informally, transitivity means that passing from a member of \(A\) to one of its members never takes us outside \(A\).
 
-This characterization gives rise to two derived rules.
+\nbgpara{1.51}{} This characterization gives rise to two derived rules.
 
 \begin{derivedrule}[Transitivity Introduction]
 \begin{prooftree}
@@ -276,7 +275,7 @@ Conversely, if a class is transitive, a two-step membership chain through that c
 \end{prooftree}
 \end{formalderivation}
 
-\nbgpara{1.3}{}
+\nbgpara{1.52}{}
 The universe provides our first example of a transitive class.
 
 \begin{proposition}[Transitivity of the Universe]
@@ -290,11 +289,9 @@ The universe provides our first example of a transitive class.
 By Proposition~\ref{prop:every-class-subclass-of-V}, every class is a subclass of \(V\). In particular, every member of \(V\) is a subclass of \(V\). Hence \(V\) is transitive.
 \end{proof}
 
-This expresses an important feature of our theory: every member of a set is itself a set. Indeed, if \(y\in V\) and \(x\in y\), transitivity gives \(x\in V\), and therefore \(\Set(x)\).
+The transitivity of the universe expresses a familiar feature of our theory from a different perspective. It follows from the definition of set that every member of a class is a set. Since \(V\) contains precisely the sets, this means that every member of \(V\) has all its members in \(V\) as well. What we previously understood as a conceptual fact about membership thus appears as a structural property of the universe itself.
 
-There are no objects of some different kind hidden among the members of sets. This property is often called the \emph{purity} of set theory. In our present framework, it requires no additional axiom: the underlying fact that only sets can be members was established earlier, and Class Formation has now supplied the universe \(V\) in which to express it.
-
-\nbgpara{1.4}{}
+\nbgpara{1.6}{}
 Since membership in \(V\) characterizes sethood, we can also characterize proper classes in relation to the universe.
 
 \begin{proposition}[Proper Classes Are Outside the Universe]
@@ -313,7 +310,7 @@ By definition, \(\PC(A)\) means \(\neg\Set(A)\). Proposition~\ref{prop:membershi
 
 Thus, the distinction between sets and proper classes can be expressed entirely in terms of the universe: a class is a set exactly when it belongs to \(V\), and a proper class exactly when it does not.
 
-\nbgpara{1.5}{}
+\nbgpara{1.7}{}
 Finally, every class can be recovered by selecting its members from \(V\).
 
 \begin{proposition}[Every Class Can Be Carved Out of the Universe]
@@ -343,6 +340,7 @@ The two classes have exactly the same members, and are therefore identical by Ex
 \end{proof}
 
 This shows that bounded class-builder notation with \(V\) is sufficiently general to describe any class. In this sense, Class Formation allows us to carve classes out of the universe by imposing suitable membership conditions.
+
 
 \nbgpara{2}{The Empty Class \(\bm{\varnothing}\)}
 
