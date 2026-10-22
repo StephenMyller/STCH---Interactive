@@ -137,12 +137,17 @@ function setupGentzenPanels() {
     let anchor = null;
     let proof = null;
 
-    if (derivation) {
-      // Keep the previously working Gentzen proof placement.
+       if (derivation) {
+      // Associate a derivation with a preceding proof only
+      // when no substantive content separates the two.
       proof = item.previousElementSibling;
       let checked = 0;
       while (proof && !proof.matches('.amsthmproof') && checked++ < 6) {
-        if (proof.matches('h1, h2, h3, h4, h5, h6')) break;
+        if (
+          proof.matches('h1, h2, h3, h4, h5, h6') ||
+          proof.textContent.trim() !== '' ||
+          proof.querySelector('img, svg, mjx-container, button')
+        ) break;
         proof = proof.previousElementSibling;
       }
       if (!proof?.matches('.amsthmproof')) proof = null;
