@@ -462,3 +462,124 @@ Similarly, a displayed application of \(\land\)-I\(^{*}\), \(\land\)-E\(^{*}\), 
 
 This convention concerns only the display of derivations and introduces no new inference rules. Every suppressed application must be a legitimate application of the ordinary rule and must separately satisfy all side conditions governing that rule.
 
+
+
+
+\nbgpara{16}{Basic Derived Rules}
+
+We establish two elementary derived rules that will be used
+in later derivations. Each is admissible in the deductive
+system already defined and introduces no additional
+inference principle.
+
+\nbgparar{Negation Congruence} \quad
+From a biconditional, we may infer the biconditional
+of the corresponding negations:
+
+\begin{prooftree}
+    \AxiomC{\(\varphi\leftrightarrow\psi\)}
+    \RightLabel{NC}
+    \UnaryInfC{\(\neg\varphi\leftrightarrow\neg\psi\)}
+\end{prooftree}
+
+To justify this rule, we derive
+\[
+\vdash
+(\varphi\leftrightarrow\psi)
+\to
+(\neg\varphi\leftrightarrow\neg\psi).
+\]
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(\varphi\leftrightarrow\psi\)}
+    \AxiomC{}
+    \RightLabel{\(2\)}
+    \UnaryInfC{\(\psi\)}
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(\varphi\)}
+    \AxiomC{}
+    \RightLabel{\(3\)}
+    \UnaryInfC{\(\neg\varphi\)}
+    \RightLabel{\(\neg\)-E}
+    \BinaryInfC{\(\bot\)}
+    \RightLabel{\(\neg\)-I, \(2\)}
+    \UnaryInfC{\(\neg\psi\)}
+    \RightLabel{\(\to\)-I, \(3\)}
+    \UnaryInfC{\(\neg\varphi\to\neg\psi\)}
+%
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(\varphi\leftrightarrow\psi\)}
+    \AxiomC{}
+    \RightLabel{\(4\)}
+    \UnaryInfC{\(\varphi\)}
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(\psi\)}
+    \AxiomC{}
+    \RightLabel{\(5\)}
+    \UnaryInfC{\(\neg\psi\)}
+    \RightLabel{\(\neg\)-E}
+    \BinaryInfC{\(\bot\)}
+    \RightLabel{\(\neg\)-I, \(4\)}
+    \UnaryInfC{\(\neg\varphi\)}
+    \RightLabel{\(\to\)-I, \(5\)}
+    \UnaryInfC{\(\neg\psi\to\neg\varphi\)}
+%
+    \RightLabel{\(\leftrightarrow\)-I}
+    \BinaryInfC{\(\neg\varphi\leftrightarrow\neg\psi\)}
+    \RightLabel{\(\to\)-I, \(1\)}
+    \UnaryInfC{
+        \((\varphi\leftrightarrow\psi)
+        \to
+        (\neg\varphi\leftrightarrow\neg\psi)\)
+    }
+\end{prooftree}
+
+Thus, an application of Negation Congruence abbreviates
+an application of the displayed theorem followed by
+\(\to\)-E.
+
+\vspace{0.4cm}
+
+\nbgparar{Symmetry of Identity} \quad
+Identity may be reversed:
+
+\begin{prooftree}
+    \AxiomC{\(\xi=\eta\)}
+    \RightLabel{\(=\)-Sym}
+    \UnaryInfC{\(\eta=\xi\)}
+\end{prooftree}
+
+To justify this rule, we derive
+\[
+\vdash
+\xi=\eta\to\eta=\xi.
+\]
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(\xi=\eta\)}
+    \AxiomC{}
+    \RightLabel{\(=\)-I}
+    \UnaryInfC{\(\xi=\xi\)}
+    \RightLabel{\(=\)-E}
+    \BinaryInfC{\(\eta=\xi\)}
+    \RightLabel{\(\to\)-I, \(1\)}
+    \UnaryInfC{\(\xi=\eta\to\eta=\xi\)}
+\end{prooftree}
+
+The application of \(=\)-E uses the formula
+\[
+\zeta=\xi,
+\]
+substituting \(\xi\) and \(\eta\), respectively, for
+\(\zeta\). Both substitutions satisfy the side conditions
+of the primitive rule. Thus, an application of \(=\)-Sym likewise abbreviates
+an application of the displayed theorem followed by
+\(\to\)-E.
+
+Neither derived rule adds deductive power. Both may
+henceforth be used as single steps in derivation displays.

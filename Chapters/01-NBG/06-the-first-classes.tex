@@ -10,7 +10,8 @@ Consider the condition
 \[
 x=x.
 \]
-Every object satisfies this condition, and it is plainly predicative. Class Formation therefore guarantees the existence of the class
+Every class satisfies this condition, and it is predicative. Class Formation
+therefore guarantees a class corresponding to the term
 \[
 \{x\mid x=x\}.
 \]
@@ -19,125 +20,146 @@ Every object satisfies this condition, and it is plainly predicative. Class Form
 \label{def:universe}
 The \emph{universe}, denoted by \(V\), is the class
 \[
-V \quad \defequiv \quad \{x\mid x=x\}.
+V\quad\defequiv\quad\{x\mid x=x\}.
 \]
 \end{definition}
 
-What belongs to \(V\)? Since every object satisfies \(x=x\), the only restriction imposed by its canonical membership condition is sethood. Thus, the Membership Law (Proposition \ref{prop:fundamental-class-builder-laws}) immediately gives us the following characterization.
+Although every class satisfies the condition defining \(V\), the Membership
+Law restricts membership in a class to sets. Since \(x=x\) imposes no
+further restriction, we obtain the following characterization.
 
 \begin{proposition}[Membership in the Universe]
 \label{prop:membership-in-V}
 \[
-\forall x
-\bigl(
-x\in V\leftrightarrow\Set(x)
-\bigr).
+\forall x\bigl(x\in V\leftrightarrow\Set(x)\bigr).
 \]
 \end{proposition}
 
 \begin{proof}
-By the Membership Law (Proposition \ref{prop:fundamental-class-builder-laws}),
+The Membership Law gives
 \[
-x\in V
-\leftrightarrow
-\bigl(\Set(x)\land x=x\bigr).
+x\in V\leftrightarrow\bigl(\Set(x)\land x=x\bigr).
 \]
-Since \(x=x\) follows from reflexivity of identity, the right-hand side is equivalent to \(\Set(x)\).
+Since every object is identical to itself, the second conjunct adds nothing.
+Thus the members of \(V\) are exactly the sets.
 \end{proof}
 
 \begin{formalderivation}
-\begin{proof}
-\begin{derivationnote}
-    First, we derive
-\end{derivationnote}
-\[
-\vdash
-a\in V\to\Set(a).
-\]
-
 \begin{prooftree}
     \AxiomC{}
     \RightLabel{\(1\)}
     \UnaryInfC{\(a\in V\)}
-    \RightLabel{CB$\in$-E}
-    \UnaryInfC{\(\Set(a) \land a=a\)}
-    \RightLabel{$\land$-E}
-    \UnaryInfC{$\Set(a)$}
+    \RightLabel{$\Set$-I}
+    \UnaryInfC{\(\Set(a)\)}
     \RightLabel{\(\to\)-I, \(1\)}
     \UnaryInfC{\(a\in V\to\Set(a)\)}
-\end{prooftree}
-\vspace{0.3cm}
-
-\begin{derivationnote}
-Conversely, we derive
-\end{derivationnote}
-\[
-\vdash
-\Set(a)\to a\in V.
-\]
-
-\begin{prooftree}
+%
     \AxiomC{}
     \RightLabel{\(2\)}
     \UnaryInfC{\(\Set(a)\)}
-%
     \AxiomC{}
     \RightLabel{\(=\)-I}
     \UnaryInfC{\(a=a\)}
-%
     \RightLabel{\(\land\)-I}
     \BinaryInfC{\(\Set(a)\land a=a\)}
-    \RightLabel{\(\mathrm{CB}{\in}\text{-I}\)}
+    \RightLabel{CB\(\in\)-I}
     \UnaryInfC{\(a\in V\)}
     \RightLabel{\(\to\)-I, \(2\)}
     \UnaryInfC{\(\Set(a)\to a\in V\)}
+%
+    \RightLabel{\(\leftrightarrow\)-I}
+    \BinaryInfC{\(a\in V\leftrightarrow\Set(a)\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall x(x\in V\leftrightarrow\Set(x))\)}
 \end{prooftree}
-\vspace{0.3cm}
-
-\begin{derivationnote}
-Together, these give us
-\end{derivationnote}
-\[
-\vdash
-a\in V
-\leftrightarrow
-\Set(a).
-\]
-
-\begin{derivationnote}
-
-Applying Universal Generalization gives
-\end{derivationnote}
-\[
-\vdash
-\forall x
-\bigl(
-x\in V
-\leftrightarrow
-\Set(x)
-\bigr).
-\]
-\end{proof}
 \end{formalderivation}
 
-\nbgpara{1.1}{} Note that the definition of a set--being a member of some class, in this case $V$---already gives us the implication, while the Class Builder Membership Law---and thus both Extensionality and Class Formation--are necessary for the converse. In the first derivation to the right, this can be seen by the fact that CB$\in$-E followed by $\land$-E can be replaced by Set-I.
+\nbgpara{1.1}{} That a member of \(V\) must be a set is an
+instance of a fact we have known all along: every member of \emph{any} class
+is a set. The converse is what distinguishes \(V\): every set belongs to
+this particular class.
 
-\nbgpara{1.2}{} The above proposition tells us that \emph{the members of \(V\) are exactly the sets}. This is why \(V\) is also called the \emph{universal class} or the \emph{class of all sets}. Readers familiar with standard Zermelo-Fraenkel set theory (ZFC) will note a profound shift here. In ZFC, the collection of all sets is too large to be a formal object within the theory itself; it can only be discussed informally from the outside. NBG, by introducing classes alongside sets, allows us to bring the universal class \(V\) directly inside the formal mathematics as a rigorous object of study.
+Recall that sethood was originally defined by membership in \emph{some}
+class:
+\[
+\Set(a)\quad\defequiv\quad\exists B(a\in B).
+\]
+We can now replace that existential condition by membership in a single,
+distinguished class:
+\[
+\exists B(a\in B)\leftrightarrow a\in V.
+\]
+Thus, \(V\) is the \emph{universal class}, or the \emph{class of
+all sets}. Unlike in ZFC, where the collection of all sets is not an object
+of the first-order theory, NBG allows us to study this collection as a
+class within the theory itself.
 
-\nbgpara{1.3}{} The converse of Proposition \ref{prop:membership-in-V} licenses a useful derived rule:
+The implication from sethood to membership in \(V\) also licenses a useful
+derived rule:
 
 \begin{derivedrule}[Universe Membership Introduction]
 \begin{prooftree}
     \AxiomC{\(\Set(a)\)}
-    \RightLabel{\(\mathrm{V}\text{-I}\)}
+    \RightLabel{\(V\)-I}
     \UnaryInfC{\(a\in V\)}
 \end{prooftree}
 \end{derivedrule}
 
-Together with Set-I, this means that we can pass freely between \(\Set(a)\) and \(a\in V\).
+Together with Set-I, this allows us to pass freely between \(\Set(a)\)
+and \(a\in V\). The rule \(V\)-I is not an additional principle: it
+abbreviates an instance of Proposition~\ref{prop:membership-in-V}, followed
+by biconditional elimination.
 
-\nbgpara{1.4}{}
-The universe has a fundamental relationship to every other class.
+\nbgpara{1.2}{} We have established that a class belongs to \(V\) precisely
+when it is a set. The corresponding characterization of
+proper classes follows immediately: a class is not a set
+precisely when it does not belong to \(V\). We are simply
+taking the contrapositives of the two implications in
+Proposition~\ref{prop:membership-in-V}.
+
+\begin{proposition}[Proper Classes Are Outside the Universe]
+\label{prop:proper-classes-outside-V}
+\[
+\forall A\bigl(\PC(A)\leftrightarrow A\notin V\bigr).
+\]
+\end{proposition}
+
+\begin{proof}
+By Proposition~\ref{prop:membership-in-V},
+membership in \(V\) is equivalent to sethood.
+Negating this equivalence gives the result, since
+a proper class is, by definition, a class that is
+not a set.
+\end{proof}
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{P\ref{prop:membership-in-V}}
+    \UnaryInfC{\(\forall x(x\in V\leftrightarrow\Set(x))\)}
+    \RightLabel{\(\forall\)-E}
+    \UnaryInfC{\(A\in V\leftrightarrow\Set(A)\)}
+    \RightLabel{\(\leftrightarrow\)-Sym}
+    \UnaryInfC{\(\Set(A)\leftrightarrow A\in V\)}
+    \RightLabel{NC}
+    \UnaryInfC{\(\neg\Set(A)\leftrightarrow A\notin V\)}
+    \dashedLine
+    \RightLabel{D\ref{def:proper-class}}
+    \UnaryInfC{\(\PC(A)\leftrightarrow A\notin V\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall A(\PC(A)\leftrightarrow A\notin V)\)}
+\end{prooftree}
+\end{formalderivation}
+
+Thus, \(V\) contains exactly the sets and excludes exactly
+the proper classes. These are not two independent facts,
+but positive and negative expressions of the same
+distinction.
+
+\nbgpara{1.3}{} The characterization of the members of \(V\) has a
+further consequence. Since every member of any class
+is a set, and every set belongs to \(V\), every
+class must be a subclass of \(V\). 
 
 \begin{proposition}[Every Class Is a Subclass of the Universe]
 \label{prop:every-class-subclass-of-V}
@@ -147,7 +169,7 @@ The universe has a fundamental relationship to every other class.
 \end{proposition}
 
 \begin{proof}
-Let \(A\) be an arbitrary class. Every member of \(A\) is a set, and every set belongs to \(V\). Hence every member of \(A\) also belongs to \(V\), so \(A\subseteq V\).
+Let $A$ be an arbitrary class and let $a \in A$. Then, since there's a class of which $a$ is a member (i.e., $A$), $a$ is a set. By Proposition \ref{prop:membership-in-V}, we hence know that $a \in V$. This gives us $A \subseteq V$, as desired.
 \end{proof}
 
 \begin{formalderivation}
@@ -157,92 +179,149 @@ Let \(A\) be an arbitrary class. Every member of \(A\) is a set, and every set b
     \UnaryInfC{\(a\in A\)}
     \RightLabel{Set-I}
     \UnaryInfC{\(\Set(a)\)}
-    \RightLabel{\(\mathrm{V}\text{-I}\)}
+    \RightLabel{\(V\)-I}
     \UnaryInfC{\(a\in V\)}
     \RightLabel{\(\subseteq\)-I, \(1\)}
     \UnaryInfC{\(A\subseteq V\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall A(A\subseteq V)\)}
 \end{prooftree}
 \end{formalderivation}
 
-Thus, \(V\) is the \emph{greatest class under subclasshood}: every class is a subclass of \(V\).
+Thus \(V\) is the greatest class under subclasshood.
+This is another expression of its universality, and
+in fact an equivalent one.
 
-\nbgpara{1.41}{} Here we must be careful to distinguish subclasshood from membership. The proposition says that every class is a \emph{subclass} of \(V\), not that every class is a \emph{member} of \(V\). A proper class is a subclass of \(V\), but cannot belong to \(V\), since only sets can be members of classes. This gives us a precise way of thinking about the relationship between sets and classes. Every class collects objects drawn from the same universe \(V\), but a class need not itself be one of those objects.
+To see the converse, suppose that every class is a
+subclass of \(V\). Any set belongs to some class,
+by the definition of sethood. But since every class
+is contained in \(V\), that set must also belong
+to \(V\). Conversely, every member of \(V\) is
+necessarily a set, as every member of a class must be.
 
-\nbgpara{1.5}{Transitive Classes}
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(\forall B(B\subseteq V)\)}
+    \RightLabel{\(\forall\)-E}
+    \UnaryInfC{\(D\subseteq V\)}
+%
+    \AxiomC{}
+    \RightLabel{\(3\)}
+    \UnaryInfC{\(a\in D\)}
+    \RightLabel{\(\subseteq\)-E}
+    \BinaryInfC{\(a\in V\)}
+%
+    \AxiomC{}
+    \RightLabel{\(2\)}
+    \UnaryInfC{\(\Set(a)\)}
+    \dashedLine
+    \RightLabel{D\ref{def:set}}
+    \UnaryInfC{\(\exists D(a\in D)\)}
+    \RightLabel{\(\exists\)-E, \(3\)}
+    \BinaryInfC{\(a\in V\)}
+    \RightLabel{\(\to\)-I, \(2\)}
+    \UnaryInfC{\(\Set(a)\to a\in V\)}
+%
+    \AxiomC{}
+    \RightLabel{\(4\)}
+    \UnaryInfC{\(a\in V\)}
+    \RightLabel{Set-I}
+    \UnaryInfC{\(\Set(a)\)}
+    \RightLabel{\(\to\)-I, \(4\)}
+    \UnaryInfC{\(a\in V\to\Set(a)\)}
+%
+    \RightLabel{\(\leftrightarrow\)-I}
+    \BinaryInfC{\(a\in V\leftrightarrow\Set(a)\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall a(a\in V\leftrightarrow\Set(a))\)}
+    \RightLabel{\(\to\)-I, \(1\)}
+    \UnaryInfC{
+        \(\forall B(B\subseteq V)\to
+        \forall a(a\in V\leftrightarrow\Set(a))\)
+    }
+\end{prooftree}
+\end{formalderivation}
 
-The fact that every class is a subclass of \(V\) has a further consequence. To express it, we introduce an important property of classes.
+
+Hence the statement that \(V\) contains exactly
+the sets and the statement that every class is a
+subclass of \(V\) entail one another.
+
+
+
+
+\nbgpara{1.4}{} Universal subclasshood also has consequences that do not themselves
+characterize the universe. One of these is transitivity, an important
+property of classes more generally.
 
 \begin{definition}[Transitive Class]
 \label{def:transitive-class}
-A class \(A\) is called \emph{transitive} iff every member of \(A\) is a subclass of \(A\):
+A class \(A\) is \emph{transitive} iff every member of \(A\)
+is a subclass of \(A\):
 \[
-\Trans(A)
-\qquad \defequiv \qquad
+\Trans(A)\quad\defequiv\quad
 \forall y(y\in A\to y\subseteq A).
 \]
 \end{definition}
 
-Thus, a class is transitive if, whenever it contains an object \(y\), it also contains every member of \(y\). Equivalently, if
-\begin{gather*}
-x\in y
-\qquad\text{and}\qquad
-y\in A, \\ \text{then } x \in A.
-\end{gather*}
+Equivalently, whenever \(z\in y\) and \(y\in A\), we also have
+\(z\in A\). Passing from a member of a transitive class to one of
+its members never leads outside that class.
 
-Informally, transitivity means that passing from a member of \(A\) to one of its members never takes us outside \(A\).
-
-\nbgpara{1.51}{} This characterization gives rise to two derived rules.
+This gives rise to two derived rules. Transitivity Introduction allows
+us to establish transitivity by showing that an arbitrary two-step
+membership chain remains inside the class.
 
 \begin{derivedrule}[Transitivity Introduction]
 \begin{prooftree}
     \AxiomC{}
     \RightLabel{\(n\)}
     \UnaryInfC{\(z\in y\)}
-%
     \AxiomC{}
     \RightLabel{\(m\)}
     \UnaryInfC{\(y\in A\)}
-%
     \noLine
     \BinaryInfC{\(\vdots\)}
     \noLine
     \UnaryInfC{\(z\in A\)}
-%
     \RightLabel{Trans-I, \(n,m\)}
     \UnaryInfC{\(\Trans(A)\)}
 \end{prooftree}
 \end{derivedrule}
 
-The rule discharges assumptions \(n\) and \(m\). The variables \(y\) and \(z\) must be chosen so that the corresponding applications of Subclass Introduction and Universal Introduction satisfy their usual side conditions. In particular, neither may occur free in any remaining undischarged assumption on which the derivation depends.
+The variables \(z\) and \(y\) must be chosen so that the underlying
+applications of Subclass Introduction and Universal Introduction are
+legitimate. In particular, they must not occur free in any undischarged
+assumptions remaining after the marked assumptions have been discharged.
 
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
     \RightLabel{\(n\)}
     \UnaryInfC{\(z\in y\)}
-%
     \AxiomC{}
     \RightLabel{\(m\)}
     \UnaryInfC{\(y\in A\)}
-%
     \noLine
     \BinaryInfC{\(\vdots\)}
     \noLine
     \UnaryInfC{\(z\in A\)}
-%
     \RightLabel{\(\subseteq\)-I, \(n\)}
     \UnaryInfC{\(y\subseteq A\)}
     \RightLabel{\(\to\)-I, \(m\)}
     \UnaryInfC{\(y\in A\to y\subseteq A\)}
     \RightLabel{\(\forall\)-I}
     \UnaryInfC{\(\forall y(y\in A\to y\subseteq A)\)}
-    \RightLabel{Def.}
     \dashedLine
+    \RightLabel{D\ref{def:transitive-class}}
     \UnaryInfC{\(\Trans(A)\)}
 \end{prooftree}
 \end{formalderivation}
 
-Conversely, if a class is transitive, a two-step membership chain through that class can be collapsed:
+Conversely, Transitivity Elimination allows us to collapse a two-step
+membership chain in a class known to be transitive.
 
 \begin{derivedrule}[Transitivity Elimination]
 \begin{prooftree}
@@ -256,27 +335,30 @@ Conversely, if a class is transitive, a two-step membership chain through that c
 
 \begin{formalderivation}
 \begin{prooftree}
-    \AxiomC{\(\Trans(A)\)}
-    \RightLabel{Def.}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(\Trans(A)\)}
     \dashedLine
+    \RightLabel{D\ref{def:transitive-class}}
     \UnaryInfC{\(\forall x(x\in A\to x\subseteq A)\)}
     \RightLabel{\(\forall\)-E}
     \UnaryInfC{\(y\in A\to y\subseteq A\)}
 %
-    \AxiomC{\(y\in A\)}
-%
+    \AxiomC{}
+    \RightLabel{\(2\)}
+    \UnaryInfC{\(y\in A\)}
     \RightLabel{\(\to\)-E}
     \BinaryInfC{\(y\subseteq A\)}
 %
-    \AxiomC{\(z\in y\)}
-%
+    \AxiomC{}
+    \RightLabel{\(3\)}
+    \UnaryInfC{\(z\in y\)}
     \RightLabel{\(\subseteq\)-E}
     \BinaryInfC{\(z\in A\)}
 \end{prooftree}
 \end{formalderivation}
 
-\nbgpara{1.52}{}
-The universe provides our first example of a transitive class.
+\nbgpara{1.5}{} The universe provides our first example of a transitive class.
 
 \begin{proposition}[Transitivity of the Universe]
 \label{prop:V-transitive}
@@ -286,60 +368,41 @@ The universe provides our first example of a transitive class.
 \end{proposition}
 
 \begin{proof}
-By Proposition~\ref{prop:every-class-subclass-of-V}, every class is a subclass of \(V\). In particular, every member of \(V\) is a subclass of \(V\). Hence \(V\) is transitive.
+Every class is a subclass of \(V\). In particular, every member of
+\(V\) is a subclass of \(V\). This is exactly what it means for \(V\)
+to be transitive.
 \end{proof}
 
-The transitivity of the universe expresses a familiar feature of our theory from a different perspective. It follows from the definition of set that every member of a class is a set. Since \(V\) contains precisely the sets, this means that every member of \(V\) has all its members in \(V\) as well. What we previously understood as a conceptual fact about membership thus appears as a structural property of the universe itself.
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{P\ref{prop:every-class-subclass-of-V}}
+    \UnaryInfC{\(\forall B(B\subseteq V)\)}
+    \RightLabel{\(\forall\)-E}
+    \UnaryInfC{\(B\subseteq V\)}
+    \RightLabel{\(\to\)-I (vacuous)}
+    \UnaryInfC{\(B\in V\to B\subseteq V\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall B(B\in V\to B\subseteq V)\)}
+    \dashedLine
+    \RightLabel{D\ref{def:transitive-class}}
+    \UnaryInfC{\(\Trans(V)\)}
+\end{prooftree}
+\end{formalderivation}
 
-\nbgpara{1.6}{}
-Since membership in \(V\) characterizes sethood, we can also characterize proper classes in relation to the universe.
+Transitivity is a consequence of the universality of \(V\), not another
+equivalent characterization of it. A class can be transitive without
+containing every set. What makes \(V\) universal is the stronger fact
+that \emph{every} class is its subclass, not merely its members.
 
-\begin{proposition}[Proper Classes Are Outside the Universe]
-\label{prop:proper-classes-outside-V}
-\[
-\forall A
-\bigl(
-\PC(A)\leftrightarrow A\notin V
-\bigr).
-\]
-\end{proposition}
+There is also a familiar set-theoretic idea behind this result. We
+already knew that every member of any class is a set. Since the members
+of \(V\) are exactly the sets, every member of a set belongs to \(V\).
+This absence of objects that could occur as members without themselves
+being sets is characteristic of \emph{pure set theory}. In our one-sorted
+framework, it is already built into the meaning of sethood and requires
+no additional axiom.
 
-\begin{proof}
-By definition, \(\PC(A)\) means \(\neg\Set(A)\). Proposition~\ref{prop:membership-in-V} tells us that \(\Set(A)\) is equivalent to \(A\in V\). Negating both sides gives the result.
-\end{proof}
-
-Thus, the distinction between sets and proper classes can be expressed entirely in terms of the universe: a class is a set exactly when it belongs to \(V\), and a proper class exactly when it does not.
-
-\nbgpara{1.7}{}
-Finally, every class can be recovered by selecting its members from \(V\).
-
-\begin{proposition}[Every Class Can Be Carved Out of the Universe]
-\label{prop:every-class-carved-out-of-V}
-\[
-\forall A
-\bigl(
-A=\{x\in V\mid x\in A\}
-\bigr).
-\]
-\end{proposition}
-
-\begin{proof}
-Let \(A\) be arbitrary. By the Membership Law for bounded class terms,
-\[
-x\in\{y\in V\mid y\in A\}
-\leftrightarrow
-(x\in V\land x\in A).
-\]
-But \(x\in A\) already implies \(x\in V\), since every class is a subclass of \(V\). Hence
-\[
-x\in\{y\in V\mid y\in A\}
-\leftrightarrow
-x\in A.
-\]
-The two classes have exactly the same members, and are therefore identical by Extensionality.
-\end{proof}
-
-This shows that bounded class-builder notation with \(V\) is sufficiently general to describe any class. In this sense, Class Formation allows us to carve classes out of the universe by imposing suitable membership conditions.
 
 
 \nbgpara{2}{The Empty Class \(\bm{\varnothing}\)}
@@ -356,7 +419,7 @@ By reflexivity of identity, this condition is always false. Nevertheless, it is 
 \label{def:empty-class}
 The \emph{empty class}, denoted by \(\varnothing\), is the class
 \[
-\varnothing \quad \defequiv \quad \{x\mid x\neq x\}.
+\varnothing \qquad \defequiv \qquad \{x\mid x\neq x\}.
 \]
 \end{definition}
 

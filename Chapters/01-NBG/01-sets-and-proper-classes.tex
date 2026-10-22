@@ -85,21 +85,55 @@ contraction displayed above. The derived rule therefore does not introduce a new
 
 
 \nbgpara{7}{}
-A direct consequence of the definitions is that proper classes are never members of other classes. This deserves to be stated explicitly, since it is the precise mathematical content of our earlier slogan that proper classes are ``too large" to be sets.
+A direct consequence of our definitions is that proper
+classes are never members of other classes. In fact, this
+property characterizes proper classes: a class is proper
+precisely when it belongs to no class whatsoever. This
+makes precise our earlier slogan that proper classes
+are ``too large'' to be sets.
 
-\begin{proposition}[Proper Classes Are Never Members]\label{prop:proper-classes-are-never-members}
-    If $A$ is a proper class, then $A$ is not a member of any class $B$.
+\begin{proposition}[Characterization of Proper Classes]
+\label{prop:proper-classes-are-never-members}
+    A class \(A\) is a proper class iff it is not
+    a member of any class \(B\).
 
     In symbols:
     \[
-        \forall A\forall B(\PC(A)\to A\notin B)
+        \forall A
+        \bigl(
+            \PC(A)\leftrightarrow
+            \forall B(A\notin B)
+        \bigr).
     \]
 \end{proposition}
 
 \begin{proof}
-Let $A$ and $B$ be arbitrary classes, and suppose that $A$ is a proper class. Assume, for a contradiction, that $A\in B$. Then, by Set-I, $A$ must be a set. But this contradicts our assumption that $A$ is a proper class, since by definition $\PC(A)$ means $\neg\Set(A)$. Hence, $A\notin B$. Discharging the assumption that $A$ is a proper class yields $\PC(A)\to A\notin B$. Since $A$ and $B$ were arbitrary, universal generalization establishes the proposition.
+Let \(A\) be an arbitrary class. First, suppose that
+\(A\) is a proper class, and let \(B\) be any class.
+Assume, for a contradiction, that \(A\in B\).
+Then, by Set-I, \(A\) must be a set. But this
+contradicts our assumption that \(A\) is a proper
+class, since by definition \(\PC(A)\) means
+\(\neg\Set(A)\). Hence \(A\notin B\). Since \(B\)
+was arbitrary, \(A\) cannot belong to any class.
+
+Conversely, suppose that \(A\) does not belong to
+any class. Assume, for a contradiction, that \(A\)
+is a set. By the definition of sethood, there
+must then exist some class \(B\) such that
+\(A\in B\), contradicting our assumption.
+Hence \(A\) is not a set and therefore is a
+proper class.
+
+The two implications establish the biconditional.
+Since \(A\) was arbitrary, universal generalization
+yields the proposition.
 \end{proof}
+
 \begin{formalderivation}
+\begin{derivationnote}
+First, we prove the implication.
+\end{derivationnote}
 \begin{prooftree}
     \AxiomC{}
     \RightLabel{\(1\)}
@@ -118,9 +152,85 @@ Let $A$ and $B$ be arbitrary classes, and suppose that $A$ is a proper class. As
     \BinaryInfC{\(\bot\)}
     \RightLabel{\(\neg\)-I, \(1\)}
     \UnaryInfC{\(A\notin B\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall B(A\notin B)\)}
     \RightLabel{\(\to\)-I, \(2\)}
-    \UnaryInfC{\(\PC(A)\to A\notin B\)}
-    \RightLabel{$\forall$-I*}
-    \UnaryInfC{$\forall A\forall B(\PC(A)\to A\notin B)$}
+    \UnaryInfC{
+        \(\PC(A)\to\forall B(A\notin B)\)
+    }
 \end{prooftree}
+
+\begin{derivationnote}
+Next, we prove the converse.
+\end{derivationnote}
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(4\)}
+    \UnaryInfC{\(\Set(A)\)}
+    \RightLabel{D\ref{def:set}}
+    \dashedLine
+    \UnaryInfC{\(\exists B(A\in B)\)}
+%
+    \AxiomC{}
+    \RightLabel{\(5\)}
+    \UnaryInfC{\(A\in C\)}
+%
+    \AxiomC{}
+    \RightLabel{\(3\)}
+    \UnaryInfC{\(\forall B(A\notin B)\)}
+    \RightLabel{\(\forall\)-E}
+    \UnaryInfC{\(A\notin C\)}
+%
+    \RightLabel{\(\neg\)-E}
+    \BinaryInfC{\(\bot\)}
+    \RightLabel{\(\exists\)-E, \(5\)}
+    \BinaryInfC{\(\bot\)}
+    \RightLabel{\(\neg\)-I, \(4\)}
+    \UnaryInfC{\(\neg\Set(A)\)}
+    \RightLabel{D\ref{def:proper-class}}
+    \dashedLine
+    \UnaryInfC{\(\PC(A)\)}
+    \RightLabel{\(\to\)-I, \(3\)}
+    \UnaryInfC{
+        \(\forall B(A\notin B)\to\PC(A)\)
+    }
+\end{prooftree}
+
+\begin{derivationnote}
+Together, the derivations yield the proposition.
+\end{derivationnote}
+
+\begin{prooftree}
+    \AxiomC{}
+    \noLine
+    \UnaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{
+        \(\PC(A)\to\forall B(A\notin B)\)
+    }
+%
+    \AxiomC{}
+    \noLine
+    \UnaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{
+        \(\forall B(A\notin B)\to\PC(A)\)
+    }
+%
+    \RightLabel{\(\leftrightarrow\)-I}
+    \BinaryInfC{
+        \(\PC(A)\leftrightarrow
+        \forall B(A\notin B)\)
+    }
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{
+        \(\forall A
+        \bigl(
+            \PC(A)\leftrightarrow
+            \forall B(A\notin B)
+        \bigr)\)
+    }
+\end{prooftree}
+
 \end{formalderivation}
