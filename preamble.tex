@@ -14,8 +14,8 @@
     \renewcommand{\encodingdefault}{OT1}%
 }
 
-\newenvironment{formalderivation}
-    {\begin{BlockClass}{formalderivation}}
+\newenvironment{formalderivation}[1][0rem]
+    {\begin{BlockClass}[--gentzen-offset: #1;]{formalderivation}}
     {\end{BlockClass}}
 
 \newenvironment{derivationnote}

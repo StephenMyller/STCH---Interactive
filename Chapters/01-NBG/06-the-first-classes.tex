@@ -87,7 +87,7 @@ class:
 We can now replace that existential condition by membership in a single,
 distinguished class:
 \[
-\exists B(a\in B)\leftrightarrow a\in V.
+\Set(a) \leftrightarrow a\in V.
 \]
 Thus, \(V\) is the \emph{universal class}, or the \emph{class of
 all sets}. Unlike in ZFC, where the collection of all sets is not an object
@@ -169,7 +169,7 @@ class must be a subclass of \(V\).
 \end{proposition}
 
 \begin{proof}
-Let $A$ be an arbitrary class and let $a \in A$. Then, since there's a class of which $a$ is a member (i.e., $A$), $a$ is a set. By Proposition \ref{prop:membership-in-V}, we hence know that $a \in V$. This gives us $A \subseteq V$, as desired.
+Let $A$ be an arbitrary class such that $a \in A$. Then, since $a$ is a member of some class (i.e., $A$), we know that $a$ is a set. So, Proposition \ref{prop:membership-in-V} implies that $a \in V$. This gives us $A \subseteq V$, as desired.
 \end{proof}
 
 \begin{formalderivation}
@@ -199,7 +199,8 @@ is contained in \(V\), that set must also belong
 to \(V\). Conversely, every member of \(V\) is
 necessarily a set, as every member of a class must be.
 
-\begin{formalderivation}
+\begin{formalderivation}[-2cm]
+
 \begin{prooftree}
     \AxiomC{}
     \RightLabel{\(1\)}
@@ -399,9 +400,7 @@ There is also a familiar set-theoretic idea behind this result. We
 already knew that every member of any class is a set. Since the members
 of \(V\) are exactly the sets, every member of a set belongs to \(V\).
 This absence of objects that could occur as members without themselves
-being sets is characteristic of \emph{pure set theory}. In our one-sorted
-framework, it is already built into the meaning of sethood and requires
-no additional axiom.
+being sets is characteristic of \emph{pure set theory}.
 
 
 
