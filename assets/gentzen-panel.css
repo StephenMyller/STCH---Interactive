@@ -1208,3 +1208,8 @@ main.bodycontainer .derivation-trigger:has(+ p) {
 .gentzen-panel .formalderivation .derivationnote p:last-child {
     margin-bottom: 0;
 }
+
+/* Individually adjustable horizontal position of Gentzen trees. */
+.gentzen-panel .formalderivation > p > mjx-container {
+  transform: translateX(var(--gentzen-offset, 0rem));
+}
