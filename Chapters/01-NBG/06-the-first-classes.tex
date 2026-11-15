@@ -500,30 +500,7 @@ Thus, \(\varnothing\) is the \emph{least class under subclasshood}. Together wit
 \]
 for every class \(A\).
 
-\nbgpara{2.2}{}
-We can also characterize the empty class without referring to its defining condition.
-
-\begin{proposition}[Characterization of the Empty Class]
-\label{prop:characterization-of-empty-class}
-\[
-\forall A
-\left(
-A=\varnothing
-\leftrightarrow
-\forall x(x\notin A)
-\right).
-\]
-\end{proposition}
-
-\begin{proof}
-If \(A=\varnothing\), then \(A\) has no members, since \(\varnothing\) has none.
-
-Conversely, suppose that \(A\) has no members. Then \(A\) and \(\varnothing\) have exactly the same members, namely none. By Extensionality, \(A=\varnothing\).
-\end{proof}
-
-The empty class is therefore not merely one example of a class without members. It is the \emph{unique} class with that property.
-
-Notice, however, that we have not established that \(\varnothing\) is a set. Class Formation guarantees its existence as a class, but does not establish that it belongs to any class. Its sethood will require further axioms.
+\nbgpara{2.2}{} Notice, however, that we have not established that \(\varnothing\) is a set. Class Formation guarantees its existence as a class, but does not establish that it belongs to any class. Its sethood will require further axioms.
 
 \nbgpara{3}{The Class of Self-Membered Sets}
 
@@ -637,13 +614,15 @@ This contradicts \(R\notin R\). Hence \(R\) is not a set, and therefore is a pro
     \RightLabel{\(\mathrm{CB}{\in}\text{-I}\)}
     \UnaryInfC{\(R\in R\)}
 %
-    \AxiomC{\(R\notin R\)}
+    \AxiomC{}
+    \RightLabel{P\ref{prop:russell-not-self-membered}}
+    \UnaryInfC{\(R\notin R\)}
 %
     \RightLabel{\(\neg\)-E}
     \BinaryInfC{\(\bot\)}
     \RightLabel{\(\neg\)-I, \(1\)}
     \UnaryInfC{\(\neg\Set(R)\)}
-    \RightLabel{Def.}
+    \RightLabel{D\ref{def:proper-class}}
     \dashedLine
     \UnaryInfC{\(\PC(R)\)}
 \end{prooftree}
