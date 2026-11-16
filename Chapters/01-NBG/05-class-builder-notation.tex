@@ -1,4 +1,3 @@
-
 \subsection{Class-Builder Notation}
 \label{sec:class-builder-notation}
 
@@ -128,7 +127,7 @@ Conversely, if \(\Real_T(A)\) holds, then \(A\) has exactly the members specifie
 
 The first equivalence is called the \emph{Membership Law}; the second is called the \emph{Identity Law}.
 
-In particular, the Membership Law for a general class term takes the familiar form
+In particular, the Membership Law for a general class term takes the form
 \[
 \zeta\in\{\xi\mid\varphi\}
 \leftrightarrow
@@ -141,27 +140,30 @@ The Identity Law states that a class is identical to a class term exactly when i
 
 \nbgpara{5}{Derived Rules for Class Terms}
 
-Each fundamental law provides two implications. We can therefore extract four derived rules that allow us to reason directly with class terms in Gentzen derivations.
+Each fundamental law provides two implications. We can therefore extract four derived rules that allow us to reason directly with class terms in Gentzen derivations. In the membership rules, let \(T=\{\xi\mid\varphi\}\).
 
 \begin{derivedrule}[Class-Builder Membership Introduction]
 \begin{prooftree}
-    \AxiomC{\(\Cond_T(\zeta)\)}
+    \AxiomC{\(\Set(\zeta)\)}
+    \AxiomC{\(\varphi[\zeta/\xi]\)}
     \RightLabel{\(\mathrm{CB}{\in}\text{-I}\)}
-    \UnaryInfC{\(\zeta\in T\)}
+    \BinaryInfC{\(\zeta\in\{\xi\mid\varphi\}\)}
 \end{prooftree}
 \end{derivedrule}
 
 \begin{formalderivation}
 \begin{prooftree}
+    \AxiomC{\(\Set(\zeta)\)}
+    \AxiomC{\(\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\land\)-I}
+    \BinaryInfC{\(\Set(\zeta)\land\varphi[\zeta/\xi]\)}
+    \RightLabel{D\ref{def:canonical-membership-condition}}
+    \dashedLine
+    \UnaryInfC{\(\Cond_T(\zeta)\)}
+%
     \AxiomC{}
     \RightLabel{P\ref{prop:fundamental-class-builder-laws}}
-    \UnaryInfC{
-        \(\zeta\in T
-        \leftrightarrow
-        \Cond_T(\zeta)\)
-    }
-%
-    \AxiomC{\(\Cond_T(\zeta)\)}
+    \UnaryInfC{\(\zeta\in T\leftrightarrow\Cond_T(\zeta)\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
     \BinaryInfC{\(\zeta\in T\)}
@@ -170,30 +172,31 @@ Each fundamental law provides two implications. We can therefore extract four de
 
 \begin{derivedrule}[Class-Builder Membership Elimination]
 \begin{prooftree}
-    \AxiomC{\(\zeta\in T\)}
+    \AxiomC{\(\zeta\in\{\xi\mid\varphi\}\)}
     \RightLabel{\(\mathrm{CB}{\in}\text{-E}\)}
-    \UnaryInfC{\(\Cond_T(\zeta)\)}
+    \UnaryInfC{\(\varphi[\zeta/\xi]\)}
 \end{prooftree}
 \end{derivedrule}
 
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
-     \RightLabel{P\ref{prop:fundamental-class-builder-laws}}
-    \UnaryInfC{
-        \(\zeta\in T
-        \leftrightarrow
-        \Cond_T(\zeta)\)
-    }
+    \RightLabel{P\ref{prop:fundamental-class-builder-laws}}
+    \UnaryInfC{\(\zeta\in T\leftrightarrow\Cond_T(\zeta)\)}
 %
     \AxiomC{\(\zeta\in T\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
     \BinaryInfC{\(\Cond_T(\zeta)\)}
+    \RightLabel{D\ref{def:canonical-membership-condition}}
+    \dashedLine
+    \UnaryInfC{\(\Set(\zeta)\land\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(\varphi[\zeta/\xi]\)}
 \end{prooftree}
 \end{formalderivation}
 
-These two rules permit us to pass between a membership statement involving a class term and its canonical membership condition.
+Membership Introduction requires both sethood and the defining condition. Membership Elimination needs no separate sethood premise: \(\zeta\in T\) already implies \(\Set(\zeta)\).
 
 The Identity Law similarly licenses two rules.
 
@@ -249,7 +252,7 @@ The Identity Law similarly licenses two rules.
 
 In these rules, \(T\) is a class term, and the relevant membership or realization condition must be defined. As usual, bound variables may be renamed where necessary to avoid conflicts in substitution.
 
-All four rules follow from the fundamental laws by Biconditional Elimination. They introduce no additional logical or set-theoretic principles.
+All four rules follow from the fundamental laws by Biconditional Elimination and the ordinary rules for conjunction. They introduce no additional logical or set-theoretic principles.
 
 \nbgpara{6}{Bounded Class-Builder Notation}
 
@@ -272,18 +275,18 @@ where \(\xi\) is distinct from the variable denoting \(A\).
 
 Thus, \(\{\xi\in A\mid\varphi\}\) denotes the class of all members of \(A\) satisfying \(\varphi\).
 
-Its canonical membership condition takes a particularly simple form. If
+Its canonical membership condition takes a particularly simple equivalent form. If
 \[
 T=\{\xi\in A\mid\varphi\},
 \]
 then
 \[
 \Cond_T(\zeta)
-\defequiv
-\zeta\in A\land\varphi[\zeta/\xi].
+\leftrightarrow
+\bigl(\zeta\in A\land\varphi[\zeta/\xi]\bigr).
 \]
 
-There is no need to include \(\Set(\zeta)\) explicitly: the statement \(\zeta\in A\) already implies that \(\zeta\) is a set.
+There is no need to include \(\Set(\zeta)\) explicitly in this equivalent form: the statement \(\zeta\in A\) already implies that \(\zeta\) is a set.
 
 Consequently, the Membership Law for bounded class terms becomes
 \[
@@ -294,10 +297,10 @@ Consequently, the Membership Law for bounded class terms becomes
 \bigr).
 \]
 
-Likewise, the realization condition is
+Likewise, the realization condition is equivalently given by
 \[
 \Real_T(B)
-\defequiv
+\leftrightarrow
 \forall\zeta
 \bigl(
 \zeta\in B
@@ -306,7 +309,79 @@ Likewise, the realization condition is
 \bigr).
 \]
 
-General and bounded class terms obey the same four derived rules. The bounded form merely allows us to express certain membership conditions more conveniently.
+For bounded class terms, the membership rules take especially convenient forms.
+
+\begin{derivedrule}[Bounded Class-Builder Membership Introduction]
+\begin{prooftree}
+    \AxiomC{\(\zeta\in A\)}
+    \AxiomC{\(\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\mathrm{BCB}{\in}\text{-I}\)}
+    \BinaryInfC{\(\zeta\in\{\xi\in A\mid\varphi\}\)}
+\end{prooftree}
+\end{derivedrule}
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{\(\zeta\in A\)}
+    \RightLabel{Set-I}
+    \UnaryInfC{\(\Set(\zeta)\)}
+%
+    \AxiomC{\(\zeta\in A\)}
+    \AxiomC{\(\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\land\)-I}
+    \BinaryInfC{\(\zeta\in A\land\varphi[\zeta/\xi]\)}
+%
+    \RightLabel{\(\mathrm{CB}{\in}\text{-I}\)}
+    \BinaryInfC{\(\zeta\in\{\xi\mid(\xi\in A\land\varphi)\}\)}
+    \RightLabel{D\ref{def:bounded-class-builder-notation}}
+    \dashedLine
+    \UnaryInfC{\(\zeta\in\{\xi\in A\mid\varphi\}\)}
+\end{prooftree}
+\end{formalderivation}
+
+\begin{derivedrule}[Bounded Class-Builder Membership Elimination 1]
+\begin{prooftree}
+    \AxiomC{\(\zeta\in\{\xi\in A\mid\varphi\}\)}
+    \RightLabel{\(\mathrm{BCB}{\in}\text{-E}_1\)}
+    \UnaryInfC{\(\zeta\in A\)}
+\end{prooftree}
+\end{derivedrule}
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{\(\zeta\in\{\xi\in A\mid\varphi\}\)}
+    \RightLabel{D\ref{def:bounded-class-builder-notation}}
+    \dashedLine
+    \UnaryInfC{\(\zeta\in\{\xi\mid(\xi\in A\land\varphi)\}\)}
+    \RightLabel{\(\mathrm{CB}{\in}\text{-E}\)}
+    \UnaryInfC{\(\zeta\in A\land\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(\zeta\in A\)}
+\end{prooftree}
+\end{formalderivation}
+
+\begin{derivedrule}[Bounded Class-Builder Membership Elimination 2]
+\begin{prooftree}
+    \AxiomC{\(\zeta\in\{\xi\in A\mid\varphi\}\)}
+    \RightLabel{\(\mathrm{BCB}{\in}\text{-E}_2\)}
+    \UnaryInfC{\(\varphi[\zeta/\xi]\)}
+\end{prooftree}
+\end{derivedrule}
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{\(\zeta\in\{\xi\in A\mid\varphi\}\)}
+    \RightLabel{D\ref{def:bounded-class-builder-notation}}
+    \dashedLine
+    \UnaryInfC{\(\zeta\in\{\xi\mid(\xi\in A\land\varphi)\}\)}
+    \RightLabel{\(\mathrm{CB}{\in}\text{-E}\)}
+    \UnaryInfC{\(\zeta\in A\land\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(\varphi[\zeta/\xi]\)}
+\end{prooftree}
+\end{formalderivation}
+
+General and bounded class terms obey the same fundamental laws. These additional bounded membership rules merely abbreviate applications of the general rules.
 
 \nbgpara{7}{}
 Class-builder notation can also be nested: a class term may occur within the defining condition of another class term, provided the resulting condition remains predicative.
