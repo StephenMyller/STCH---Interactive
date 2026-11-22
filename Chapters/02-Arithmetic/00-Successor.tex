@@ -34,7 +34,7 @@ application of the successor operation:
 Assume that $x$ is a set. Then, by applying the Axiom of Pairing twice, we know that $\{x,\{x\}\}$ is a set. Then, by applying the Axiom of Union, we get that $\cup\{x,\{x\}\}$ is a set. As shown in Exercise 5.4, this set is identical to $x \cup \{x\}$, which is the successor of $x$.
 
 
-
+\begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
     \RightLabel{1}
@@ -73,6 +73,7 @@ Assume that $x$ is a set. Then, by applying the Axiom of Pairing twice, we know 
     \RightLabel{$\forall$-I}
     \UnaryInfC{$\forall y(\Set(y) \to \Set(y^+))$}
 \end{prooftree}
+\end{formalderivation}
 
 \end{proof}
 
