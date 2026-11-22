@@ -157,6 +157,15 @@
 \newcommand{\Trans}{\operatorname{Trans}}
 \newcommand{\Ind}{\operatorname{Ind}}
 
+% Special classes and theorems
+\newcommand{\Nat}{\mathbb{N}}
+
+% Clickable references to the five Peano theorems.
+% Usage: \Peano{3} prints "Peano 3".
+\newcommand{\Peano}[1]{%
+    \hyperref[th:peano#1]{Peano~#1}%
+}
+
 \begin{warpMathJax}
 \CustomizeMathJax{\newcommand{\Set}{\operatorname{Set}}}
 \CustomizeMathJax{\newcommand{\PC}{\operatorname{PC}}}

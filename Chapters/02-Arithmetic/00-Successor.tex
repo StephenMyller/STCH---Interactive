@@ -39,35 +39,35 @@ Assume that $x$ is a set. Then, by applying the Axiom of Pairing twice, we know 
     \AxiomC{}
     \RightLabel{1}
     \UnaryInfC{$\Set(x)$}
-
+%
     \AxiomC{}
     \RightLabel{1}
     \UnaryInfC{$\Set(x)$}
-
+%
     \RightLabel{Pairing}
     \BinaryInfC{$\Set(\{x\})$}
-
+%
     \AxiomC{}
     \RightLabel{1}
     \UnaryInfC{$\Set(x)$}
-
+%
     \RightLabel{Pairing}
     \BinaryInfC{$\Set(\{x,\{x\}\})$}
-
+%
     \RightLabel{Union}
     \UnaryInfC{$\Set(\bigcup\{x,\{x\}\})$}
-
+%
     \AxiomC{}
     \RightLabel{Exercise 5.4}
     \UnaryInfC{$\bigcup\{x,\{x\}\}=x\cup\{x\}$}
-
+%
     \RightLabel{$=$-E}
     \BinaryInfC{$\Set(x\cup\{x\})$}
-
+%
     \RightLabel{D\ref{def:successor}}
     \dashedLine
     \UnaryInfC{$\Set(x^+)$}
-
+%
     \RightLabel{$\to$-I, 1}
     \UnaryInfC{$\Set(x)\to\Set(x^+)$}
     \RightLabel{$\forall$-I}
@@ -111,55 +111,55 @@ $\mathbb{N}$ is a set.
 By the Axiom of Infinity, there exists an inductive
 set $I$. By definition, $\mathbb N\subseteq I$,
 so $\mathbb N$ is a set by the Axiom of Subsets. \vspace{-0.5cm}
+\begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
     \RightLabel{Infinity}
     \UnaryInfC{$\exists x (\Ind(x) \land \Set(x))$}
-
+%
     \AxiomC{}
     \RightLabel{1}
     \UnaryInfC{$\Ind(I) \land \Set(I)$}
-
-
+%
     \AxiomC{}
     \RightLabel{2}
     \UnaryInfC{$n \in \mathbb{N}$}
     \RightLabel{D\ref{def:natural-numbers}}
     \dashedLine
     \UnaryInfC{$n \in \{z \mid \forall A(\Ind(A) \land \Set(A) \to z \in A)\}$}
-
+%
     \AxiomC{}
     \RightLabel{2}
     \UnaryInfC{$n \in \mathbb{N}$}
     \RightLabel{Set-I}
     \UnaryInfC{$\Set(n)$}
-
+%
     \RightLabel{CB$\in$-E}
     \BinaryInfC{$\forall A(\Ind(A) \land \Set(A) \to n \in A)$}
     \RightLabel{$\forall$-E}
     \UnaryInfC{$\Ind(I) \land \Set(I) \to n \in I$}
-
+%
     \RightLabel{$\to$-E}
     \BinaryInfC{$n \in I$}
     \RightLabel{$\subseteq$-I, 2}
     \UnaryInfC{$\mathbb{N} \subseteq I$}
-
+%
     \AxiomC{}
     \RightLabel{1}
     \UnaryInfC{$\Ind(I) \land \Set(I)$}
     \RightLabel{$\land$-E}
     \UnaryInfC{$\Set(I)$}
-
+%
     \RightLabel{Subsets}
     \insertBetweenHyps{\hspace{-2cm}}
     \BinaryInfC{$\Set(\mathbb{N})$}
-
+%
     \RightLabel{$\exists$-E, 1}
     \insertBetweenHyps{\hspace{-2.5cm}}
     \BinaryInfC{$\Set(\mathbb{N})$}
-
-    
 \end{prooftree}
+\end{formalderivation}
+
 \end{proof}
 
 We shall show that the natural numbers satisfy the five Peano axioms, deriving each as a theorem of NBG set theory. We distinguish two groups. Peano 1, 2, and 5 establish that every natural number can be reached by counting forward from zero. Peano 3 and 4 establish that counting never returns to a number already reached. We prove the axioms in this order to make their distinct contributions apparent.
@@ -173,6 +173,7 @@ $0$ is a natural number. In symbols:
 Every inductive set contains $0$. Since $0$ is a set,
 it belongs to $\mathbb{N}$ by definition.
 
+\begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
     \RightLabel{1}
@@ -188,21 +189,21 @@ it belongs to $\mathbb{N}$ by definition.
     \UnaryInfC{$\Ind(x) \land \Set(x) \to 0 \in x$}
     \RightLabel{$\forall$-I}
     \UnaryInfC{$\forall z(\Ind(z) \land \Set(z) \to 0 \in z)$}
-
+%
     \AxiomC{}
     \RightLabel{Empty Set}
     \UnaryInfC{$\Set(\varnothing)$}
     \RightLabel{D\ref{def:von-neumann-numerals}}
     \dashedLine
     \UnaryInfC{$\Set(0)$}
-
-    
+%   
     \RightLabel{CB$\in$-I}
     \BinaryInfC{$0 \in \{x \mid \forall z(\Ind(z) \land \Set(z) \to x \in z\}$}
     \RightLabel{D\ref{def:natural-numbers}}
     \dashedLine
     \UnaryInfC{$0 \in \mathbb{N}$}
 \end{prooftree}
+\end{formalderivation}
 \end{proof}
 
 \begin{theorem}[Peano 2: Closure under Successors]\label{th:peano2}
@@ -217,6 +218,7 @@ $x^+$ is a set by P\ref{prop:succ-are-sets}.
 Thus, $x^+\in\mathbb{N}$.
 
 \begin{adjustwidth}{-2.5cm}{2.5cm}
+\begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
     \RightLabel{1}
@@ -226,27 +228,27 @@ Thus, $x^+\in\mathbb{N}$.
     \UnaryInfC{$x \in
         \{z \mid \forall B(
         \Ind(B) \land \Set(B) \to z \in B)\}$}
-
+%
     \AxiomC{}
     \RightLabel{1}
     \UnaryInfC{$x \in \mathbb{N}$}
     \RightLabel{Set-I}
     \UnaryInfC{$\Set(x)$}
-
+%
     \RightLabel{CB$\in$-E}
     \BinaryInfC{$\forall B(
         \Ind(B) \land \Set(B) \to x \in B)$}
     \RightLabel{$\forall$-E}
     \UnaryInfC{$\Ind(A) \land \Set(A) \to x \in A$}
-
+%
     \AxiomC{}
     \RightLabel{2}
     \UnaryInfC{$\Ind(A) \land \Set(A)$}
-
+%
     \RightLabel{$\to$-E}
     \insertBetweenHyps{\hspace{-1.5cm}}
     \BinaryInfC{$x \in A$}
-
+%
     \AxiomC{}
     \RightLabel{2}
     \UnaryInfC{$\Ind(A) \land \Set(A)$}
@@ -260,7 +262,7 @@ Thus, $x^+\in\mathbb{N}$.
     \UnaryInfC{$\forall w(w \in A \to w^+ \in A)$}
     \RightLabel{$\forall$-E}
     \UnaryInfC{$x \in A \to x^+ \in A$}
-
+%
     \RightLabel{$\to$-E}
     \BinaryInfC{$x^+ \in A$}
     \RightLabel{$\to$-I, 2}
@@ -268,7 +270,7 @@ Thus, $x^+\in\mathbb{N}$.
     \RightLabel{$\forall$-I}
     \UnaryInfC{$\forall B(
         \Ind(B) \land \Set(B) \to x^+ \in B)$}
-
+%
     \AxiomC{}
     \RightLabel{1}
     \UnaryInfC{$x \in \mathbb{N}$}
@@ -276,7 +278,7 @@ Thus, $x^+\in\mathbb{N}$.
     \UnaryInfC{$\Set(x)$}
     \RightLabel{P\ref{prop:succ-are-sets}}
     \UnaryInfC{$\Set(x^+)$}
-
+%
     \RightLabel{CB$\in$-I}
     \insertBetweenHyps{\hspace{-1cm}}
     \BinaryInfC{$x^+ \in
@@ -291,6 +293,7 @@ Thus, $x^+\in\mathbb{N}$.
     \UnaryInfC{$\forall x(
         x \in \mathbb{N} \to x^+ \in \mathbb{N})$}
 \end{prooftree}
+\end{formalderivation}
 \end{adjustwidth}
 \end{proof}
 
@@ -316,50 +319,51 @@ That it is the smallest such set follows
 immediately from its definition.
 
 \begin{adjustwidth}{-2.5cm}{2.5cm}
+\begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
     \RightLabel{\hyperref[th:peano1]{Peano 1}}
     \UnaryInfC{$0 \in \mathbb{N}$}
-
+%
     \AxiomC{}
     \RightLabel{\hyperref[th:peano2]{Peano 2}}
     \UnaryInfC{$\forall x(x \in \mathbb{N} \to x^+ \in \mathbb{N})$}
-
+%
     \RightLabel{$\land$-I}
     \BinaryInfC{$0 \in \mathbb{N} \land \forall x(x \in \mathbb{N} \to x^+ \in \mathbb{N})$}
     \RightLabel{D\ref{def:inductive-class}}
     \dashedLine
     \UnaryInfC{$\Ind(\mathbb{N})$}
-
+%
     \AxiomC{}
     \RightLabel{P\ref{prop:natural-numbers-form-set}}
     \UnaryInfC{$\Set(\mathbb N)$}
-
+%
     \RightLabel{$\land$-I}
     \BinaryInfC{$\Ind(\mathbb N)\land\Set(\mathbb N)$}
-
+%
      \AxiomC{}
     \RightLabel{1}
     \UnaryInfC{$x \in \mathbb{N}$}
     \RightLabel{D\ref{def:natural-numbers}}
     \dashedLine
     \UnaryInfC{$x \in \{z \mid \forall w(\Ind(w) \land \Set(w) \to z \in w)\}$}
-
+%
     \AxiomC{}
     \RightLabel{1}
     \UnaryInfC{$x \in \mathbb{N}$}
     \RightLabel{Set-I}
     \UnaryInfC{$\Set(x)$}
-
+%
     \RightLabel{CB$\in$-E}
     \BinaryInfC{$\forall w(\Ind(w) \land \Set(w) \to x \in w)$}
     \RightLabel{$\forall$-E}
     \UnaryInfC{$\Ind(A) \land \Set(A) \to x \in A$}
-
+%
     \AxiomC{}
     \RightLabel{2}
     \UnaryInfC{$\Ind(A) \land \Set(A)$}
-
+%
     \RightLabel{$\to$-E}
     \BinaryInfC{$x \in A$}
     \RightLabel{$\subseteq$-I, 1}
@@ -377,6 +381,7 @@ immediately from its definition.
         \Ind(A) \land \Set(A)
         \to\mathbb N\subseteq A)$}
 \end{prooftree}
+\end{formalderivation}
 \end{adjustwidth}
 \end{proof}
 
@@ -407,6 +412,7 @@ Hence, Peano 1 and 2 guarantee that the natural numbers include $0$ and are clos
 
 
 \begin{adjustwidth}{-3cm}{3cm}
+\begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
     \RightLabel{1}
@@ -415,13 +421,13 @@ Hence, Peano 1 and 2 guarantee that the natural numbers include $0$ and are clos
     \UnaryInfC{$x\in y\cup\{y\}$}
     \RightLabel{$\cup$-E}
     \UnaryInfC{$x\in y\lor x\in\{y\}$}
-
+%
     \AxiomC{}
     \RightLabel{2}
     \UnaryInfC{$x\in y$}
     \RightLabel{$\lor$-I}
     \UnaryInfC{$x\in y\lor x=y$}
-
+%
     \AxiomC{}
     \RightLabel{3}
     \UnaryInfC{$x\in\{y\}$}
@@ -429,17 +435,17 @@ Hence, Peano 1 and 2 guarantee that the natural numbers include $0$ and are clos
     \UnaryInfC{$x=y$}
     \RightLabel{$\lor$-I}
     \UnaryInfC{$x\in y\lor x=y$}
-
+%
     \RightLabel{$\lor$-E, 2,3}
     \TrinaryInfC{$x\in y\lor x=y$}
     \RightLabel{$\to$-I, 1}
     \UnaryInfC{$x\in y^+\to
         (x\in y\lor x=y)$}
-
+%
     \AxiomC{}
     \RightLabel{4}
     \UnaryInfC{$x\in y\lor x=y$}
-
+%
     \AxiomC{}
     \RightLabel{5}
     \UnaryInfC{$x\in y$}
@@ -447,38 +453,38 @@ Hence, Peano 1 and 2 guarantee that the natural numbers include $0$ and are clos
     \UnaryInfC{$x\in y\cup\{y\}$}
     \RightLabel{D\ref{def:successor}}
     \UnaryInfC{$x\in y^+$}
-
+%
     \AxiomC{}
     \RightLabel{6}
     \UnaryInfC{$x=y$}
-
+%
     \AxiomC{}
     \RightLabel{7}
     \UnaryInfC{$\Set(x)$}
-
+%
     \RightLabel{CB$\in$-I}
     \BinaryInfC{$x\in\{y\}$}
     \RightLabel{$\cup$-I}
     \UnaryInfC{$x\in y\cup\{y\}$}
     \RightLabel{D\ref{def:successor}}
     \UnaryInfC{$x\in y^+$}
-
+%
     \RightLabel{$\lor$-E, 5,6}
     \TrinaryInfC{$x\in y^+$}
     \RightLabel{$\to$-I, 4}
     \UnaryInfC{$(x\in y\lor x=y)\to
         x\in y^+$}
-
+%
     \RightLabel{$\leftrightarrow$-I}
     \BinaryInfC{$x\in y^+
         \leftrightarrow(x\in y\lor x=y)$}
-
+%
     \RightLabel{$\to$-I, 7}
     \UnaryInfC{$
         \Set(x)\to
         (x\in y^+\leftrightarrow
         (x\in y\lor x=y))$}
-
+%
     \RightLabel{$\forall$-I*}
     \UnaryInfC{$
         \forall x\forall y\,
@@ -487,6 +493,7 @@ Hence, Peano 1 and 2 guarantee that the natural numbers include $0$ and are clos
         (x\in y\lor x=y))\bigr)
     $}
 \end{prooftree}
+\end{formalderivation}
 \end{adjustwidth}
 
 \end{proof}
@@ -503,25 +510,27 @@ Hence, Peano 1 and 2 guarantee that the natural numbers include $0$ and are clos
     Since $y=y$, the Successor Lemma
     immediately gives us $y\in y^+$.
 
+\begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
     \RightLabel{$=$-I}
     \UnaryInfC{$y=y$}
     \RightLabel{$\lor$-I}
     \UnaryInfC{$y\in y\lor y=y$}
-
+%
     \AxiomC{}
     \RightLabel{1}
     \UnaryInfC{$\Set(y)$}
-    
+ %   
     \RightLabel{L\ref{le:successor}}
     \BinaryInfC{$y\in y^+$}
-
+%
     \RightLabel{$\to$-I, 1}
     \UnaryInfC{$\Set(y)\to y\in y^+$}
     \RightLabel{$\forall$-I}
     \UnaryInfC{$\forall y(\Set(y)\to y\in y^+)$}
 \end{prooftree}
+\end{formalderivation}
 \end{proof}
 
 
@@ -537,31 +546,33 @@ Hence, Peano 1 and 2 guarantee that the natural numbers include $0$ and are clos
     tells us that $x\in y^+$.
     Hence $y\subseteq y^+$, as desired.
 
+\begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
     \RightLabel{1}
     \UnaryInfC{$x\in y$}
     \RightLabel{$\lor$-I}
     \UnaryInfC{$x\in y\lor x=y$}
-
+%
     \AxiomC{}
     \RightLabel{1}
     \UnaryInfC{$x\in y$}
     \RightLabel{Set-I}
     \UnaryInfC{$\Set(x)$}
-
+%
     \AxiomC{}
     \RightLabel{2}
     \UnaryInfC{$\Set(y)$}
-
+%
     \RightLabel{L\ref{le:successor}}
     \TrinaryInfC{$x\in y^+$}
     \RightLabel{$\subseteq$-I, 1}
     \UnaryInfC{$y\subseteq y^+$}
-
+%
     \RightLabel{$\to$-I, 2}
     \UnaryInfC{$\Set(y)\to y\subseteq y^+$}
     \RightLabel{$\forall$-I}
     \UnaryInfC{$\forall y(\Set(y)\to y\subseteq y^+)$}
 \end{prooftree}
+\end{formalderivation}
 \end{proof}
