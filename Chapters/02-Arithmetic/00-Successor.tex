@@ -1,0 +1,566 @@
+
+\subsection{Construction of the Natural Numbers}
+
+\nbgpara{1}{} The successor operation formalizes the most elementary act of counting: advancing by one step. Whenever we count, we move from the number we have reached to its successor. To demonstrate the definition's adequacy, it suffices to show the two things. First, that every natural number can be reached by starting at zero and counting forward---no natural number lies beyond the reach of counting far enough. Second, that counting forward always takes us somewhere new: we never return to a number we have already counted, and every number can be reached in exactly one way.
+
+
+\begin{definition}[Successor]
+\label{def:successor}
+For any class $x$, by $x^+$ we mean $x\cup\{x\}$.
+\end{definition}
+
+\begin{remark}
+    For proper classes $x$, we have $x \cup \{x\} = x \cup \varnothing = x$. We include this degenerate case to simplify the necessary sethood assumptions for some of the following proofs.
+\end{remark}
+
+\begin{definition}[Von Neumann Numerals]
+\label{def:von-neumann-numerals}
+We put $0:=\varnothing$ and introduce the subsequent
+\textit{von Neumann numerals} recursively by repeated
+application of the successor operation:
+\[
+1:=0^+,\qquad
+2:=1^+,\qquad
+3:=2^+,\qquad \ldots
+\]
+\end{definition}
+
+
+\begin{proposition}[Successor Preserves Sethood]\label{prop:succ-are-sets}
+    If $x$ is a set, then $x^+$ is a set.
+\end{proposition}
+
+\begin{proof}
+Assume that $x$ is a set. Then, by applying the Axiom of Pairing twice, we know that $\{x,\{x\}\}$ is a set. Then, by applying the Axiom of Union, we get that $\cup\{x,\{x\}\}$ is a set. As shown in Exercise 5.4, this set is identical to $x \cup \{x\}$, which is the successor of $x$.
+
+
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{$\Set(x)$}
+
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{$\Set(x)$}
+
+    \RightLabel{Pairing}
+    \BinaryInfC{$\Set(\{x\})$}
+
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{$\Set(x)$}
+
+    \RightLabel{Pairing}
+    \BinaryInfC{$\Set(\{x,\{x\}\})$}
+
+    \RightLabel{Union}
+    \UnaryInfC{$\Set(\bigcup\{x,\{x\}\})$}
+
+    \AxiomC{}
+    \RightLabel{Exercise 5.4}
+    \UnaryInfC{$\bigcup\{x,\{x\}\}=x\cup\{x\}$}
+
+    \RightLabel{$=$-E}
+    \BinaryInfC{$\Set(x\cup\{x\})$}
+
+    \RightLabel{D\ref{def:successor}}
+    \dashedLine
+    \UnaryInfC{$\Set(x^+)$}
+
+    \RightLabel{$\to$-I, 1}
+    \UnaryInfC{$\Set(x)\to\Set(x^+)$}
+    \RightLabel{$\forall$-I}
+    \UnaryInfC{$\forall y(\Set(y) \to \Set(y^+))$}
+\end{prooftree}
+
+\end{proof}
+
+
+\begin{definition}[Inductive Class]
+\label{def:inductive-class}
+We call a class $A$ \textit{inductive} iff
+it satisfies the following two conditions:
+
+\quad (1) $0\in A$;
+
+\quad (2) for every $x\in A$, we have $x^+\in A$.
+\end{definition}
+
+
+\begin{definition}[Natural Numbers]
+\label{def:natural-numbers}
+We call a set $x$ a \textit{natural number} iff
+$x$ belongs to every inductive set.
+
+By $\mathbb{N}$ we mean the class of all natural
+numbers:
+\[
+\mathbb{N}:=
+\{x\mid x\text{ belongs to every inductive set.}\} = \{x \mid \forall z(\Ind(z) \land \Set(z) \to x \in z)\}.
+\]
+\end{definition}
+
+\begin{proposition}[The Natural Numbers Form a Set]
+\label{prop:natural-numbers-form-set}
+$\mathbb{N}$ is a set.
+\end{proposition}
+
+\begin{proof}
+By the Axiom of Infinity, there exists an inductive
+set $I$. By definition, $\mathbb N\subseteq I$,
+so $\mathbb N$ is a set by the Axiom of Subsets. \vspace{-0.5cm}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{Infinity}
+    \UnaryInfC{$\exists x (\Ind(x) \land \Set(x))$}
+
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{$\Ind(I) \land \Set(I)$}
+
+
+    \AxiomC{}
+    \RightLabel{2}
+    \UnaryInfC{$n \in \mathbb{N}$}
+    \RightLabel{D\ref{def:natural-numbers}}
+    \dashedLine
+    \UnaryInfC{$n \in \{z \mid \forall A(\Ind(A) \land \Set(A) \to z \in A)\}$}
+
+    \AxiomC{}
+    \RightLabel{2}
+    \UnaryInfC{$n \in \mathbb{N}$}
+    \RightLabel{Set-I}
+    \UnaryInfC{$\Set(n)$}
+
+    \RightLabel{CB$\in$-E}
+    \BinaryInfC{$\forall A(\Ind(A) \land \Set(A) \to n \in A)$}
+    \RightLabel{$\forall$-E}
+    \UnaryInfC{$\Ind(I) \land \Set(I) \to n \in I$}
+
+    \RightLabel{$\to$-E}
+    \BinaryInfC{$n \in I$}
+    \RightLabel{$\subseteq$-I, 2}
+    \UnaryInfC{$\mathbb{N} \subseteq I$}
+
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{$\Ind(I) \land \Set(I)$}
+    \RightLabel{$\land$-E}
+    \UnaryInfC{$\Set(I)$}
+
+    \RightLabel{Subsets}
+    \insertBetweenHyps{\hspace{-2cm}}
+    \BinaryInfC{$\Set(\mathbb{N})$}
+
+    \RightLabel{$\exists$-E, 1}
+    \insertBetweenHyps{\hspace{-2.5cm}}
+    \BinaryInfC{$\Set(\mathbb{N})$}
+
+    
+\end{prooftree}
+\end{proof}
+
+We shall show that the natural numbers satisfy the five Peano axioms, deriving each as a theorem of NBG set theory. We distinguish two groups. Peano 1, 2, and 5 establish that every natural number can be reached by counting forward from zero. Peano 3 and 4 establish that counting never returns to a number already reached. We prove the axioms in this order to make their distinct contributions apparent.
+
+\begin{theorem}[Peano 1: Zero Is a Natural Number]\label{th:peano1}
+$0$ is a natural number. In symbols:
+\[0 \in \mathbb{N}.\]
+\end{theorem}
+
+\begin{proof}
+Every inductive set contains $0$. Since $0$ is a set,
+it belongs to $\mathbb{N}$ by definition.
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{$\Ind(x) \land \Set(x)$}
+    \RightLabel{$\land$-E}
+    \UnaryInfC{$\Ind(x)$}
+    \RightLabel{D\ref{def:inductive-class}}
+    \dashedLine
+    \UnaryInfC{$0 \in x \land \forall y(y \in x \to y^+ \in x) $}
+    \RightLabel{$\land$-E}
+    \UnaryInfC{$0 \in x$}
+    \RightLabel{$\to$-I, 1}
+    \UnaryInfC{$\Ind(x) \land \Set(x) \to 0 \in x$}
+    \RightLabel{$\forall$-I}
+    \UnaryInfC{$\forall z(\Ind(z) \land \Set(z) \to 0 \in z)$}
+
+    \AxiomC{}
+    \RightLabel{Empty Set}
+    \UnaryInfC{$\Set(\varnothing)$}
+    \RightLabel{D\ref{def:von-neumann-numerals}}
+    \dashedLine
+    \UnaryInfC{$\Set(0)$}
+
+    
+    \RightLabel{CB$\in$-I}
+    \BinaryInfC{$0 \in \{x \mid \forall z(\Ind(z) \land \Set(z) \to x \in z\}$}
+    \RightLabel{D\ref{def:natural-numbers}}
+    \dashedLine
+    \UnaryInfC{$0 \in \mathbb{N}$}
+\end{prooftree}
+\end{proof}
+
+\begin{theorem}[Peano 2: Closure under Successors]\label{th:peano2}
+If $n$ is a natural number, so is $n^+$. In symbols:
+\[\forall n(n\in\mathbb{N}\to n^+\in\mathbb{N}).\]
+\end{theorem}
+
+\begin{proof}
+If $x\in\mathbb{N}$, then $x$ belongs to every
+inductive set, and hence so does $x^+$. Moreover,
+$x^+$ is a set by P\ref{prop:succ-are-sets}.
+Thus, $x^+\in\mathbb{N}$.
+
+\begin{adjustwidth}{-2.5cm}{2.5cm}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{$x \in \mathbb{N}$}
+    \RightLabel{D\ref{def:natural-numbers}}
+    \dashedLine
+    \UnaryInfC{$x \in
+        \{z \mid \forall B(
+        \Ind(B) \land \Set(B) \to z \in B)\}$}
+
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{$x \in \mathbb{N}$}
+    \RightLabel{Set-I}
+    \UnaryInfC{$\Set(x)$}
+
+    \RightLabel{CB$\in$-E}
+    \BinaryInfC{$\forall B(
+        \Ind(B) \land \Set(B) \to x \in B)$}
+    \RightLabel{$\forall$-E}
+    \UnaryInfC{$\Ind(A) \land \Set(A) \to x \in A$}
+
+    \AxiomC{}
+    \RightLabel{2}
+    \UnaryInfC{$\Ind(A) \land \Set(A)$}
+
+    \RightLabel{$\to$-E}
+    \insertBetweenHyps{\hspace{-1.5cm}}
+    \BinaryInfC{$x \in A$}
+
+    \AxiomC{}
+    \RightLabel{2}
+    \UnaryInfC{$\Ind(A) \land \Set(A)$}
+    \RightLabel{$\land$-E}
+    \UnaryInfC{$\Ind(A)$}
+    \RightLabel{D\ref{def:inductive-class}}
+    \dashedLine
+    \UnaryInfC{$0 \in A \land
+        \forall w(w \in A \to w^+ \in A)$}
+    \RightLabel{$\land$-E}
+    \UnaryInfC{$\forall w(w \in A \to w^+ \in A)$}
+    \RightLabel{$\forall$-E}
+    \UnaryInfC{$x \in A \to x^+ \in A$}
+
+    \RightLabel{$\to$-E}
+    \BinaryInfC{$x^+ \in A$}
+    \RightLabel{$\to$-I, 2}
+    \UnaryInfC{$\Ind(A) \land \Set(A) \to x^+ \in A$}
+    \RightLabel{$\forall$-I}
+    \UnaryInfC{$\forall B(
+        \Ind(B) \land \Set(B) \to x^+ \in B)$}
+
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{$x \in \mathbb{N}$}
+    \RightLabel{Set-I}
+    \UnaryInfC{$\Set(x)$}
+    \RightLabel{P\ref{prop:succ-are-sets}}
+    \UnaryInfC{$\Set(x^+)$}
+
+    \RightLabel{CB$\in$-I}
+    \insertBetweenHyps{\hspace{-1cm}}
+    \BinaryInfC{$x^+ \in
+        \{z \mid \forall B(
+        \Ind(B) \land \Set(B) \to z \in B)\}$}
+    \RightLabel{D\ref{def:natural-numbers}}
+    \dashedLine
+    \UnaryInfC{$x^+ \in \mathbb{N}$}
+    \RightLabel{$\to$-I, 1}
+    \UnaryInfC{$x \in \mathbb{N} \to x^+ \in \mathbb{N}$}
+    \RightLabel{$\forall$-I}
+    \UnaryInfC{$\forall x(
+        x \in \mathbb{N} \to x^+ \in \mathbb{N})$}
+\end{prooftree}
+\end{adjustwidth}
+\end{proof}
+
+
+
+\begin{proposition}[$\mathbb{N}$ is the Smallest Inductive Set]
+\label{prop:nat-ind-set}
+$\mathbb{N}$ is an inductive set, and every
+inductive set contains $\mathbb{N}$. In symbols:
+\[\Ind(\mathbb{N}) \land \Set(\mathbb{N}) \land
+\forall A(\Ind(A) \land \Set(A) \to \mathbb{N} \subseteq A).\]
+\end{proposition}
+
+\begin{proof}
+We know that $\mathbb N$ is a set by
+P\ref{prop:natural-numbers-form-set}. Moreover,
+$0\in\mathbb N$ by \hyperref[th:peano1]{Peano 1},
+and $\mathbb N$ is closed under successors by
+\hyperref[th:peano2]{Peano 2}. Thus, $\mathbb N$
+is an inductive set.
+
+That it is the smallest such set follows
+immediately from its definition.
+
+\begin{adjustwidth}{-2.5cm}{2.5cm}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\hyperref[th:peano1]{Peano 1}}
+    \UnaryInfC{$0 \in \mathbb{N}$}
+
+    \AxiomC{}
+    \RightLabel{\hyperref[th:peano2]{Peano 2}}
+    \UnaryInfC{$\forall x(x \in \mathbb{N} \to x^+ \in \mathbb{N})$}
+
+    \RightLabel{$\land$-I}
+    \BinaryInfC{$0 \in \mathbb{N} \land \forall x(x \in \mathbb{N} \to x^+ \in \mathbb{N})$}
+    \RightLabel{D\ref{def:inductive-class}}
+    \dashedLine
+    \UnaryInfC{$\Ind(\mathbb{N})$}
+
+    \AxiomC{}
+    \RightLabel{P\ref{prop:natural-numbers-form-set}}
+    \UnaryInfC{$\Set(\mathbb N)$}
+
+    \RightLabel{$\land$-I}
+    \BinaryInfC{$\Ind(\mathbb N)\land\Set(\mathbb N)$}
+
+     \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{$x \in \mathbb{N}$}
+    \RightLabel{D\ref{def:natural-numbers}}
+    \dashedLine
+    \UnaryInfC{$x \in \{z \mid \forall w(\Ind(w) \land \Set(w) \to z \in w)\}$}
+
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{$x \in \mathbb{N}$}
+    \RightLabel{Set-I}
+    \UnaryInfC{$\Set(x)$}
+
+    \RightLabel{CB$\in$-E}
+    \BinaryInfC{$\forall w(\Ind(w) \land \Set(w) \to x \in w)$}
+    \RightLabel{$\forall$-E}
+    \UnaryInfC{$\Ind(A) \land \Set(A) \to x \in A$}
+
+    \AxiomC{}
+    \RightLabel{2}
+    \UnaryInfC{$\Ind(A) \land \Set(A)$}
+
+    \RightLabel{$\to$-E}
+    \BinaryInfC{$x \in A$}
+    \RightLabel{$\subseteq$-I, 1}
+    \UnaryInfC{$\mathbb{N} \subseteq A$}
+    \RightLabel{$\to$-I, 2}
+    \UnaryInfC{$\Ind(A) \land \Set(A) \to \mathbb{N} \subseteq A$}
+    \RightLabel{$\forall$-I}
+    \UnaryInfC{$\forall A(\Ind(A) \land \Set(A) \to \mathbb{N} \subseteq A)$}
+    \RightLabel{$\land$-I}
+    \insertBetweenHyps{\hspace{-3.5cm}}
+    \BinaryInfC{$
+        \Ind(\mathbb N)\land\Set(\mathbb N)
+        \ \land \ 
+        \forall A(
+        \Ind(A) \land \Set(A)
+        \to\mathbb N\subseteq A)$}
+\end{prooftree}
+\end{adjustwidth}
+\end{proof}
+
+Hence, Peano 1 and 2 guarantee that the natural numbers include $0$ and are closed under the successor function, i.e., if we count one forward from a natural number, we will always get another natural number.
+
+
+\begin{lemma}[Successor Lemma]\label{le:successor}
+    For all sets $x$ and classes $y$, we have
+    $x\in y^+$ iff $x\in y$ or $x=y$.
+\end{lemma}
+
+\begin{proof}
+    Let $x$ be an arbitrary set and $y$ be an arbitrary class.
+
+    Suppose first that $x\in y^+$. By the
+    definition of successor, we have
+    $x\in y\cup\{y\}$. Thus, either $x\in y$
+    or $x\in\{y\}$. In the latter case,
+    $x=y$. Hence $x\in y$ or $x=y$.
+
+    Conversely, suppose that $x\in y$ or
+    $x=y$. In the first case, $x$ belongs
+    to $y\cup\{y\}$. In the second case,
+    $x\in\{y\}$, so again
+    $x\in y\cup\{y\}$. Thus, in either
+    case, $x\in y^+$, as desired.
+
+
+
+\begin{adjustwidth}{-3cm}{3cm}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{$x\in y^+$}
+    \RightLabel{D\ref{def:successor}}
+    \UnaryInfC{$x\in y\cup\{y\}$}
+    \RightLabel{$\cup$-E}
+    \UnaryInfC{$x\in y\lor x\in\{y\}$}
+
+    \AxiomC{}
+    \RightLabel{2}
+    \UnaryInfC{$x\in y$}
+    \RightLabel{$\lor$-I}
+    \UnaryInfC{$x\in y\lor x=y$}
+
+    \AxiomC{}
+    \RightLabel{3}
+    \UnaryInfC{$x\in\{y\}$}
+    \RightLabel{CB$\in$-E}
+    \UnaryInfC{$x=y$}
+    \RightLabel{$\lor$-I}
+    \UnaryInfC{$x\in y\lor x=y$}
+
+    \RightLabel{$\lor$-E, 2,3}
+    \TrinaryInfC{$x\in y\lor x=y$}
+    \RightLabel{$\to$-I, 1}
+    \UnaryInfC{$x\in y^+\to
+        (x\in y\lor x=y)$}
+
+    \AxiomC{}
+    \RightLabel{4}
+    \UnaryInfC{$x\in y\lor x=y$}
+
+    \AxiomC{}
+    \RightLabel{5}
+    \UnaryInfC{$x\in y$}
+    \RightLabel{$\cup$-I}
+    \UnaryInfC{$x\in y\cup\{y\}$}
+    \RightLabel{D\ref{def:successor}}
+    \UnaryInfC{$x\in y^+$}
+
+    \AxiomC{}
+    \RightLabel{6}
+    \UnaryInfC{$x=y$}
+
+    \AxiomC{}
+    \RightLabel{7}
+    \UnaryInfC{$\Set(x)$}
+
+    \RightLabel{CB$\in$-I}
+    \BinaryInfC{$x\in\{y\}$}
+    \RightLabel{$\cup$-I}
+    \UnaryInfC{$x\in y\cup\{y\}$}
+    \RightLabel{D\ref{def:successor}}
+    \UnaryInfC{$x\in y^+$}
+
+    \RightLabel{$\lor$-E, 5,6}
+    \TrinaryInfC{$x\in y^+$}
+    \RightLabel{$\to$-I, 4}
+    \UnaryInfC{$(x\in y\lor x=y)\to
+        x\in y^+$}
+
+    \RightLabel{$\leftrightarrow$-I}
+    \BinaryInfC{$x\in y^+
+        \leftrightarrow(x\in y\lor x=y)$}
+
+    \RightLabel{$\to$-I, 7}
+    \UnaryInfC{$
+        \Set(x)\to
+        (x\in y^+\leftrightarrow
+        (x\in y\lor x=y))$}
+
+    \RightLabel{$\forall$-I*}
+    \UnaryInfC{$
+        \forall x\forall y\,
+        \bigl(\Set(x)\to
+        (x\in y^+\leftrightarrow
+        (x\in y\lor x=y))\bigr)
+    $}
+\end{prooftree}
+\end{adjustwidth}
+
+\end{proof}
+
+
+
+\begin{corollary}[Every Set Belongs to Its Successor]
+\label{cor:successor-membership}
+    For every set $y$, we have $y\in y^+$.
+\end{corollary}
+
+\begin{proof}
+    Let $y$ be an arbitrary set.
+    Since $y=y$, the Successor Lemma
+    immediately gives us $y\in y^+$.
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{$=$-I}
+    \UnaryInfC{$y=y$}
+    \RightLabel{$\lor$-I}
+    \UnaryInfC{$y\in y\lor y=y$}
+
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{$\Set(y)$}
+    
+    \RightLabel{L\ref{le:successor}}
+    \BinaryInfC{$y\in y^+$}
+
+    \RightLabel{$\to$-I, 1}
+    \UnaryInfC{$\Set(y)\to y\in y^+$}
+    \RightLabel{$\forall$-I}
+    \UnaryInfC{$\forall y(\Set(y)\to y\in y^+)$}
+\end{prooftree}
+\end{proof}
+
+
+\begin{corollary}[Every Set Is Contained in Its Successor]
+\label{cor:successor-inclusion}
+    For every set $y$, we have $y\subseteq y^+$.
+\end{corollary}
+
+\begin{proof}
+    Let $y$ be an arbitrary set, and let
+    $x\in y$ be arbitrary. Then $x\in y$
+    or $x=y$, so the Successor Lemma
+    tells us that $x\in y^+$.
+    Hence $y\subseteq y^+$, as desired.
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{$x\in y$}
+    \RightLabel{$\lor$-I}
+    \UnaryInfC{$x\in y\lor x=y$}
+
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{$x\in y$}
+    \RightLabel{Set-I}
+    \UnaryInfC{$\Set(x)$}
+
+    \AxiomC{}
+    \RightLabel{2}
+    \UnaryInfC{$\Set(y)$}
+
+    \RightLabel{L\ref{le:successor}}
+    \TrinaryInfC{$x\in y^+$}
+    \RightLabel{$\subseteq$-I, 1}
+    \UnaryInfC{$y\subseteq y^+$}
+
+    \RightLabel{$\to$-I, 2}
+    \UnaryInfC{$\Set(y)\to y\subseteq y^+$}
+    \RightLabel{$\forall$-I}
+    \UnaryInfC{$\forall y(\Set(y)\to y\subseteq y^+)$}
+\end{prooftree}
+\end{proof}

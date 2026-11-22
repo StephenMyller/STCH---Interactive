@@ -581,5 +581,76 @@ of the primitive rule. Thus, an application of \(=\)-Sym likewise abbreviates
 an application of the displayed theorem followed by
 \(\to\)-E.
 
-Neither derived rule adds deductive power. Both may
-henceforth be used as single steps in derivation displays.
+ For the sake of economy, throughout our derivations, we allow the two sides
+of an equality to be exchanged without explicitly
+    invoking the symmetry of identity. Thus, whenever
+    $a=b$ has been established, we may also use $b=a$.
+    Such steps are understood to abbreviate an
+    application of the derived rule $=$-Sym.
+
+
+\vspace{0.4cm}
+
+\nbgparar{Disjunctive Syllogism} \quad
+From a disjunction and the negation of one
+of its disjuncts, we may infer the other:
+
+\begin{prooftree}
+    \AxiomC{\(\varphi\lor\psi\)}
+    \AxiomC{\(\neg\varphi\)}
+    \RightLabel{DS}
+    \BinaryInfC{\(\psi\)}
+\end{prooftree}
+
+To justify this rule, we derive
+\[
+\vdash
+(\varphi\lor\psi)\to(\neg\varphi\to\psi).
+\]
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(\varphi\lor\psi\)}
+
+    \AxiomC{}
+    \RightLabel{\(3\)}
+    \UnaryInfC{\(\varphi\)}
+
+    \AxiomC{}
+    \RightLabel{\(2\)}
+    \UnaryInfC{\(\neg\varphi\)}
+
+    \RightLabel{\(\neg\)-E}
+    \BinaryInfC{\(\bot\)}
+    \RightLabel{\(\bot\)-E}
+    \UnaryInfC{\(\psi\)}
+
+    \AxiomC{}
+    \RightLabel{\(4\)}
+    \UnaryInfC{\(\psi\)}
+
+    \RightLabel{\(\lor\)-E, \(3,4\)}
+    \TrinaryInfC{\(\psi\)}
+
+    \RightLabel{\(\to\)-I, \(2\)}
+    \UnaryInfC{\(\neg\varphi\to\psi\)}
+    \RightLabel{\(\to\)-I, \(1\)}
+    \UnaryInfC{
+        \((\varphi\lor\psi)\to
+        (\neg\varphi\to\psi)\)
+    }
+\end{prooftree}
+
+Thus, an application of DS abbreviates
+an application of the displayed theorem
+followed by two applications of $\to$-E.
+The rule is also admissible with the
+disjuncts exchanged.
+
+
+
+None of these derived rules adds deductive
+power. All may henceforth be used
+as single steps in derivation displays.
+
