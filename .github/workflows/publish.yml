@@ -230,7 +230,12 @@ jobs:
           for page in pages:
               for number, label in numbering.findall(page.read_text(encoding='utf-8')):
                   targets[label] = (number.strip(), page.name)
-
+                    # Locate all labeled HTML anchors, including theorem labels.
+          anchors = {}
+          for page in pages:
+              html = page.read_text(encoding="utf-8")
+              for label in re.findall(r'<a\b[^>]*\bid="([^"]+)"', html):
+                  anchors.setdefault(label, page.name)
           trees = re.compile(
               r'(\\begin\s*\{prooftree\})(.*?)(\\end\s*\{prooftree\})',
               re.S,
@@ -257,7 +262,32 @@ jobs:
                       count += 1
                       return rf'\href{{{destination}}}{{{number}}}'
 
-                  return match.group(1) + refs.sub(rewrite_ref, match.group(2)) + match.group(3)
+                                     body = refs.sub(rewrite_ref, match.group(2))
+
+                   def rewrite_hyperref(m):
+                       global count
+                       label, link_text = m.groups()
+
+                       if label not in anchors:
+                           missing.add(label)
+                           return m.group(0)
+
+                       filename = anchors[label]
+                       destination = (
+                           f'#{label}' if filename == page.name
+                           else f'{filename}#{label}'
+                       )
+
+                       count += 1
+                       return rf'\href{{{destination}}}{{\text{{{link_text}}}}}'
+
+                   body = re.sub(
+                       r'\\hyperref\s*\[\s*([^\[\]\s]+)\s*\]\s*\{([^{}]*)\}',
+                       rewrite_hyperref,
+                       body,
+                   )
+
+                   return match.group(1) + body + match.group(3)
 
               updated = trees.sub(rewrite_tree, html)
               if updated != html:
