@@ -230,17 +230,22 @@ jobs:
           for page in pages:
               for number, label in numbering.findall(page.read_text(encoding='utf-8')):
                   targets[label] = (number.strip(), page.name)
-                    # Locate all labeled HTML anchors, including theorem labels.
+
+          # Locate all labeled HTML anchors.
           anchors = {}
           for page in pages:
               html = page.read_text(encoding="utf-8")
               for label in re.findall(r'<a\b[^>]*\bid="([^"]+)"', html):
                   anchors.setdefault(label, page.name)
+
           trees = re.compile(
               r'(\\begin\s*\{prooftree\})(.*?)(\\end\s*\{prooftree\})',
               re.S,
           )
           refs = re.compile(r'\\ref\s*\{\s*([^{}\s]+)\s*\}')
+          hyperrefs = re.compile(
+              r'\\hyperref\s*\[\s*([^\[\]\s]+)\s*\]\s*\{([^{}]*)\}'
+          )
           count = 0
           missing = set()
 
@@ -262,38 +267,27 @@ jobs:
                       count += 1
                       return rf'\href{{{destination}}}{{{number}}}'
 
-                                     body = refs.sub(rewrite_ref, match.group(2))
+                  def rewrite_hyperref(ref_match):
+                      global count
+                      label, link_text = ref_match.groups()
+                      if label not in anchors:
+                          missing.add(label)
+                          return ref_match.group(0)
+                      filename = anchors[label]
+                      destination = (
+                          f'#{label}' if filename == page.name
+                          else f'{filename}#{label}'
+                      )
+                      count += 1
+                      return rf'\href{{{destination}}}{{\text{{{link_text}}}}}'
 
-                   def rewrite_hyperref(m):
-                       global count
-                       label, link_text = m.groups()
-
-                       if label not in anchors:
-                           missing.add(label)
-                           return m.group(0)
-
-                       filename = anchors[label]
-                       destination = (
-                           f'#{label}' if filename == page.name
-                           else f'{filename}#{label}'
-                       )
-
-                       count += 1
-                       return rf'\href{{{destination}}}{{\text{{{link_text}}}}}'
-
-                   body = re.sub(
-                       r'\\hyperref\s*\[\s*([^\[\]\s]+)\s*\]\s*\{([^{}]*)\}',
-                       rewrite_hyperref,
-                       body,
-                   )
-
-                   return match.group(1) + body + match.group(3)
+                  body = refs.sub(rewrite_ref, match.group(2))
+                  body = hyperrefs.sub(rewrite_hyperref, body)
+                  return match.group(1) + body + match.group(3)
 
               updated = trees.sub(rewrite_tree, html)
               if updated != html:
-                  temporary = page.with_name(page.name + ".tmp")
-                  temporary.write_text(updated, encoding="utf-8")
-                  temporary.replace(page)
+                  page.write_text(updated, encoding='utf-8')
 
           if missing:
               raise SystemExit(f'Unresolved proof-tree references: {sorted(missing)}')
