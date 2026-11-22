@@ -279,7 +279,7 @@ jobs:
                           else f'{filename}#{label}'
                       )
                       count += 1
-                      return rf'\href{{{destination}}}{{\text{{{link_text}}}}}'
+                      return rf'\href{{{destination}}}{{{link_text}}}'
 
                   body = refs.sub(rewrite_ref, match.group(2))
                   body = hyperrefs.sub(rewrite_hyperref, body)
