@@ -666,8 +666,12 @@ def restricted_justification(tree: str, schema: dict, mode: str, location: str):
     # Check the defining proof actually contains the expected primitive rules.
     if not all(('\\' + op) in ''.join(labels) for op in required):
         error(f"{location}: restricted {mode} justification misses expected steps")
-    if not any('Def.' in (c['arg'] or '') for c in cmds if c['op'] in ('RightLabel','RL')):
-        error(f"{location}: restricted justification must contain Def. step")
+    if not any(
+        'Def.' in (c['arg'] or '')
+        or re.search(r'D\s*\\(?:ref|href)\s*\{', c['arg'] or '')
+        for c in cmds if c['op'] in ('RightLabel', 'RL')
+    ):
+        error(f"{location}: restricted justification must contain a definition step")
     # Retain the authored source as registry provenance. At runtime we graft
     # the actual quantified formulas and full subproof trees, not schematic vdots.
     return tree
