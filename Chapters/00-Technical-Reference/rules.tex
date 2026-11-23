@@ -400,7 +400,106 @@ This is made precise by the following side conditions:
 
 \vspace{0.35cm}
 
-\nbgpara{14}{Identity}
+\nbgpara{14}{Unique Existence}
+
+\begin{definition}[Unique Existence]
+\label{def:unique-existence}
+We write $\Unique x\,\varphi(x)$ to express that
+\emph{at most one} object satisfies $\varphi$.
+This is an abbreviation for the condition that
+any two objects satisfying $\varphi$ are identical:
+\[
+\Unique x\,\varphi(x)
+\quad\defequiv\quad
+\forall y\forall z\bigl(
+(\varphi(y)\land\varphi(z))\to y=z
+\bigr).
+\]
+
+We write $\exists!x\,\varphi(x)$ to express that
+\emph{exactly one} object satisfies $\varphi$.
+This abbreviates existence together with at-most-one uniqueness:
+\[
+\exists!x\,\varphi(x)
+\quad\defequiv\quad
+\exists x\,\varphi(x) \
+\land \ \Unique x\,\varphi(x).
+\]
+Here $y$ and $z$ are fresh variables, and
+$\varphi(y)$ and $\varphi(z)$ denote the
+corresponding substitutions for $x$.
+\end{definition}
+
+Neither abbreviation introduces a primitive logical rule.
+The definition of unique existence licenses the following
+derived introduction and elimination rules.
+
+\begin{derivedrule}[Unique Existence Introduction]
+\label{rule:unique-existence-intro}
+\begin{prooftree}
+    \AxiomC{\(\exists x\,\varphi(x)\)}
+    \AxiomC{\(\Unique x\,\varphi(x)\)}
+    \RightLabel{\(\exists!\)-I}
+    \BinaryInfC{\(\exists!x\,\varphi(x)\)}
+\end{prooftree}
+\end{derivedrule}
+
+% proof-explorer-expansion: rule:unique-existence-intro; kind=unique; mode=intro
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{\(\exists x\,\varphi(x)\)}
+    \AxiomC{\(\Unique x\,\varphi(x)\)}
+    \RightLabel{\(\land\)-I}
+    \BinaryInfC{\((\exists x\,\varphi(x))\land\Unique x\,\varphi(x)\)}
+    \RightLabel{D\ref{def:unique-existence}}
+    \dashedLine
+    \UnaryInfC{\(\exists!x\,\varphi(x)\)}
+\end{prooftree}
+\end{formalderivation}
+
+\begin{derivedrule}[Unique Existence Elimination]
+\label{rule:unique-existence-elim}
+From a statement of unique existence, we may infer
+existence or at-most-one uniqueness independently.
+
+\begin{prooftree}
+    \AxiomC{\(\exists!x\,\varphi(x)\)}
+    \RightLabel{\(\exists!\)-E}
+    \UnaryInfC{\(\exists x\,\varphi(x)\)}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{\(\exists!x\,\varphi(x)\)}
+    \RightLabel{\(\exists!\)-E}
+    \UnaryInfC{\(\Unique x\,\varphi(x)\)}
+\end{prooftree}
+\end{derivedrule}
+
+Both forms follow by the definition and Conjunction Elimination.
+
+% proof-explorer-expansion: rule:unique-existence-elim; kind=unique; mode=elim
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{\(\exists!x\,\varphi(x)\)}
+    \RightLabel{D\ref{def:unique-existence}}
+    \dashedLine
+    \UnaryInfC{\((\exists x\,\varphi(x))\land\Unique x\,\varphi(x)\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(\exists x\,\varphi(x)\)}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{\(\exists!x\,\varphi(x)\)}
+    \RightLabel{D\ref{def:unique-existence}}
+    \dashedLine
+    \UnaryInfC{\((\exists x\,\varphi(x))\land\Unique x\,\varphi(x)\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(\Unique x\,\varphi(x)\)}
+\end{prooftree}
+\end{formalderivation}
+
+\vspace{0.35cm}
+\nbgpara{15}{Identity}
 
 \nbgparar{$\bm{=}$-I} \quad Identity is governed by the following introduction rule:
 
@@ -439,7 +538,7 @@ This is made precise by the following side conditions:
 Each rule is permitted only if both \(\xi\) and \(\eta\) are free for \(\zeta\) in \(\varphi\).
 
 
-\nbgpara{15}{Compressed Derivation Displays}
+\nbgpara{16}{Compressed Derivation Displays}
 In later derivations, we shall occasionally suppress a finite sequence of routine applications of the same inference rule. If \(R\) is an inference rule, a displayed application labelled
 
 $$
@@ -465,7 +564,7 @@ This convention concerns only the display of derivations and introduces no new i
 
 
 
-\nbgpara{16}{Basic Derived Rules}
+\nbgpara{17}{Basic Derived Rules}
 
 We establish two elementary derived rules that will be used
 in later derivations. Each is admissible in the deductive
@@ -653,4 +752,3 @@ disjuncts exchanged.
 None of these derived rules adds deductive
 power. All may henceforth be used
 as single steps in derivation displays.
-

@@ -39,7 +39,7 @@ Neither restricted quantifier introduces anything fundamentally new into our lan
 \nbgpara{3}{}
 The definitions of restricted quantification license four derived rules, corresponding to the introduction and elimination rules for ordinary quantification.
 
-\begin{derivedrule}[Restricted Universal Introduction]
+\begin{derivedrule}[Restricted Universal Introduction]\label{rule:restricted-forall-i}
 \begin{prooftree}
     \AxiomC{}
     \RightLabel{\(n\)}
@@ -54,6 +54,8 @@ The definitions of restricted quantification license four derived rules, corresp
 The rule discharges assumption \(n\). The variable \(\zeta\) must be free for \(\xi\) in \(\varphi\), must not occur free in \(\varphi\), and must not occur free in any remaining undischarged assumption on which the premise depends.
 \end{derivedrule}
 
+% Restricted Universal Introduction:
+% proof-explorer-expansion: rule:restricted-forall-i; kind=restricted; mode=forall-i
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
@@ -67,13 +69,13 @@ The rule discharges assumption \(n\). The variable \(\zeta\) must be free for \(
     \UnaryInfC{\(\Set(\zeta)\to\varphi[\zeta/\xi]\)}
     \RightLabel{\(\forall\)-I}
     \UnaryInfC{\(\forall\xi(\Set(\xi)\to\varphi)\)}
-    \RightLabel{Def.}
+    \RightLabel{D\ref{def:restricted-universal-quantification}}
     \dashedLine
     \UnaryInfC{\(\forall_S\xi\,\varphi\)}
 \end{prooftree}
 \end{formalderivation}
 
-\begin{derivedrule}[Restricted Universal Elimination]
+\begin{derivedrule}[Restricted Universal Elimination]\label{rule:restricted-forall-e}
 \begin{prooftree}
     \AxiomC{\(\forall_S\xi\,\varphi\)}
     \AxiomC{\(\Set(\zeta)\)}
@@ -84,11 +86,12 @@ The rule requires that \(\zeta\) be free for \(\xi\) in \(\varphi\).
 \end{derivedrule}
 
 
-
+% Restricted Universal Elimination:
+% proof-explorer-expansion: rule:restricted-forall-e; kind=restricted; mode=forall-e
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{\(\forall_S\xi\,\varphi\)}
-    \RightLabel{Def.}
+    \RightLabel{D\ref{def:restricted-universal-quantification}}
     \dashedLine
     \UnaryInfC{\(\forall\xi(\Set(\xi)\to\varphi)\)}
     \RightLabel{\(\forall\)-E}
@@ -101,7 +104,9 @@ The rule requires that \(\zeta\) be free for \(\xi\) in \(\varphi\).
 \end{prooftree}
 \end{formalderivation}
 
-\begin{derivedrule}[Restricted Existential Introduction]
+
+
+\begin{derivedrule}[Restricted Existential Introduction]\label{rule:restricted-exists-i}
 \begin{prooftree}
     \AxiomC{\(\Set(\zeta)\)}
     \AxiomC{\(\varphi[\zeta/\xi]\)}
@@ -111,6 +116,9 @@ The rule requires that \(\zeta\) be free for \(\xi\) in \(\varphi\).
 The rule requires that \(\zeta\) be free for \(\xi\) in \(\varphi\).
 \end{derivedrule}
 
+
+% Restricted Existential Introduction:
+% proof-explorer-expansion: rule:restricted-exists-i; kind=restricted; mode=exists-i
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{\(\Set(\zeta)\)}
@@ -119,13 +127,13 @@ The rule requires that \(\zeta\) be free for \(\xi\) in \(\varphi\).
     \BinaryInfC{\(\Set(\zeta)\land\varphi[\zeta/\xi]\)}
     \RightLabel{\(\exists\)-I}
     \UnaryInfC{\(\exists\xi(\Set(\xi)\land\varphi)\)}
-    \RightLabel{Def.}
+    \RightLabel{D\ref{def:restricted-existential-quantification}}
     \dashedLine
     \UnaryInfC{\(\exists_S\xi\,\varphi\)}
 \end{prooftree}
 \end{formalderivation}
 
-\begin{derivedrule}[Restricted Existential Elimination]
+\begin{derivedrule}[Restricted Existential Elimination]\label{rule:restricted-exists-e}
 \begin{prooftree}
     \AxiomC{\(\exists_S\xi\,\varphi\)}
 %
@@ -148,10 +156,12 @@ The rule requires that \(\zeta\) be free for \(\xi\) in \(\varphi\).
 The rule discharges assumptions \(n\) and \(m\) within the minor premise subderivation. The variable \(\zeta\) must be free for \(\xi\) in \(\varphi\), must not occur free in \(\varphi\) or \(\psi\), and must not occur free in any remaining undischarged assumption on which either premise depends.
 \end{derivedrule}
 
+% Restricted Existential Elimination:
+% proof-explorer-expansion: rule:restricted-exists-e; kind=restricted; mode=exists-e
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{\(\exists_S\xi\,\varphi\)}
-    \RightLabel{Def.}
+    \RightLabel{D\ref{def:restricted-existential-quantification}}
     \dashedLine
     \UnaryInfC{\(\exists\xi(\Set(\xi)\land\varphi)\)}
 %
@@ -303,6 +313,38 @@ x\in A\leftrightarrow\varphi(x)
 
 \begin{proof}
 Existence follows from the Axiom of Class Formation. Uniqueness follows from Proposition~\ref{prop:uniqueness-class-specification}.
+
+
+
+
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(\mathrm{A}_2\)}
+    \UnaryInfC{
+        \(\exists A\,\forall_S x
+        (x\in A\leftrightarrow\varphi(x))\)
+    }
+%
+    \AxiomC{}
+    \RightLabel{P\ref{prop:uniqueness-class-specification}}
+    \UnaryInfC{
+        \(\Unique A\,\forall_S x
+        (x\in A\leftrightarrow\varphi(x))\)
+    }
+%
+    \RightLabel{\(\exists!\)-I}
+    \BinaryInfC{
+        \(\exists! A\,\forall_S x
+        (x\in A\leftrightarrow\varphi(x))\)
+    }
+\end{prooftree}
+\end{formalderivation}
+
+
+
+
 \end{proof}
 
 
