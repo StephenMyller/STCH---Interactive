@@ -886,7 +886,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ? 'Click Set-I in the tree to expand it.'
         : history.length ? 'Set-I expanded.' : 'No expandable Set-I applications.';
       undo.disabled = history.length === 0;
-      requestAnimationFrame(() => fit?.click());
     }
 
     async function change(next, revert = false) {
