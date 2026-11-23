@@ -24,6 +24,8 @@ In Gentzen derivations, we use \(\mathrm{Ext}\) to abbreviate the inference lice
     \UnaryInfC{\(A=B\)}
 \end{prooftree}
 
+This inference simply involves two applications of $\forall$-I. So, strictly speaking, we could treat it as a ``derived rule" based on the axiom. However, there is no harm in treating the rule itself as primitive.
+
 \nbgpara{2}{}
 The axiom's contribution can be better appreciated by considering how it could be different. The name \emph{Extensionality} comes from the word \emph{extension}: the extension of a class consists of its members. An \emph{intensional} description, by contrast, concerns the property or condition by which those members are picked out.
 
@@ -118,11 +120,38 @@ This criterion gives us a fundamental proof strategy, called \emph{proof by doub
 \end{prooftree}
 \end{derivedrule}
 
+% proof-explorer-expansion: rule:mutual-inclusion; vars=A,B; fresh=x
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{\(A\subseteq B\)}
+    \RightLabel{D\ref{def:subclass}}
+    \dashedLine
+    \UnaryInfC{\(\forall x(x\in A\to x\in B)\)}
+    \RightLabel{\(\forall\)-E}
+    \UnaryInfC{\(x\in A\to x\in B\)}
+%
+    \AxiomC{\(B\subseteq A\)}
+    \RightLabel{D\ref{def:subclass}}
+    \dashedLine
+    \UnaryInfC{\(\forall x(x\in B\to x\in A)\)}
+    \RightLabel{\(\forall\)-E}
+    \UnaryInfC{\(x\in B\to x\in A\)}
+%
+    \RightLabel{\(\leftrightarrow\)-I}
+    \BinaryInfC{\(x\in A\leftrightarrow x\in B\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall x(x\in A\leftrightarrow x\in B)\)}
+    \RightLabel{\(\mathrm{Ext}\)}
+    \UnaryInfC{\(A=B\)}
+\end{prooftree}
+\end{formalderivation}
+
 Unlike the derived subclass rules introduced earlier, Mutual Inclusion (\(\mathrm{MI}\)) depends on a non-logical axiom: Extensionality.
 
 
 \nbgpara{6}{} There are also two useful derived rules for establishing that one class is \emph{not} included in another, or that two classes are \emph{not} identical. In both cases, it suffices to exhibit an element that belongs to one class but not the other.
 
+% proof-explorer-expansion: rule:non-inclusion-intro; vars=A,B,a; locals=3
 \begin{derivedrule}[Non-Inclusion Introduction]
 \label{rule:non-inclusion-intro}
 \begin{prooftree}
@@ -157,8 +186,9 @@ Unlike the derived subclass rules introduced earlier, Mutual Inclusion (\(\mathr
 \end{prooftree}
 \end{formalderivation}
 
+% proof-explorer-expansion: rule:membership-difference; vars=A,B,a; locals=3
 \begin{derivedrule}[Membership Difference]
-\label{rule:nonidentity-intro}
+\label{rule:membership-difference}
 \begin{prooftree}
     \AxiomC{\(a\in A\)}
     \AxiomC{\(a\notin B\)}
