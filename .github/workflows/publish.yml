@@ -208,6 +208,11 @@ jobs:
       - name: Check website exists
         run: test -f index.html
 
+      - name: Make generated HTML writable
+        run: |
+          sudo chown "$(id -u):$(id -g)" ./*.html
+          chmod u+w ./*.html
+
       - name: Resolve Gentzen proof references
         run: |
           python3 - <<'PY'
