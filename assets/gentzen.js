@@ -835,10 +835,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // Local bound variables must not capture free variables in the context.
     // Use genuinely fresh subscripted symbols, not a fixed name like Z.
     const used = new Set(mathTokens(source).filter(token => SIMPLE_VAR.test(token)));
-    let next = 0;
+     const lowercase = ['a', 'b', 'c', 'x', 'y', 'z'];
+    const uppercase = ['A', 'B', 'C', 'X', 'Y', 'Z'];
+
     for (const local of hit.rule.fresh) {
-      let candidate;
-      do { candidate = `z_{${next++}}`; } while (used.has(candidate));
+      const isUppercase = /^[A-Z]/.test(local);
+      const candidates = isUppercase ? uppercase : lowercase;
+
+      let candidate = candidates.find(v => !used.has(v));
+
+      if (!candidate) {
+        const stem = isUppercase ? 'Z' : 'z';
+        let next = 0;
+        do {
+          candidate = `${stem}_{${next++}}`;
+        } while (used.has(candidate));
+      }
+
       used.add(candidate);
       substitutions[local] = candidate;
     }
