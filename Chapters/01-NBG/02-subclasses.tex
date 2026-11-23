@@ -311,6 +311,7 @@ Our argument required only that $A\subseteq B$ and $B\subseteq C$. It therefore 
 Since $A$, $B$, and $C$ were arbitrary, this establishes the proposition.
 \end{proof}
 
+% proof-explorer-expansion: rule:subset-trans; vars=A,B,C; fresh=a
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
@@ -341,6 +342,7 @@ The formal derivation shows how the two derived rules work together. We begin wi
 Since transitivity is a general property of subclasshood, we can now treat it as another derived rule.
 
 \begin{derivedrule}[$\pmb{\subseteq}$-Trans]
+\label{rule:subset-trans}
 \begin{prooftree}
     \AxiomC{\(A\subseteq B\)}
     \AxiomC{\(B\subseteq C\)}
