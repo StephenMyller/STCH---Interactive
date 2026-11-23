@@ -686,70 +686,94 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-/* Proof Explorer 0.3 — first genuine, reversible one-step expansion.
-   Append this AFTER the two existing Proof Explorer add-ons in assets/gentzen.js.
-   For now only Set-I applied to x \in Y (simple variables) can be expanded.
-   The sidebar, LaTeX source, and PDF are never changed. */
+/* Proof Explorer 0.5 — registered unary-rule expansion.
+   REPLACES the complete 0.4 expansion add-on; do not append alongside 0.4.
+   Viewer 0.1, full-proof substitution 0.2, and proofExplorerPanBy stay unchanged.
+   The rule data is generated from LaTeX into assets/proof-rules.json. */
 (() => {
   'use strict';
   if (!new URLSearchParams(location.search).has('proof-explorer')) return;
 
-  const LINK_PREFIX = '#proof-expand-seti-';
+  const LINK_PREFIX = '#proof-expand-rule-';
   const style = document.createElement('style');
   style.textContent = `
-    .proof-explorer-stage svg a[href^="${LINK_PREFIX}"] {cursor: zoom-in;}
-    .proof-explorer-stage svg a[href^="${LINK_PREFIX}"]:hover {opacity: .62;}
-    .proof-explorer-expansion-note {
-      font: inherit; font-size: .85rem; opacity: .85;
-    }
-    .proof-explorer-toolbar button:disabled {opacity: .4; cursor: default;}
+    .proof-explorer-stage svg a[href^="${LINK_PREFIX}"] { cursor: zoom-in; }
+    .proof-explorer-stage svg a[href^="${LINK_PREFIX}"]:hover { opacity: .62; }
+    .proof-explorer-expansion-note { font: inherit; font-size: .85rem; opacity: .85; }
+    .proof-explorer-toolbar button:disabled { opacity: .4; cursor: default; }
   `;
   document.head.append(style);
 
   function braced(text, from) {
     let i = from;
-    while (/\s/.test(text[i] || '') && i < text.length) i++;
+    while (i < text.length && /\s/.test(text[i])) i++;
     if (text[i] !== '{') return null;
-    const open = i;
     let depth = 0;
+    const start = i + 1;
     for (; i < text.length; i++) {
       if (text[i] === '\\' && (text[i + 1] === '{' || text[i + 1] === '}')) {
-        i++; // Literal escaped brace, not structural.
+        i++;
         continue;
       }
       if (text[i] === '{') depth++;
       else if (text[i] === '}' && --depth === 0) {
-        return {content: text.slice(open + 1, i), start: open, end: i + 1};
+        return {content: text.slice(start, i), end: i + 1};
       }
     }
     return null;
   }
 
-  function simplifiedFormula(tex) {
-    return tex.trim()
+  // Preserve command boundaries: stripping all spaces would merge "\exists B".
+  // This deliberately does NOT parse arbitrary terms or expressions.
+  const TOKEN = /\\[A-Za-z@]+|\\.|[A-Za-z](?:_\{?[0-9]+\}?)?|[0-9]+|\s+|[^\s]/g;
+  const SIMPLE_VAR = /^[A-Za-z](?:_\{?[0-9]+\}?)?$/;
+  function mathTokens(source) {
+    const s = source.trim()
       .replace(/^\\\(\s*/, '').replace(/\s*\\\)$/, '')
-      .replace(/^\$\s*/, '').replace(/\s*\$$/, '')
-      .replace(/\s+/g, '');
+      .replace(/^\$\s*/, '').replace(/\s*\$$/, '');
+    return (s.match(TOKEN) || []).filter(token => !/^\s+$/.test(token));
   }
 
-  function setIInstance(premise, conclusion) {
-    const subject = '[A-Za-z](?:_\\{?[0-9]+\\}?)?';
-    const result = simplifiedFormula(conclusion).match(
-      new RegExp('^\\\\Set\\((' + subject + ')\\)$')
-    );
-    const antecedent = simplifiedFormula(premise).match(
-      new RegExp('^(' + subject + ')\\\\in.+$')
-    );
-    if (!result || !antecedent || result[1] !== antecedent[1]) return null;
-    return result[1];
+  function unify(schematic, actual, metavariables, bindings) {
+    const lhs = mathTokens(schematic);
+    const rhs = mathTokens(actual);
+    if (lhs.length !== rhs.length) return false;
+    for (let i = 0; i < lhs.length; i++) {
+      const expected = lhs[i];
+      const value = rhs[i];
+      if (!metavariables.includes(expected)) {
+        if (expected !== value) return false;
+      } else {
+        if (!SIMPLE_VAR.test(value)) return false;
+        if (bindings[expected] !== undefined && bindings[expected] !== value) return false;
+        bindings[expected] = value;
+      }
+    }
+    return true;
   }
 
-  // Parse the proof's stack operations to locate *genuine* Set-I applications.
-  // We do not trust the label alone: premise and conclusion must match Set-I.
-  function findSetI(source) {
+  function matchRule(rule, premise, conclusion) {
+    const bindings = Object.create(null);
+    if (!unify(rule.premise, premise, rule.vars, bindings)) return null;
+    if (!unify(rule.conclusion, conclusion, rule.vars, bindings)) return null;
+    return bindings;
+  }
+
+  function substituteFormula(formula, substitutions) {
+    // Tokenwise replacement is essential: never replace letters inside \Set,
+    // \exists, \operatorname, or an ordinary rule label.
+    return formula.replace(TOKEN, token =>
+      Object.prototype.hasOwnProperty.call(substitutions, token)
+        ? substitutions[token] : token
+    );
+  }
+
+  // Locate labeled inferences, checking their premises AND conclusions.
+  // An application is never considered expandable merely because its label matches.
+  function findApplications(source, rules) {
     const stack = [];
     const hits = [];
-    let rightLabel = null;
+    let label = null;
     const command = /\\(AxiomC|UnaryInfC|BinaryInfC|TrinaryInfC|QuaternaryInfC|QuinaryInfC|RightLabel|RL)\b/g;
     let match;
     while ((match = command.exec(source))) {
@@ -757,14 +781,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const arg = braced(source, command.lastIndex);
       if (!arg) continue;
       command.lastIndex = arg.end;
-
       if (name === 'RightLabel' || name === 'RL') {
-        rightLabel = {value: arg.content.trim(), start: match.index, end: arg.end, cmd: name};
+        label = {value: arg.content.trim(), start: match.index, command: name};
         continue;
       }
       if (name === 'AxiomC') {
         stack.push({formula: arg.content});
-        rightLabel = null;
+        label = null;
         continue;
       }
       const arity = {
@@ -772,68 +795,65 @@ document.addEventListener('DOMContentLoaded', () => {
         QuaternaryInfC: 4, QuinaryInfC: 5
       }[name];
       if (!arity || stack.length < arity) {
-        rightLabel = null;
+        label = null;
         continue;
       }
       const premises = stack.splice(-arity, arity);
-      if (arity === 1 && rightLabel?.value === 'Set-I') {
-        const variable = setIInstance(premises[0].formula, arg.content);
-        if (variable) {
-          hits.push({
-            id: hits.length, variable,
-            start: rightLabel.start, end: arg.end,
-            originalConclusion: arg.content
-          });
+      if (arity === 1 && label) {
+        const rule = rules.find(item => item.label === label.value);
+        const bindings = rule && matchRule(rule, premises[0].formula, arg.content);
+        if (bindings) {
+          hits.push({id: hits.length, rule, bindings,
+            start: label.start, end: arg.end,
+            originalConclusion: arg.content, labelCommand: label.command});
         }
       }
       stack.push({formula: arg.content});
-      rightLabel = null;
+      label = null;
     }
     return hits;
   }
 
-  function markExpandableRules(source) {
-    const hits = findSetI(source);
+  function markExpandableRules(source, rules) {
+    const hits = findApplications(source, rules);
     let result = source;
     for (const hit of hits.slice().reverse()) {
-      const original = result.slice(hit.start, hit.end);
-      const marked = original.replace(
-        /\\(RightLabel|RL)\s*\{\s*Set-I\s*\}/,
-        (_, command) => `\\${command}{\\href{${LINK_PREFIX}${hit.id}}{Set-I}}`
-      );
+      const marker = `\\${hit.labelCommand}{\\href{${LINK_PREFIX}${hit.id}}{${hit.rule.label}}}`;
+      const old = result.slice(hit.start, hit.end);
+      const prefix = new RegExp('^\\\\(?:RightLabel|RL)\\s*\\{[^{}]*\\}');
+      const marked = old.replace(prefix, marker);
+      if (marked === old) throw new Error(`Could not mark inference ${hit.rule.label}`);
       result = result.slice(0, hit.start) + marked + result.slice(hit.end);
     }
     return {tex: result, hits};
   }
 
-  function definitionRef(label) {
-    const node = document.getElementById('gentzen-reference-index');
-    if (!node) return 'D(Set)';
-    try {
-      const entry = JSON.parse(node.textContent)[label];
-      if (!entry) return 'D(Set)';
-      const [number, filename] = entry;
-      const here = decodeURIComponent(location.pathname.split('/').pop() || 'index.html');
-      const url = (filename === here ? '' : filename) + '#' + label;
-      return `D\\href{${url}}{${number}}`;
-    } catch (error) {
-      console.warn('Cannot resolve definition:', label, error);
-      return 'D(Set)';
-    }
-  }
-
-  function expandOnce(source, index) {
-    const hit = findSetI(source).find(item => item.id === index);
+  function expandOnce(source, id, rules) {
+    const hit = findApplications(source, rules).find(item => item.id === id);
     if (!hit) return null;
-    // Fresh bound variable: do not bind the subject of the original inference.
-    const witnessVariable = ['Z', 'Y', 'X', 'W', 'C'].find(v => v !== hit.variable);
-    const x = hit.variable;
-    const expansion = String.raw`\RightLabel{\(\exists\)-I}
-\UnaryInfC{\(\exists ${witnessVariable}(${x}\in ${witnessVariable})\)}
-\RightLabel{${definitionRef('def:set')}}
-\dashedLine
-\UnaryInfC{${hit.originalConclusion}}`;
-    return source.slice(0, hit.start) + expansion + source.slice(hit.end);
+    const substitutions = Object.assign(Object.create(null), hit.bindings);
+    // Local bound variables must not capture free variables in the context.
+    // Use genuinely fresh subscripted symbols, not a fixed name like Z.
+    const used = new Set(mathTokens(source).filter(token => SIMPLE_VAR.test(token)));
+    let next = 0;
+    for (const local of hit.rule.fresh) {
+      let candidate;
+      do { candidate = `z_{${next++}}`; } while (used.has(candidate));
+      used.add(candidate);
+      substitutions[local] = candidate;
+    }
+    const replacement = hit.rule.steps.map((step, i) => {
+      const conclusion = i === hit.rule.steps.length - 1
+        ? hit.originalConclusion : substituteFormula(step.conclusion, substitutions);
+      let tex = '';
+      if (step.label) tex += `\\RightLabel{${step.label}}\n`;
+      if (step.line === 'dashed') tex += '\\dashedLine\n';
+      else if (step.line === 'none') tex += '\\noLine\n';
+      else tex += '\\solidLine\n';
+      tex += `\\UnaryInfC{${conclusion}}`;
+      return tex;
+    }).join('\n');
+    return source.slice(0, hit.start) + replacement + source.slice(hit.end);
   }
 
   function locateExplorerMath(stage) {
@@ -841,18 +861,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!math) return null;
     for (const item of math) {
       if (item.typesetRoot && stage.contains(item.typesetRoot) &&
-          /\\begin\s*\{prooftree\}/.test(item.math) &&
-          findSetI(item.math).length) {
-        return item;
-      }
+          /\\begin\s*\{prooftree\}/.test(item.math)) return item;
     }
     return null;
   }
 
-  function initialize(stage, item) {
+  function initialize(stage, item, rules) {
     const texEngine = window.MathJax;
     if (typeof texEngine?.tex2svgPromise !== 'function') {
-      console.warn('Proof Explorer: MathJax SVG renderer not available for expansion.');
+      console.warn('Proof Explorer: MathJax SVG renderer unavailable.');
       return;
     }
     const toolbar = document.querySelector('.proof-explorer-toolbar');
@@ -874,14 +891,12 @@ document.addEventListener('DOMContentLoaded', () => {
     toolbar.insertBefore(hint, fit || toolbar.firstChild);
 
     async function render() {
-      const prepared = markExpandableRules(source);
-      // Build the replacement first; keep the existing tree if MathJax fails.
+      const prepared = markExpandableRules(source, rules);
       const replacement = await texEngine.tex2svgPromise(prepared.tex, {display: true});
-      if (!replacement?.querySelector('svg') || replacement.querySelector('merror, [data-mml-node="merror"]')) {
-        throw new Error('MathJax failed to render the expanded proof');
+      if (!replacement?.querySelector('svg') ||
+          replacement.querySelector('merror, [data-mml-node="merror"]')) {
+        throw new Error('MathJax failed to render the proof');
       }
-      // Keep the root conclusion stationary at its existing screen position.
-      // This is more stable than recentering when the proof grows upward.
       const oldBox = output.querySelector('svg')?.getBoundingClientRect();
       output.replaceWith(replacement);
       output = replacement;
@@ -892,16 +907,16 @@ document.addEventListener('DOMContentLoaded', () => {
           oldBox.bottom - newBox.bottom
         );
       }
-      // A short fade makes the redraw easier to follow without slowing it down.
-      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        replacement.animate([{opacity: 0.15}, {opacity: 1}],
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
+          typeof replacement.animate === 'function') {
+        replacement.animate([{opacity: .15}, {opacity: 1}],
           {duration: 200, easing: 'ease-out'});
       }
       hint.textContent = prepared.hits.length
-        ? 'Click Set-I in the tree to expand it.'
-        : history.length ? 'Set-I expanded.' : 'No expandable Set-I applications.';
+        ? `Click a derived rule to expand it (${prepared.hits.length} available).`
+        : history.length ? 'No further registered expansions in this tree.'
+          : 'No registered expandable rules in this tree.';
       undo.disabled = history.length === 0;
-      // The Fit button remains available when the reader wants to recenter.
     }
 
     async function change(next, revert = false) {
@@ -930,45 +945,54 @@ document.addEventListener('DOMContentLoaded', () => {
       const href = link?.getAttribute('href');
       if (!href?.startsWith(LINK_PREFIX)) return;
       event.preventDefault();
-      event.stopImmediatePropagation(); // Prevent the existing viewer's textbook navigation.
+      event.stopImmediatePropagation();
       const id = Number(href.slice(LINK_PREFIX.length));
       if (!Number.isSafeInteger(id)) return;
-      const next = expandOnce(source, id);
+      const next = expandOnce(source, id, rules);
       if (next) change(next);
     }, true);
-
     undo.addEventListener('click', () => {
       if (busy || !history.length) return;
       change(history[history.length - 1], true);
     });
 
     render().catch(error => {
-      hint.textContent = 'Proof expansion is unavailable for this tree.';
+      hint.textContent = 'Expansion is unavailable for this tree.';
       console.warn('Proof Explorer:', error);
     });
   }
 
-  function start() {
+  function start(rules) {
     const stage = document.querySelector('.proof-explorer-stage');
     if (!stage) return false;
     const snippet = stage.querySelector(':scope > .formalderivation');
     const key = snippet?.style.getPropertyValue('--explorer-id').trim();
-    // Wait for the 0.2 add-on to substitute the full version, if supplied.
     if (key && [...document.querySelectorAll('.explorerderivation')]
       .some(el => el.style.getPropertyValue('--explorer-id').trim() === key)) return false;
     const item = locateExplorerMath(stage);
     if (!item) return false;
-    initialize(stage, item);
+    initialize(stage, item, rules);
     return true;
   }
 
-  function waitForExplorer() {
-    if (start()) return;
+  async function waitForExplorer() {
+    const url = new URL('assets/proof-rules.json', location.href);
+    let data;
+    try {
+      const response = await fetch(url, {cache: 'no-store'});
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      data = await response.json();
+      if (data.version !== 1 || !data.rules) throw new Error('Unknown registry format');
+    } catch (error) {
+      console.warn('Proof Explorer: rule registry unavailable:', error);
+      return;
+    }
+    const rules = Object.values(data.rules);
+    if (start(rules)) return;
     const observer = new MutationObserver(() => {
-      if (start()) observer.disconnect();
+      if (start(rules)) observer.disconnect();
     });
     observer.observe(document.body, {childList: true, subtree: true});
-    // A page without Set-I is entirely normal; don't keep observing forever.
     setTimeout(() => observer.disconnect(), 12000);
   }
 
