@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build Proof Explorer v1.0 registry from explicitly annotated LaTeX rules.
+"""Build Proof Explorer v1.1 registry from explicitly annotated LaTeX rules.
 
 Supports unary, binary, locally discharged assumptions, and subderivation rules, with arbitrary branching in
 justifications provided each schematic premise appears once as either a direct
@@ -226,7 +226,7 @@ def annotation(raw: str, location: str):
         options[option] = value
     kind = options.get("kind", "ordinary")
     mode = options.get("mode")
-    if kind != "restricted" and not options.get("vars"):
+    if kind not in ("restricted", "unique") and not options.get("vars"):
         error(f"{location}: specify schematic vars (e.g. vars=A,B,C)")
     if any(k not in ("vars", "fresh", "kind", "discharge", "eigen", "locals", "mode") for k in options):
         error(f"{location}: unknown annotation field")
@@ -235,7 +235,7 @@ def annotation(raw: str, location: str):
     names = vars_ + fresh
     if len(names) != len(set(names)) or any(not VARNAME.fullmatch(name) for name in names):
         error(f"{location}: variables must be distinct single symbols, optionally subscripted")
-    if kind not in ("ordinary", "subproof", "restricted"):
+    if kind not in ("ordinary", "subproof", "restricted", "unique"):
         error(f"{location}: unsupported expansion kind {kind!r}")
     tag = options.get("discharge")
     eigen = options.get("eigen")
@@ -248,8 +248,13 @@ def annotation(raw: str, location: str):
             error(f"{location}: restricted rule needs mode=forall-i/forall-e/exists-i/exists-e")
         if tag or eigen or vars_ or fresh or options.get("locals"):
             error(f"{location}: restricted annotations require only kind=restricted and mode=...")
+    elif kind == "unique":
+        if mode not in ("intro", "elim"):
+            error(f"{location}: unique-existence rule requires mode=intro/elim")
+        if tag or eigen or vars_ or fresh or options.get("locals"):
+            error(f"{location}: unique-existence annotation requires only kind=unique and mode=...")
     elif mode:
-        error(f"{location}: mode=... is reserved for restricted quantifiers")
+        error(f"{location}: mode=... is reserved for special quantifier rules")
     if kind != "subproof" and (tag or eigen):
         error(f"{location}: discharge=/eigen= are only valid with kind=subproof")
     locals_ = [item.strip() for item in options.get("locals", "").split(",") if item.strip()]
@@ -668,6 +673,42 @@ def restricted_justification(tree: str, schema: dict, mode: str, location: str):
     return tree
 
 
+
+def unique_schema(trees: list[str], mode: str, location: str):
+    """Validate the two inference forms sharing the same elimination label."""
+    count = 1 if mode == 'intro' else 2
+    if len(trees) != count:
+        error(f"{location}: unique-existence {mode} needs {count} schematic tree(s)")
+    entries = []
+    for index, tree in enumerate(trees):
+        premises, conclusion, label = schema_from(tree, location)
+        expected_arity = 2 if mode == 'intro' else 1
+        if len(premises) != expected_arity:
+            error(f"{location}: unique-existence {mode} requires {expected_arity} premises")
+        normalized = canon(label or '').replace(r'\(', '').replace(r'\)', '').replace('$', '')
+        if r'\exists!' + ('-I' if mode == 'intro' else '-E') not in normalized:
+            error(f"{location}: wrong inference label for unique-existence {mode}: {label!r}")
+        entries.append(dict(premises=premises, conclusion=conclusion, inferenceLabel=label,
+                            variant=('intro' if mode == 'intro' else
+                                     ('existence' if index == 0 else 'atmostone'))))
+    return entries
+
+
+def unique_justification(trees: list[str], schemata: list[dict], location: str):
+    if len(trees) != len(schemata):
+        error(f"{location}: unique-existence justification count mismatch")
+    output = []
+    for tree, schema in zip(trees, schemata):
+        template = proof_template(tree, schema['premises'], schema['conclusion'], location)
+        labels = [c['arg'] for c in commands(tree) if c['op'] in ('RightLabel', 'RL')]
+        if not any(r'D\ref{def:unique-existence}' in lab for lab in labels):
+            error(f"{location}: unique-existence justification must cite its definition")
+        needed = ('-I' if schema['variant'] == 'intro' else '-E')
+        if not any(r'\land' in lab and needed in lab for lab in labels):
+            error(f"{location}: justification must contain {needed}")
+        output.append(template)
+    return output
+
 def get_proposition_proofs(path: Path, content: str, targets):
     entries = {}
     props = list(PROPOSITION.finditer(content))
@@ -732,10 +773,15 @@ def main():
             if key not in annotated_options:
                 continue
             rule_trees = TREE.findall(match.group(2))
-            if len(rule_trees) != 1:
-                error(f"{path}:{content.count(chr(10), 0, match.start())+1}: rule {key} needs one schematic prooftree")
+            if len(rule_trees) != (2 if annotated_options[key]["kind"] == "unique" and annotated_options[key]["mode"] == "elim" else 1):
+                error(f"{path}:{content.count(chr(10), 0, match.start())+1}: rule {key} has unexpected schematic tree count")
             kind = annotated_options[key]["kind"]
             assumption = None
+            if kind == "unique":
+                if key in schemata:
+                    error(f"Duplicate rule identifier {key}")
+                schemata[key] = unique_schema(rule_trees, annotated_options[key]["mode"], key)
+                continue
             if kind == "restricted":
                 mode = annotated_options[key]["mode"]
                 premises, conclusion, inf_label = restricted_schema(rule_trees[0], mode, key)
@@ -762,13 +808,14 @@ def main():
             if not end:
                 error(f"{location}: cannot find closing formalderivation")
             trees = TREE.findall(form[:end.start()])
-            if len(trees) != 1:
-                error(f"{location}: justification must contain exactly one prooftree")
+            if len(trees) != (2 if kind == "unique" and mode == "elim" else 1):
+                error(f"{location}: justification has unexpected prooftree count")
             if key in expansions:
                 error(f"Duplicate expansion annotation for {key}")
             expansions[key] = {"vars": vars_, "fresh": fresh, "kind": kind,
                                "discharge": tag, "eigen": eigen, "locals": locals_, "tree": trees[0],
-                               "location": location, "mode": mode}
+                               "location": location, "mode": mode,
+                               "trees": trees}
 
     if not expansions:
         error("No proof-explorer-expansion annotations found in *.tex")
@@ -784,6 +831,20 @@ def main():
         if key not in schemata:
             error(f"{expansion['location']}: no derivedrule with \\label{{{key}}}")
         schema = schemata[key]
+        if expansion["kind"] == "unique":
+            templates = unique_justification(expansion["trees"], schema, expansion["location"])
+            for variant, template in zip(schema, templates):
+                suffix = '' if variant['variant'] == 'intro' else ':' + variant['variant']
+                entry_key = key + suffix
+                registry[entry_key] = dict(
+                    id=entry_key, label=variant['inferenceLabel'], vars=[], fresh=[],
+                    premises=variant['premises'], conclusion=variant['conclusion'],
+                    template=resolve_label(template, targets, expansion['location']),
+                    kind='unique', mode=expansion['mode'],
+                    variant=variant['variant'], locals=[],
+                    definitionLabel=resolve_label(r'D\ref{def:unique-existence}', targets, expansion['location'])
+                )
+            continue
         # The theorem heading may use different typography from the inference label.
         # Match applications using the actual RightLabel, not the heading text.
         if expansion["kind"] == "restricted":
@@ -817,11 +878,15 @@ def main():
         registry[key] = entry
 
     labels = [entry["label"] for entry in registry.values()]
-    if len(labels) != len(set(labels)):
-        error("Multiple registered rules have the same inference label")
+    for i, entry in enumerate(registry.values()):
+        for other in list(registry.values())[:i]:
+            if entry['label'] == other['label'] and not (
+                entry['kind'] == other['kind'] == 'unique' and
+                entry['mode'] == other['mode'] == 'elim'):
+                error("Multiple unrelated registered rules have the same inference label")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(
-        json.dumps({"version": 6, "rules": registry, "propositions": propositions}, indent=2, ensure_ascii=False) + "\n",
+        json.dumps({"version": 7, "rules": registry, "propositions": propositions}, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
     print(f"Proof registry: generated {len(registry)} rule(s) "
