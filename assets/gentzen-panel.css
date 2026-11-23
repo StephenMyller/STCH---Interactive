@@ -1213,3 +1213,27 @@ main.bodycontainer .derivation-trigger:has(+ p) {
 .gentzen-panel .formalderivation > p > mjx-container {
   transform: translateX(var(--gentzen-offset, 0rem));
 }
+
+
+
+
+
+/* Hide full explorer proofs in the ordinary textbook. */
+main.bodycontainer .explorerderivation {
+  display: none !important;
+}
+
+/* Display full proofs inside Proof Explorer. */
+.proof-explorer-stage > .explorerderivation {
+  display: block !important;
+  width: max-content;
+  max-width: none !important;
+  overflow: visible !important;
+}
+
+.proof-explorer-stage > .explorerderivation > p {
+  width: max-content;
+  max-width: none;
+  text-align: center !important;
+  margin: 0;
+}
