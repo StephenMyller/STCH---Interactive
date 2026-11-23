@@ -218,6 +218,7 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import re
+          import json
 
           pages = sorted(
               p for p in Path('.').glob('*.html')
@@ -291,6 +292,19 @@ jobs:
                   return match.group(1) + body + match.group(3)
 
               updated = trees.sub(rewrite_tree, html)
+                        index_tag = (
+              '<script id="gentzen-reference-index" type="application/json">'
+              + json.dumps(targets).replace('</', '<\\/')
+              + '</script>'
+          )
+          existing_tag = re.compile(
+              r'<script id="gentzen-reference-index" type="application/json">.*?</script>',
+              re.S,
+          )
+          if existing_tag.search(updated):
+              updated = existing_tag.sub(lambda _: index_tag, updated)
+          else:
+              updated = updated.replace('</body>', index_tag + '\n</body>')
               if updated != html:
                   page.write_text(updated, encoding='utf-8')
 
