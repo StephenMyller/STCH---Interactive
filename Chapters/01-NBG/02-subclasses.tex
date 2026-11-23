@@ -227,6 +227,7 @@ Conversely, suppose we already know that $A\subseteq B$. Then every member of $A
 This gives us the corresponding elimination rule.
 
 \begin{derivedrule}[$\pmb{\subseteq}$-E]
+\label{rule:subset-e}
 \begin{prooftree}
     \AxiomC{\(A\subseteq B\)}
     \AxiomC{\(a\in A\)}
@@ -241,6 +242,7 @@ Here, too, the rule merely abbreviates reasoning that is already available to us
 \]
 In particular, $a\in A\to a\in B$. Together with $a\in A$, this yields $a\in B$ by implication elimination.
 
+% proof-explorer-expansion: rule:subset-e; vars=A,B,a; fresh=x
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{\(A\subseteq B\)}
