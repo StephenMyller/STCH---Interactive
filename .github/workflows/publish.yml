@@ -71,11 +71,6 @@ jobs:
     # Here we request a Linux computer running Ubuntu.
     runs-on: ubuntu-latest
 
-    # Associate the job with our GitHub Pages environment.
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
     # A job consists of steps, executed in the order listed.
     steps:
 
@@ -543,18 +538,19 @@ jobs:
         with:
           path: site
 
+  # ==========================================================
+  # STEP 9 — DEPLOY WEBSITE IN A SEPARATE JOB
+  # ==========================================================
 
-      # ==========================================================
-      # STEP 9 — PUBLISH THE WEBSITE
-      # ==========================================================
+  deploy:
+    needs: publish
+    runs-on: ubuntu-latest
 
-      # Deploy the uploaded artifact to GitHub Pages.
-      # This is the step that actually publishes the website.
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
       - name: Publish website
-
-        # The deployment ID lets the environment definition
-        # above retrieve the finished website's URL.
         id: deployment
-
         uses: actions/deploy-pages@v4
-
