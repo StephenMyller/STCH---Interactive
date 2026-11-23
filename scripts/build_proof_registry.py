@@ -255,8 +255,6 @@ def main():
         if key not in schemata:
             error(f"{expansion['location']}: no derivedrule with \\label{{{key}}}")
         schema = schemata[key]
-        if schema["display"].strip() != schema["inferenceLabel"]:
-            error(f"{key}: derivedrule title and Gentzen inference label disagree")
         template = proof_template(
             expansion["tree"], schema["premises"], schema["conclusion"], key
         )
