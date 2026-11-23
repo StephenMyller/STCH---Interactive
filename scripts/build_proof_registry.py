@@ -2,8 +2,9 @@
 """Build Proof Explorer v0.6 registry from explicitly annotated LaTeX rules.
 
 Supports unary and binary derived-rule schemata, with arbitrary branching in
-justifications provided each schematic premise appears as exactly one matching
-AxiomC leaf. Other leaves (e.g. locally discharged assumptions) are preserved.
+justifications provided each schematic premise appears once as either a direct
+AxiomC leaf or a numbered assumption line (AxiomC/RightLabel/UnaryInfC).
+Other leaves (e.g. locally discharged assumptions) are preserved.
 
 Annotation immediately before a formalderivation:
 % proof-explorer-expansion: rule:set-I; vars=a,A; fresh=B
@@ -174,24 +175,44 @@ def resolve_label(tex: str, targets, location: str):
 
 
 def proof_template(tree: str, premises: list[str], conclusion: str, location: str):
-    """Insert one placeholder for each schematic premise leaf.
+    r"""Identify premise attachment points without changing the authored proof.
 
-    Does not replace other AxiomC leaves: those may represent local assumptions,
-    which remain exactly as the author wrote them. Rejects ambiguous matches.
+    Each schematic premise must appear exactly once in either form:
+      (1) a direct \AxiomC{formula} leaf, or
+      (2) a numbered assumption line
+          \AxiomC{} \RightLabel{number} \UnaryInfC{formula}.
+
+    Local temporary assumptions (such as a\in A in subset introduction)
+    are preserved and are not treated as schematic premise slots.
     """
-    root, leaves = parse_tree(tree, location)
+    root, _ = parse_tree(tree, location)
     if canon(root["formula"]) != canon(conclusion):
         error(f"{location}: justification must end in the schematic rule conclusion")
     if len({canon(p) for p in premises}) != len(premises):
         error(f"{location}: identical premise formulas are ambiguous in v0.6")
+
+    cmds = commands(tree)
     replacements = []
     for i, premise in enumerate(premises):
-        hits = [cmd for leaf, cmd in leaves if canon(leaf["formula"]) == canon(premise)]
-        if len(hits) != 1:
-            error(f"{location}: premise {i+1} occurs {len(hits)} times as an AxiomC leaf; "
-                  "v0.6 requires exactly one occurrence per premise")
-        cmd = hits[0]
-        replacements.append((cmd["start"], cmd["end"], f"@@PE_PREMISE_{i}@@"))
+        matches = []
+        for j, cmd in enumerate(cmds):
+            if cmd["op"] != "AxiomC":
+                continue
+            # Standard bussproofs premise, without an assumption line.
+            if canon(cmd["arg"]) == canon(premise):
+                matches.append((cmd["start"], cmd["end"]))
+            # User's convention: draw assumptions with a numbered inference line.
+            if (canon(cmd["arg"]) == "" and j + 2 < len(cmds)
+                    and cmds[j + 1]["op"] in ("RightLabel", "RL", "LeftLabel", "LL")
+                    and cmds[j + 2]["op"] == "UnaryInfC"
+                    and canon(cmds[j + 2]["arg"]) == canon(premise)):
+                matches.append((cmd["start"], cmds[j + 2]["end"]))
+        if len(matches) != 1:
+            error(f"{location}: premise {i+1} has {len(matches)} attachment points; "
+                  "requires exactly one direct premise leaf or numbered assumption line")
+        start, end = matches[0]
+        replacements.append((start, end, f"@@PE_PREMISE_{i}@@"))
+
     template = tree
     for start, end, marker in sorted(replacements, reverse=True):
         template = template[:start] + marker + template[end:]
@@ -255,6 +276,8 @@ def main():
         if key not in schemata:
             error(f"{expansion['location']}: no derivedrule with \\label{{{key}}}")
         schema = schemata[key]
+        # The theorem heading may use different typography from the inference label.
+        # Match applications using the actual RightLabel, not the heading text.
         template = proof_template(
             expansion["tree"], schema["premises"], schema["conclusion"], key
         )
