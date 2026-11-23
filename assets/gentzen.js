@@ -499,6 +499,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const paint = () => {
       stage.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
     };
+      stage.proofExplorerPanBy = (dx, dy) => {
+      x += dx;
+      y += dy;
+      paint();
+    };
     const fit = () => {
       const w = Math.max(stage.offsetWidth, 1);
       const h = Math.max(stage.offsetHeight, 1);
@@ -801,27 +806,22 @@ document.addEventListener('DOMContentLoaded', () => {
     return {tex: result, hits};
   }
 
-     function definitionRef(label) {
+  function definitionRef(label) {
     const node = document.getElementById('gentzen-reference-index');
     if (!node) return 'D(Set)';
-
     try {
       const entry = JSON.parse(node.textContent)[label];
       if (!entry) return 'D(Set)';
-
       const [number, filename] = entry;
-      const here = decodeURIComponent(
-        location.pathname.split('/').pop() || 'index.html'
-      );
+      const here = decodeURIComponent(location.pathname.split('/').pop() || 'index.html');
       const url = (filename === here ? '' : filename) + '#' + label;
-
       return `D\\href{${url}}{${number}}`;
     } catch (error) {
       console.warn('Cannot resolve definition:', label, error);
       return 'D(Set)';
     }
   }
-   
+
   function expandOnce(source, index) {
     const hit = findSetI(source).find(item => item.id === index);
     if (!hit) return null;
@@ -880,12 +880,28 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!replacement?.querySelector('svg') || replacement.querySelector('merror, [data-mml-node="merror"]')) {
         throw new Error('MathJax failed to render the expanded proof');
       }
+      // Keep the root conclusion stationary at its existing screen position.
+      // This is more stable than recentering when the proof grows upward.
+      const oldBox = output.querySelector('svg')?.getBoundingClientRect();
       output.replaceWith(replacement);
       output = replacement;
+      const newBox = replacement.querySelector('svg')?.getBoundingClientRect();
+      if (oldBox && newBox && stage.proofExplorerPanBy) {
+        stage.proofExplorerPanBy(
+          (oldBox.left + oldBox.right - newBox.left - newBox.right) / 2,
+          oldBox.bottom - newBox.bottom
+        );
+      }
+      // A short fade makes the redraw easier to follow without slowing it down.
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        replacement.animate([{opacity: 0.15}, {opacity: 1}],
+          {duration: 200, easing: 'ease-out'});
+      }
       hint.textContent = prepared.hits.length
         ? 'Click Set-I in the tree to expand it.'
         : history.length ? 'Set-I expanded.' : 'No expandable Set-I applications.';
       undo.disabled = history.length === 0;
+      // The Fit button remains available when the reader wants to recenter.
     }
 
     async function change(next, revert = false) {
