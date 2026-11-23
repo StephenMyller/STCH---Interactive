@@ -241,28 +241,35 @@ Unlike Mutual Inclusion, neither of these rules depends on Extensionality. Non-I
 
 Importantly, this argument does not depend on what the condition \(\varphi(x)\) says. It gives us a general principle of uniqueness.
 
+
+
 \begin{proposition}[Uniqueness of Class Specifications]
 \label{prop:uniqueness-class-specification}
-Let \(\varphi(x)\) be a fixed condition on \(x\) that does not depend on \(A\) or \(B\). If
+Let \(\varphi(x)\) be a fixed condition on \(x\)
+that does not depend on \(A\) or \(B\).
+Then
 \[
-\forall x\bigl(x\in A\leftrightarrow\varphi(x)\bigr)
-\qquad \text{and} \qquad
-\forall x\bigl(x\in B\leftrightarrow\varphi(x)\bigr),
+\Unique A\,\forall x
+\bigl(x\in A\leftrightarrow\varphi(x)\bigr).
 \]
-then \(A=B\).
 \end{proposition}
 
 \begin{proof}
-If \(A\) and \(B\) satisfy the given specifications, then for every object \(x\),
+Suppose \(A\) and \(B\) both satisfy the given
+specification. Then, for every object \(x\),
 \[
-x\in A\quad\text{iff}\quad\varphi(x)\quad\text{iff}\quad x\in B.
+x\in A\quad\text{iff}\quad
+\varphi(x)\quad\text{iff}\quad x\in B.
 \]
-Hence they have exactly the same members, and Extensionality gives \(A=B\).
+Hence they have exactly the same members,
+and Extensionality gives \(A=B\).
+Thus at most one class satisfies the specification.
 \end{proof}
 
 \begin{formalderivation}[0rem][uniqueness-class-specification]
 \begin{derivationnote}
-Choose \(a\) fresh for the two specifications. We first derive: \bookvspace{0.3cm}
+Choose \(a\) fresh for the two specifications.
+We first derive: \bookvspace{0.3cm}
 \end{derivationnote}
 \begin{prooftree}
     \AxiomC{\(\forall x(x\in A\leftrightarrow\varphi(x))\)}
@@ -285,15 +292,34 @@ Choose \(a\) fresh for the two specifications. We first derive: \bookvspace{0.3c
     \RightLabel{\(\to\)-I, \(1\)}
     \UnaryInfC{\(a\in A\to a\in B\)}
 \end{prooftree} \bookvspace{0.3cm}
+
 \begin{derivationnote}
-Interchanging \(A\) and \(B\) gives the converse implication. Combining both directions, we obtain:
+Interchanging \(A\) and \(B\) gives the converse implication.
+Combining both directions under the assumption that
+both classes satisfy the specification, we obtain:
 \end{derivationnote}
 \begin{prooftree}
-    \AxiomC{\(\vdots\)}
+    \AxiomC{}
+    \RightLabel{\(3\)}
+    \UnaryInfC{
+        \(\forall x(x\in A\leftrightarrow\varphi(x))
+        \land
+        \forall x(x\in B\leftrightarrow\varphi(x))\)
+    }
+    \noLine
+    \UnaryInfC{\(\vdots\)}
     \noLine
     \UnaryInfC{\(a\in A\to a\in B\)}
 %
-    \AxiomC{\(\vdots\)}
+    \AxiomC{}
+    \RightLabel{\(3\)}
+    \UnaryInfC{
+        \(\forall x(x\in A\leftrightarrow\varphi(x))
+        \land
+        \forall x(x\in B\leftrightarrow\varphi(x))\)
+    }
+    \noLine
+    \UnaryInfC{\(\vdots\)}
     \noLine
     \UnaryInfC{\(a\in B\to a\in A\)}
 %
@@ -303,13 +329,43 @@ Interchanging \(A\) and \(B\) gives the converse implication. Combining both dir
     \UnaryInfC{\(\forall x(x\in A\leftrightarrow x\in B)\)}
     \RightLabel{\(\mathrm{Ext}\)}
     \UnaryInfC{\(A=B\)}
+    \RightLabel{\(\to\)-I, \(3\)}
+    \UnaryInfC{
+        \(\bigl(
+        \forall x(x\in A\leftrightarrow\varphi(x))
+        \land
+        \forall x(x\in B\leftrightarrow\varphi(x))
+        \bigr)\to A=B\)
+    }
+    \RightLabel{\(\forall\)-I\(^{*}\)}
+    \UnaryInfC{
+        \(\forall A\forall B\bigl(
+        (\forall x(x\in A\leftrightarrow\varphi(x))
+        \land
+        \forall x(x\in B\leftrightarrow\varphi(x)))
+        \to A=B\bigr)\)
+    }
+    \RightLabel{D\ref{def:unique-existence}}
+    \dashedLine
+    \UnaryInfC{
+        \(\Unique A\,\forall x
+        (x\in A\leftrightarrow\varphi(x))\)
+    }
 \end{prooftree}
 \end{formalderivation}
 
 
 \begin{explorerderivation}{uniqueness-class-specification}
 \begin{prooftree}
-    \AxiomC{\(\forall x(x\in A\leftrightarrow\varphi(x))\)}
+    \AxiomC{}
+    \RightLabel{\(3\)}
+    \UnaryInfC{
+        \(\forall x(x\in A\leftrightarrow\varphi(x))
+        \land
+        \forall x(x\in B\leftrightarrow\varphi(x))\)
+    }
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(\forall x(x\in A\leftrightarrow\varphi(x))\)}
     \RightLabel{\(\forall\)-E}
     \UnaryInfC{\(a\in A\leftrightarrow\varphi(a)\)}
 %
@@ -320,7 +376,15 @@ Interchanging \(A\) and \(B\) gives the converse implication. Combining both dir
     \RightLabel{\(\leftrightarrow\)-E}
     \BinaryInfC{\(\varphi(a)\)}
 %
-    \AxiomC{\(\forall x(x\in B\leftrightarrow\varphi(x))\)}
+    \AxiomC{}
+    \RightLabel{\(3\)}
+    \UnaryInfC{
+        \(\forall x(x\in A\leftrightarrow\varphi(x))
+        \land
+        \forall x(x\in B\leftrightarrow\varphi(x))\)
+    }
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(\forall x(x\in B\leftrightarrow\varphi(x))\)}
     \RightLabel{\(\forall\)-E}
     \UnaryInfC{\(a\in B\leftrightarrow\varphi(a)\)}
 %
@@ -329,7 +393,15 @@ Interchanging \(A\) and \(B\) gives the converse implication. Combining both dir
     \RightLabel{\(\to\)-I, \(1\)}
     \UnaryInfC{\(a\in A\to a\in B\)}
 %
-    \AxiomC{\(\forall x(x\in B\leftrightarrow\varphi(x))\)}
+    \AxiomC{}
+    \RightLabel{\(3\)}
+    \UnaryInfC{
+        \(\forall x(x\in A\leftrightarrow\varphi(x))
+        \land
+        \forall x(x\in B\leftrightarrow\varphi(x))\)
+    }
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(\forall x(x\in B\leftrightarrow\varphi(x))\)}
     \RightLabel{\(\forall\)-E}
     \UnaryInfC{\(a\in B\leftrightarrow\varphi(a)\)}
 %
@@ -340,7 +412,15 @@ Interchanging \(A\) and \(B\) gives the converse implication. Combining both dir
     \RightLabel{\(\leftrightarrow\)-E}
     \BinaryInfC{\(\varphi(a)\)}
 %
-    \AxiomC{\(\forall x(x\in A\leftrightarrow\varphi(x))\)}
+    \AxiomC{}
+    \RightLabel{\(3\)}
+    \UnaryInfC{
+        \(\forall x(x\in A\leftrightarrow\varphi(x))
+        \land
+        \forall x(x\in B\leftrightarrow\varphi(x))\)
+    }
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(\forall x(x\in A\leftrightarrow\varphi(x))\)}
     \RightLabel{\(\forall\)-E}
     \UnaryInfC{\(a\in A\leftrightarrow\varphi(a)\)}
 %
@@ -355,8 +435,40 @@ Interchanging \(A\) and \(B\) gives the converse implication. Combining both dir
     \UnaryInfC{\(\forall x(x\in A\leftrightarrow x\in B)\)}
     \RightLabel{\(\mathrm{Ext}\)}
     \UnaryInfC{\(A=B\)}
+    \RightLabel{\(\to\)-I, \(3\)}
+    \UnaryInfC{
+        \(\bigl(
+        \forall x(x\in A\leftrightarrow\varphi(x))
+        \land
+        \forall x(x\in B\leftrightarrow\varphi(x))
+        \bigr)\to A=B\)
+    }
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{
+        \(\forall B\bigl(
+        (\forall x(x\in A\leftrightarrow\varphi(x))
+        \land
+        \forall x(x\in B\leftrightarrow\varphi(x)))
+        \to A=B\bigr)\)
+    }
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{
+        \(\forall A\forall B\bigl(
+        (\forall x(x\in A\leftrightarrow\varphi(x))
+        \land
+        \forall x(x\in B\leftrightarrow\varphi(x)))
+        \to A=B\bigr)\)
+    }
+    \RightLabel{D\ref{def:unique-existence}}
+    \dashedLine
+    \UnaryInfC{
+        \(\Unique A\,\forall x
+        (x\in A\leftrightarrow\varphi(x))\)
+    }
 \end{prooftree}
 \end{explorerderivation}
+
+
 
 
 This illustrates a general method for proving uniqueness: assume that two candidates satisfy a specification, then show that they must be identical.
