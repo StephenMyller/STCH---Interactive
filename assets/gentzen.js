@@ -781,6 +781,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Locate inference nodes by executing the bussproofs stack operations.
   // For each subtree, retain the actual TeX source span: this is what must be
   // grafted into the defining derivation, not just the premise's last formula.
+     function normalizeRuleLabel(text) {
+    return text.replace(/(\\[A-Za-z@]+)\s+(?=\\\))/g, '$1');
+  }
   function findApplications(source, rules) {
     const stack = [];
     const hits = [];
@@ -812,8 +815,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const branches = stack.splice(-arity, arity);
       if (label) {
-        const rule = rules.find(item => item.label === label.value &&
-          item.premises.length === arity);
+               const rule = rules.find(item =>
+          normalizeRuleLabel(item.label) === normalizeRuleLabel(label.value) &&
+          item.premises.length === arity
+        );
         const matched = rule && matchRule(
           rule, branches.map(branch => branch.formula), arg.content
         );
