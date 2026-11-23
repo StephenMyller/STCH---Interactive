@@ -51,6 +51,7 @@ x\in A\leftrightarrow x\in B.
 Since \(x\) was arbitrary, the two classes have exactly the same members. By the Axiom of Extensionality, \(A=B\).
 \end{proof}
 
+% proof-explorer-proposition: prop:subclasshood-antisymmetric; vars=A,B; fresh=a
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{\(A\subseteq B\)}
@@ -108,6 +109,7 @@ A\subseteq B\text{ and }B\subseteq A.
 By Proposition~\ref{prop:identity-implies-mutual-subclasshood}, if \(A=B\), then \(A\subseteq B\) and \(B\subseteq A\). Conversely, by Proposition~\ref{prop:subclasshood-antisymmetric}, if \(A\subseteq B\) and \(B\subseteq A\), then \(A=B\). Together, these two implications establish the biconditional.
 \end{proof}
 
+% proof-explorer-proposition: prop:extensional-equality; vars=A,B
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
