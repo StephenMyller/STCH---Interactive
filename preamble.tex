@@ -14,10 +14,25 @@
     \renewcommand{\encodingdefault}{OT1}%
 }
 
-\newenvironment{formalderivation}[1][0rem]
-    {\begin{BlockClass}[--gentzen-offset: #1;]{formalderivation}}
-    {\end{BlockClass}}
+% Sidebar derivation, optionally linked to a full explorer proof.
+\NewDocumentEnvironment{formalderivation}{ O{0rem} O{} }
+{%
+    \begin{BlockClass}[--gentzen-offset: #1; --explorer-id: #2;]{formalderivation}%
+}
+{%
+    \end{BlockClass}%
+}
 
+% Full derivation, included only in the HTML.
+\NewDocumentEnvironment{explorerderivation}{m +b}
+{%
+    \ifbool{warpingHTML}{%
+        \begin{BlockClass}[--explorer-id: #1;]{explorerderivation}%
+        #2%
+        \end{BlockClass}%
+    }{}%
+}
+{}
 \newenvironment{derivationnote}
     {\begin{BlockClass}{derivationnote}}
     {\end{BlockClass}}
