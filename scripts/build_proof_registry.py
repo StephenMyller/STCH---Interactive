@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Build Proof Explorer v0.7 registry from explicitly annotated LaTeX rules.
+"""Build Proof Explorer v0.8 registry from explicitly annotated LaTeX rules.
 
-Supports unary, binary, and explicitly annotated subderivation rules, with arbitrary branching in
+Supports unary, binary, locally discharged assumptions, and subderivation rules, with arbitrary branching in
 justifications provided each schematic premise appears once as either a direct
 AxiomC leaf or a numbered assumption line (AxiomC/RightLabel/UnaryInfC).
 Other leaves (e.g. locally discharged assumptions) are preserved.
@@ -224,7 +224,7 @@ def annotation(raw: str, location: str):
         options[option] = value
     if "vars" not in options or not options["vars"]:
         error(f"{location}: specify schematic vars (e.g. vars=A,B,C)")
-    if any(k not in ("vars", "fresh", "kind", "discharge", "eigen") for k in options):
+    if any(k not in ("vars", "fresh", "kind", "discharge", "eigen", "locals") for k in options):
         error(f"{location}: unknown annotation field")
     vars_ = [part.strip() for part in options["vars"].split(",") if part.strip()]
     fresh = [part.strip() for part in options.get("fresh", "").split(",") if part.strip()]
@@ -242,7 +242,10 @@ def annotation(raw: str, location: str):
         error(f"{location}: kind=subproof requires eigen= naming a schematic variable")
     if kind != "subproof" and (tag or eigen):
         error(f"{location}: discharge=/eigen= are only valid with kind=subproof")
-    return key, vars_, fresh, kind, tag, eigen
+    locals_ = [item.strip() for item in options.get("locals", "").split(",") if item.strip()]
+    if any(not re.fullmatch(r"[1-9][0-9]*", n) for n in locals_) or len(set(locals_)) != len(locals_):
+        error(f"{location}: locals must be distinct positive assumption numbers")
+    return key, vars_, fresh, kind, tag, eigen, locals_
 
 
 def reference_index():
@@ -316,6 +319,47 @@ def proof_template(tree: str, premises: list[str], conclusion: str, location: st
     return template
 
 
+def freshen_local_template_labels(template: str, labels: list[str], location: str):
+    """Mark explicitly listed LOCAL assumption/discharge pairs for alpha-renaming.
+
+    A local tag must appear once as a numbered assumption line and once in a
+    discharge inference. All schema premise stubs have already been replaced
+    with placeholders, so their outer assumptions cannot be mistaken for local.
+    """
+    if not labels:
+        return template
+    cmds = commands(template)
+    edits = []
+    for tag in labels:
+        assumption_count = 0
+        discharge_count = 0
+        needle = re.compile(r"\\\(\s*" + re.escape(tag) + r"\s*\\\)")
+        for cmd in cmds:
+            if cmd["op"] not in ("RightLabel", "RL", "LeftLabel", "LL"):
+                continue
+            arg = cmd["arg"]
+            occurrences = list(needle.finditer(arg))
+            if not occurrences:
+                continue
+            plain = canon(arg) == tag
+            discharge = bool(re.search(r",\s*\\\(\s*" + re.escape(tag) + r"\s*\\\)\s*$", arg))
+            if not (plain or discharge) or len(occurrences) != 1:
+                error(f"{location}: local assumption {tag} appears in an unsupported label")
+            if plain:
+                assumption_count += 1
+            else:
+                discharge_count += 1
+            old = template[cmd["start"]:cmd["end"]]
+            edited = needle.sub(f"@@PE_LOCAL_{tag}@@", old)
+            edits.append((cmd["start"], cmd["end"], edited))
+        if assumption_count != 1 or discharge_count != 1:
+            error(f"{location}: local assumption {tag} must appear exactly once as an "
+                  f"assumption and once as a discharge (found {assumption_count} and {discharge_count})")
+    for start, end, replacement in sorted(edits, reverse=True):
+        template = template[:start] + replacement + template[end:]
+    return template
+
+
 def main():
     schemata = {}
     expansions = {}
@@ -328,11 +372,11 @@ def main():
         content = path.read_text(encoding="utf-8")
         for match in ANNOTATION.finditer(content):
             location = f"{path.relative_to(ROOT)}:{content.count(chr(10), 0, match.start()) + 1}"
-            key, vars_, fresh, kind, tag, eigen = annotation(match.group(1), location)
+            key, vars_, fresh, kind, tag, eigen, locals_ = annotation(match.group(1), location)
             if key in annotated_options:
                 error(f"Duplicate expansion annotation for {key}")
             annotated_options[key] = {"vars": vars_, "fresh": fresh,
-                                      "kind": kind, "discharge": tag, "eigen": eigen}
+                                      "kind": kind, "discharge": tag, "eigen": eigen, "locals": locals_}
 
     for path in tex_paths:
         content = path.read_text(encoding="utf-8")
@@ -361,7 +405,7 @@ def main():
                              "inferenceLabel": inf_label, "assumption": assumption}
         for match in ANNOTATION.finditer(content):
             location = f"{path.relative_to(ROOT)}:{content.count(chr(10), 0, match.start()) + 1}"
-            key, vars_, fresh, kind, tag, eigen = annotation(match.group(1), location)
+            key, vars_, fresh, kind, tag, eigen, locals_ = annotation(match.group(1), location)
             after = content[match.end():]
             env = re.match(r"\s*\\begin\s*\{formalderivation\}(?:\[[^\]]*\]){0,2}", after)
             if not env:
@@ -376,7 +420,7 @@ def main():
             if key in expansions:
                 error(f"Duplicate expansion annotation for {key}")
             expansions[key] = {"vars": vars_, "fresh": fresh, "kind": kind,
-                               "discharge": tag, "eigen": eigen, "tree": trees[0],
+                               "discharge": tag, "eigen": eigen, "locals": locals_, "tree": trees[0],
                                "location": location}
 
     if not expansions:
@@ -399,11 +443,14 @@ def main():
                 expansion["tree"], schema["premises"], schema["conclusion"], key
             )
         template = resolve_label(template, targets, expansion["location"])
+        template = freshen_local_template_labels(
+            template, expansion["locals"], expansion["location"]
+        )
         entry = {
             "id": key, "label": schema["inferenceLabel"], "vars": expansion["vars"],
             "fresh": expansion["fresh"], "premises": schema["premises"],
             "conclusion": schema["conclusion"], "template": template,
-            "kind": expansion["kind"]
+            "kind": expansion["kind"], "locals": expansion["locals"]
         }
         if expansion["kind"] == "subproof":
             entry["assumption"] = schema["assumption"]
@@ -416,7 +463,7 @@ def main():
         error("Multiple registered rules have the same inference label")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(
-        json.dumps({"version": 3, "rules": registry}, indent=2, ensure_ascii=False) + "\n",
+        json.dumps({"version": 4, "rules": registry}, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
     print(f"Proof registry: generated {len(registry)} rule(s) "
