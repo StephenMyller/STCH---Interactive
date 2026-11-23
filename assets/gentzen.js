@@ -801,6 +801,27 @@ document.addEventListener('DOMContentLoaded', () => {
     return {tex: result, hits};
   }
 
+     function definitionRef(label) {
+    const node = document.getElementById('gentzen-reference-index');
+    if (!node) return 'D(Set)';
+
+    try {
+      const entry = JSON.parse(node.textContent)[label];
+      if (!entry) return 'D(Set)';
+
+      const [number, filename] = entry;
+      const here = decodeURIComponent(
+        location.pathname.split('/').pop() || 'index.html'
+      );
+      const url = (filename === here ? '' : filename) + '#' + label;
+
+      return `D\\href{${url}}{${number}}`;
+    } catch (error) {
+      console.warn('Cannot resolve definition:', label, error);
+      return 'D(Set)';
+    }
+  }
+   
   function expandOnce(source, index) {
     const hit = findSetI(source).find(item => item.id === index);
     if (!hit) return null;
@@ -809,7 +830,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const x = hit.variable;
     const expansion = String.raw`\RightLabel{\(\exists\)-I}
 \UnaryInfC{\(\exists ${witnessVariable}(${x}\in ${witnessVariable})\)}
-\RightLabel{D(Set)}
+\RightLabel{${definitionRef('def:set')}}
 \dashedLine
 \UnaryInfC{${hit.originalConclusion}}`;
     return source.slice(0, hit.start) + expansion + source.slice(hit.end);
