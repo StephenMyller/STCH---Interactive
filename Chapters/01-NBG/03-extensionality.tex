@@ -90,6 +90,7 @@ These three properties now hold for subclasshood. Thus, \(\subseteq\) is a parti
 
 The word \emph{partial} reflects the fact that a partial order need not compare every pair of objects. Unlike a \emph{total order}, it does not require that, for any two classes \(A\) and \(B\), either \(A\subseteq B\) or \(B\subseteq A\).
 
+
 \nbgpara{4}{}
 We can now combine the preceding proposition with a result from the previous section to obtain a complete criterion for the identity of classes.
 
@@ -107,6 +108,28 @@ A\subseteq B\text{ and }B\subseteq A.
 By Proposition~\ref{prop:identity-implies-mutual-subclasshood}, if \(A=B\), then \(A\subseteq B\) and \(B\subseteq A\). Conversely, by Proposition~\ref{prop:subclasshood-antisymmetric}, if \(A\subseteq B\) and \(B\subseteq A\), then \(A=B\). Together, these two implications establish the biconditional.
 \end{proof}
 
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(A=B\)}
+    \RightLabel{P\ref{prop:identity-implies-mutual-subclasshood}}
+    \UnaryInfC{\(A\subseteq B\land B\subseteq A\)}
+    \RightLabel{\(\to\)-I, \(1\)}
+    \UnaryInfC{\(A=B\to(A\subseteq B\land B\subseteq A)\)}
+%
+    \AxiomC{}
+    \RightLabel{\(2\)}
+    \UnaryInfC{\(A\subseteq B\land B\subseteq A\)}
+    \RightLabel{P\ref{prop:subclasshood-antisymmetric}}
+    \UnaryInfC{\(A=B\)}
+    \RightLabel{\(\to\)-I, \(2\)}
+    \UnaryInfC{\((A\subseteq B\land B\subseteq A)\to A=B\)}
+    \RightLabel{\(\leftrightarrow\)-I}
+    \BinaryInfC{\(A=B\leftrightarrow(A\subseteq B\land B\subseteq A)\)}
+\end{prooftree}
+\end{formalderivation}
+
 \nbgpara{5}{}
 This criterion gives us a fundamental proof strategy, called \emph{proof by double inclusion} or \emph{proof by mutual inclusion}: to establish \(A=B\), prove \(A\subseteq B\) and \(B\subseteq A\) separately. We record the strategy as a derived rule.
 
@@ -120,33 +143,20 @@ This criterion gives us a fundamental proof strategy, called \emph{proof by doub
 \end{prooftree}
 \end{derivedrule}
 
-% proof-explorer-expansion: rule:mutual-inclusion; vars=A,B; fresh=x
+% proof-explorer-expansion: rule:mutual-inclusion; vars=A,B
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{\(A\subseteq B\)}
-    \RightLabel{D\ref{def:subclass}}
-    \dashedLine
-    \UnaryInfC{\(\forall x(x\in A\to x\in B)\)}
-    \RightLabel{\(\forall\)-E}
-    \UnaryInfC{\(x\in A\to x\in B\)}
-%
     \AxiomC{\(B\subseteq A\)}
-    \RightLabel{D\ref{def:subclass}}
-    \dashedLine
-    \UnaryInfC{\(\forall x(x\in B\to x\in A)\)}
-    \RightLabel{\(\forall\)-E}
-    \UnaryInfC{\(x\in B\to x\in A\)}
-%
-    \RightLabel{\(\leftrightarrow\)-I}
-    \BinaryInfC{\(x\in A\leftrightarrow x\in B\)}
-    \RightLabel{\(\forall\)-I}
-    \UnaryInfC{\(\forall x(x\in A\leftrightarrow x\in B)\)}
-    \RightLabel{\(\mathrm{Ext}\)}
+    \RightLabel{\(\land\)-I}
+    \BinaryInfC{\(A\subseteq B\land B\subseteq A\)}
+    \RightLabel{P\ref{prop:extensional-equality}}
     \UnaryInfC{\(A=B\)}
 \end{prooftree}
 \end{formalderivation}
 
 Unlike the derived subclass rules introduced earlier, Mutual Inclusion (\(\mathrm{MI}\)) depends on a non-logical axiom: Extensionality.
+
 
 
 \nbgpara{6}{} There are also two useful derived rules for establishing that one class is \emph{not} included in another, or that two classes are \emph{not} identical. In both cases, it suffices to exhibit an element that belongs to one class but not the other.
