@@ -312,6 +312,9 @@ jobs:
               raise SystemExit(f'Unresolved proof-tree references: {sorted(missing)}')
           print(f'Resolved {count} proof-tree reference(s).')
           PY
+
+      - name: Build Proof Explorer rule registry
+        run: python3 scripts/build_proof_registry.py    
       # ==========================================================
       # STEP 5 — PREPARE CSS AND JAVASCRIPT REFERENCES
       # ==========================================================
