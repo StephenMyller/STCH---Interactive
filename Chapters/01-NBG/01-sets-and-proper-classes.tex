@@ -92,6 +92,15 @@ precisely when it belongs to no class whatsoever. This
 makes precise our earlier slogan that proper classes
 are ``too large'' to be sets.
 
+
+
+
+
+
+%%%
+
+
+
 \begin{proposition}[Characterization of Proper Classes]
 \label{prop:proper-classes-are-never-members}
     A class \(A\) is a proper class iff it is not
@@ -130,7 +139,7 @@ Since \(A\) was arbitrary, universal generalization
 yields the proposition.
 \end{proof}
 
-\begin{formalderivation}
+\begin{formalderivation}[0rem][prop:proper-class-nonmembership]
 \begin{derivationnote}
 First, we prove the implication.
 \end{derivationnote}
@@ -234,3 +243,79 @@ Together, the derivations yield the proposition.
 \end{prooftree}
 
 \end{formalderivation}
+
+\begin{explorerderivation}{prop:proper-class-nonmembership}
+\begin{prooftree}
+    % Forward implication
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(A\in B\)}
+    \RightLabel{Set-I}
+    \UnaryInfC{\(\Set(A)\)}
+%
+    \AxiomC{}
+    \RightLabel{\(2\)}
+    \UnaryInfC{\(\PC(A)\)}
+    \RightLabel{D\ref{def:proper-class}}
+    \dashedLine
+    \UnaryInfC{\(\neg\Set(A)\)}
+%
+    \RightLabel{\(\neg\)-E}
+    \BinaryInfC{\(\bot\)}
+    \RightLabel{\(\neg\)-I, \(1\)}
+    \UnaryInfC{\(A\notin B\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall B(A\notin B)\)}
+    \RightLabel{\(\to\)-I, \(2\)}
+    \UnaryInfC{
+        \(\PC(A)\to\forall B(A\notin B)\)
+    }
+%
+    % Converse implication
+    \AxiomC{}
+    \RightLabel{\(4\)}
+    \UnaryInfC{\(\Set(A)\)}
+    \RightLabel{D\ref{def:set}}
+    \dashedLine
+    \UnaryInfC{\(\exists B(A\in B)\)}
+%
+    \AxiomC{}
+    \RightLabel{\(5\)}
+    \UnaryInfC{\(A\in C\)}
+%
+    \AxiomC{}
+    \RightLabel{\(3\)}
+    \UnaryInfC{\(\forall B(A\notin B)\)}
+    \RightLabel{\(\forall\)-E}
+    \UnaryInfC{\(A\notin C\)}
+%
+    \RightLabel{\(\neg\)-E}
+    \BinaryInfC{\(\bot\)}
+    \RightLabel{\(\exists\)-E, \(5\)}
+    \BinaryInfC{\(\bot\)}
+    \RightLabel{\(\neg\)-I, \(4\)}
+    \UnaryInfC{\(\neg\Set(A)\)}
+    \RightLabel{D\ref{def:proper-class}}
+    \dashedLine
+    \UnaryInfC{\(\PC(A)\)}
+    \RightLabel{\(\to\)-I, \(3\)}
+    \UnaryInfC{
+        \(\forall B(A\notin B)\to\PC(A)\)
+    }
+%
+    % Combine both implications
+    \RightLabel{\(\leftrightarrow\)-I}
+    \BinaryInfC{
+        \(\PC(A)\leftrightarrow
+        \forall B(A\notin B)\)
+    }
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{
+        \(\forall A
+        \bigl(
+            \PC(A)\leftrightarrow
+            \forall B(A\notin B)
+        \bigr)\)
+    }
+\end{prooftree}
+\end{explorerderivation}
