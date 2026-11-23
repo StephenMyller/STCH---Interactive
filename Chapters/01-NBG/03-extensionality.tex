@@ -260,7 +260,7 @@ x\in A\quad\text{iff}\quad\varphi(x)\quad\text{iff}\quad x\in B.
 Hence they have exactly the same members, and Extensionality gives \(A=B\).
 \end{proof}
 
-\begin{formalderivation}
+\begin{formalderivation}[0rem][uniqueness-class-specification]
 \begin{derivationnote}
 Choose \(a\) fresh for the two specifications. We first derive: \bookvspace{0.3cm}
 \end{derivationnote}
@@ -305,6 +305,59 @@ Interchanging \(A\) and \(B\) gives the converse implication. Combining both dir
     \UnaryInfC{\(A=B\)}
 \end{prooftree}
 \end{formalderivation}
+
+
+\begin{explorerderivation}{uniqueness-class-specification}
+\begin{prooftree}
+    \AxiomC{\(\forall x(x\in A\leftrightarrow\varphi(x))\)}
+    \RightLabel{\(\forall\)-E}
+    \UnaryInfC{\(a\in A\leftrightarrow\varphi(a)\)}
+%
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(a\in A\)}
+%
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(\varphi(a)\)}
+%
+    \AxiomC{\(\forall x(x\in B\leftrightarrow\varphi(x))\)}
+    \RightLabel{\(\forall\)-E}
+    \UnaryInfC{\(a\in B\leftrightarrow\varphi(a)\)}
+%
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(a\in B\)}
+    \RightLabel{\(\to\)-I, \(1\)}
+    \UnaryInfC{\(a\in A\to a\in B\)}
+%
+    \AxiomC{\(\forall x(x\in B\leftrightarrow\varphi(x))\)}
+    \RightLabel{\(\forall\)-E}
+    \UnaryInfC{\(a\in B\leftrightarrow\varphi(a)\)}
+%
+    \AxiomC{}
+    \RightLabel{\(2\)}
+    \UnaryInfC{\(a\in B\)}
+%
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(\varphi(a)\)}
+%
+    \AxiomC{\(\forall x(x\in A\leftrightarrow\varphi(x))\)}
+    \RightLabel{\(\forall\)-E}
+    \UnaryInfC{\(a\in A\leftrightarrow\varphi(a)\)}
+%
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(a\in A\)}
+    \RightLabel{\(\to\)-I, \(2\)}
+    \UnaryInfC{\(a\in B\to a\in A\)}
+%
+    \RightLabel{\(\leftrightarrow\)-I}
+    \BinaryInfC{\(a\in A\leftrightarrow a\in B\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall x(x\in A\leftrightarrow x\in B)\)}
+    \RightLabel{\(\mathrm{Ext}\)}
+    \UnaryInfC{\(A=B\)}
+\end{prooftree}
+\end{explorerderivation}
+
 
 This illustrates a general method for proving uniqueness: assume that two candidates satisfy a specification, then show that they must be identical.
 
