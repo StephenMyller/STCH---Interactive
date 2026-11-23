@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build Proof Explorer v0.8 registry from explicitly annotated LaTeX rules.
+"""Build Proof Explorer v0.9 registry from explicitly annotated LaTeX rules.
 
 Supports unary, binary, locally discharged assumptions, and subderivation rules, with arbitrary branching in
 justifications provided each schematic premise appears once as either a direct
@@ -17,8 +17,8 @@ applications if the eigenvariable occurs in other assumption leaves.
 Annotation immediately before a formalderivation:
 % proof-explorer-expansion: rule:set-I; vars=a,A; fresh=B
 
-This is a proof-exploration tool, NOT a proof checker. It does not verify
-assumption discharge, eigenvariable conditions or general substitutions.
+This is a proof-exploration tool, NOT a general proof checker.
+Direction-sensitive proposition extraction is opt-in and structurally conservative.
 """
 from __future__ import annotations
 
@@ -34,6 +34,8 @@ DERIVED = re.compile(
     r"\\begin\s*\{derivedrule\}(?:\[([^\]]+)\])?(.*?)\\end\s*\{derivedrule\}", re.S
 )
 ANNOTATION = re.compile(r"^[ \t]*%[ \t]*proof-explorer-expansion:[ \t]*([^\n\r]+)$", re.M)
+PROP_ANNOTATION = re.compile(r"^[ \t]*%[ \t]*proof-explorer-proposition:[ \t]*([^\n\r]+)$", re.M)
+PROPOSITION = re.compile(r"\\begin\s*\{proposition\}(?:\[[^\]]*\])?(.*?)\\end\s*\{proposition\}", re.S)
 TREE = re.compile(r"\\begin\s*\{prooftree\}(.*?)\\end\s*\{prooftree\}", re.S)
 COMMAND = re.compile(
     r"\\(AxiomC|UnaryInfC|BinaryInfC|TrinaryInfC|QuaternaryInfC|QuinaryInfC|"
@@ -360,6 +362,284 @@ def freshen_local_template_labels(template: str, labels: list[str], location: st
     return template
 
 
+
+def proposition_annotation(raw: str, location: str):
+    """Opt-in registration, one line before the canonical formalderivation."""
+    parts = [part.strip() for part in raw.split(';')]
+    key = parts[0]
+    if not re.fullmatch(r"prop:[\w:.-]+", key):
+        error(f"{location}: invalid proposition identifier {key!r}")
+    options = {}
+    for part in parts[1:]:
+        if '=' not in part:
+            error(f"{location}: expected key=value after ';'")
+        name, value = [field.strip() for field in part.split('=', 1)]
+        if name in options or name not in ('vars', 'fresh'):
+            error(f"{location}: unknown or duplicate proposition field {name!r}")
+        options[name] = value
+    if not options.get('vars'):
+        error(f"{location}: proposition needs vars=A,B (schematic variables)")
+    vars_ = [part.strip() for part in options['vars'].split(',') if part.strip()]
+    fresh = [part.strip() for part in options.get('fresh', '').split(',') if part.strip()]
+    if (any(not VARNAME.fullmatch(name) for name in vars_ + fresh)
+            or len(vars_ + fresh) != len(set(vars_ + fresh))):
+        error(f"{location}: invalid or repeated proposition variables")
+    return key, vars_, fresh
+
+
+def nodes_with_spans(tree: str, location: str):
+    """Parse the existing proof stack and preserve source spans for grafting."""
+    stack = []
+    pending = None
+    for cmd in commands(tree):
+        op, arg = cmd['op'], cmd['arg']
+        if op in ('RightLabel', 'RL'):
+            pending = arg.strip()
+        elif op == 'AxiomC':
+            stack.append(dict(op=op, formula=arg, label=None,
+                              start=cmd['start'], end=cmd['end'], children=[]))
+            pending = None
+        elif op in ARITIES:
+            arity = ARITIES[op]
+            if len(stack) < arity:
+                error(f"{location}: malformed canonical prooftree")
+            children = stack[-arity:]
+            del stack[-arity:]
+            stack.append(dict(op=op, formula=arg, label=pending,
+                              start=children[0]['start'], end=cmd['end'], children=children))
+            pending = None
+    if len(stack) != 1:
+        error(f"{location}: canonical prooftree is not a single tree")
+    return stack[0]
+
+
+def all_nodes(node):
+    yield node
+    for child in node['children']:
+        yield from all_nodes(child)
+
+
+def number_of_discharge(label: str | None):
+    if not label:
+        return None
+    m = re.search(r",\s*\\\(\s*([1-9][0-9]*)\s*\\\)\s*$", label)
+    return m.group(1) if m else None
+
+
+def assumption_tag(node):
+    """User's standard numbered assumption: empty leaf, label, unary formula."""
+    if (node['op'] != 'UnaryInfC' or len(node['children']) != 1
+            or canon(node['children'][0]['formula']) != ''):
+        return None
+    m = re.fullmatch(r"\s*\\\(\s*([1-9][0-9]*)\s*\\\)\s*", node['label'] or '')
+    return m.group(1) if m else None
+
+
+def local_discharge_numbers(template: str):
+    """Locate canonical proof's temporary numbered assumption/discharge pairs."""
+    cmds = commands(template)
+    uses = {}
+    for i, cmd in enumerate(cmds):
+        if cmd['op'] != 'AxiomC' or canon(cmd['arg']) != '':
+            continue
+        if (i + 2 < len(cmds) and cmds[i + 1]['op'] in ('RightLabel', 'RL')
+                and cmds[i + 2]['op'] == 'UnaryInfC'):
+            label = cmds[i + 1]['arg']
+            m = re.fullmatch(r"\s*\\\(\s*([1-9][0-9]*)\s*\\\)\s*", label)
+            if m:
+                uses[m.group(1)] = uses.get(m.group(1), 0) + 1
+    discharges = {}
+    for cmd in cmds:
+        if cmd['op'] in ('RightLabel', 'RL'):
+            n = number_of_discharge(cmd['arg'])
+            if n is not None:
+                discharges[n] = discharges.get(n, 0) + 1
+    return sorted([tag for tag, count in uses.items()
+                   if count == 1 and discharges.get(tag) == 1], key=int)
+
+
+def edit_segments(text: str, changes: list[tuple[int, int, str]]):
+    """Apply source-coordinate edits in descending order."""
+    for start, end, value in sorted(changes, reverse=True):
+        text = text[:start] + value + text[end:]
+    return text
+
+
+
+def unwrapped_formula(tex: str):
+    r"""Remove \( ... \) and complete outer grouping parentheses only."""
+    s = tex.strip()
+    if s.startswith(r'\(') and s.endswith(r'\)'):
+        s = s[2:-2].strip()
+    while s.startswith('(') and s.endswith(')'):
+        nesting = 0
+        complete = False
+        for i, char in enumerate(s):
+            if char == '(': nesting += 1
+            elif char == ')':
+                nesting -= 1
+                if nesting == 0:
+                    complete = i == len(s) - 1
+                    break
+        if not complete: break
+        s = s[1:-1].strip()
+    return s
+
+
+def split_top_connective(tex: str, name: str):
+    """Only recognize an explicitly top-level connective in ordinary TeX."""
+    s = unwrapped_formula(tex)
+    depth = 0
+    i = 0
+    op = '\\' + name
+    while i < len(s):
+        if s[i] == '\\':
+            if depth == 0 and s.startswith(op, i) and (
+                i + len(op) == len(s) or not s[i + len(op)].isalpha()
+            ):
+                return unwrapped_formula(s[:i]), unwrapped_formula(s[i + len(op):])
+            # A TeX macro is an indivisible token; skip through its letters.
+            i += 1
+            if i < len(s) and s[i].isalpha():
+                while i < len(s) and s[i].isalpha(): i += 1
+            else:
+                i += 1
+            continue
+        if s[i] in '({[': depth += 1
+        elif s[i] in ')}]': depth -= 1
+        i += 1
+    return None
+
+
+def verify_numbered_assumptions_are_local(template: str, locals_: list[str], location: str):
+    cmds = commands(template)
+    for i, cmd in enumerate(cmds):
+        if (cmd['op'] != 'AxiomC' or canon(cmd['arg']) != ''
+                or i + 2 >= len(cmds)
+                or cmds[i + 1]['op'] not in ('RightLabel', 'RL')
+                or cmds[i + 2]['op'] != 'UnaryInfC'):
+            continue
+        m = re.fullmatch(r"\s*\\\(\s*([1-9][0-9]*)\s*\\\)\s*", cmds[i + 1]['arg'])
+        if m and m.group(1) not in locals_:
+            error(f"{location}: unaccounted open assumption {m.group(1)} in canonical proof")
+
+def proof_prop_variants(tree: str, location: str):
+    """Compile a proof into applications without constructing a theorem-statement detour.
+
+    Supported: (1) final biconditional introduction with two discharged
+    implication-introduction branches; (2) a direct derivation from one
+    repeated premise or two distinct premises (joined by conjunction).
+    """
+    root = nodes_with_spans(tree, location)
+    if (root['label'] and re.sub(r'\\\(|\\\)|\s+', '', root['label']) == r'\leftrightarrow-I'
+            and len(root['children']) == 2):
+        theorem_halves = split_top_connective(root['formula'], 'leftrightarrow')
+        if theorem_halves is None:
+            error(f"{location}: final biconditional proof has no biconditional conclusion")
+        results = []
+        for branch in root['children']:
+            tag = number_of_discharge(branch['label'])
+            if (branch['op'] != 'UnaryInfC' or not tag or
+                not re.sub(r'\\\(|\\\)|\s+', '', branch['label']).startswith(r'\to-I,')):
+                error(f"{location}: biconditional branch must end with a numbered \\to-I")
+            body = branch['children'][0]
+            selected = [n for n in all_nodes(body) if assumption_tag(n) == tag]
+            if not selected:
+                error(f"{location}: no assumptions to discharge for direction {tag}")
+            assumption = selected[0]['formula']
+            if any(canon(n['formula']) != canon(assumption) for n in selected):
+                error(f"{location}: discharge {tag} changes assumption formulas")
+            implication = split_top_connective(branch['formula'], 'to')
+            if (implication is None or canon(implication[0]) != canon(unwrapped_formula(assumption))
+                    or canon(implication[1]) != canon(unwrapped_formula(body['formula']))):
+                error(f"{location}: implication branch does not prove its labeled direction")
+            halves = [canon(part) for part in theorem_halves]
+            endpoints = [canon(unwrapped_formula(assumption)), canon(unwrapped_formula(body['formula']))]
+            if endpoints not in (halves, halves[::-1]):
+                error(f"{location}: implication branch does not match the biconditional")
+            # The user's branch must be a subproof of this implication; any
+            # other undischarged direct premises would be unsafe to graft.
+            if any(n['op'] == 'AxiomC' and canon(n['formula'])
+                   for n in all_nodes(body)):
+                error(f"{location}: direction {tag} depends on another open premise")
+            part = tree[body['start']:body['end']]
+            rel = [(n['start'] - body['start'], n['end'] - body['start'],
+                    '@@PE_PREMISE_0@@') for n in selected]
+            part = edit_segments(part, rel)
+            locals_ = local_discharge_numbers(part)
+            verify_numbered_assumptions_are_local(part, locals_, location)
+            part = freshen_local_template_labels(part, locals_, location)
+            results.append(dict(premises=[assumption], conclusion=body['formula'],
+                                template=part, locals=locals_, kind='direction'))
+        if len({(canon(v['premises'][0]), canon(v['conclusion'])) for v in results}) != 2:
+            error(f"{location}: duplicate directional patterns")
+        return results
+
+    # A direct proof with one or two open premise formula types.
+    leaves = [n for n in all_nodes(root)
+              if n['op'] == 'AxiomC' and canon(n['formula'])]
+    formulas = list(dict.fromkeys(canon(n['formula']) for n in leaves))
+    if len(formulas) not in (1, 2):
+        error(f"{location}: direct proposition needs one or two distinct premises")
+    original = {canon(n['formula']): n['formula'] for n in leaves}
+    if len(formulas) == 1:
+        premise = original[formulas[0]]
+        replacement = lambda _: '@@PE_PREMISE_0@@'
+    else:
+        # The application supplies a conjunction. Derive each of its
+        # conjuncts by ordinary conjunction elimination.
+        one, two = [original[f] for f in formulas]
+        premise = r'\(' + one.strip()[2:-2].strip() + r'\land ' + two.strip()[2:-2].strip() + r'\)'
+        replacement = lambda leaf: (
+            '@@PE_PREMISE_0@@\n'
+            r'\RightLabel{\(\land\)-E}' + '\n'
+            r'\UnaryInfC{' + leaf + '}'
+        )
+    part = edit_segments(tree, [(n['start'], n['end'], replacement(n['formula']))
+                                for n in leaves])
+    locals_ = local_discharge_numbers(part)
+    verify_numbered_assumptions_are_local(part, locals_, location)
+    part = freshen_local_template_labels(part, locals_, location)
+    return [dict(premises=[premise], conclusion=root['formula'],
+                 template=part, locals=locals_, kind='direct')]
+
+
+def get_proposition_proofs(path: Path, content: str, targets):
+    entries = {}
+    props = list(PROPOSITION.finditer(content))
+    for match in PROP_ANNOTATION.finditer(content):
+        loc = f"{path.relative_to(ROOT)}:{content.count(chr(10), 0, match.start()) + 1}"
+        key, vars_, fresh = proposition_annotation(match.group(1), loc)
+        prior = next((m for m in reversed(props) if m.end() < match.start()), None)
+        if not prior:
+            error(f"{loc}: no preceding proposition")
+        lbl = re.search(r"\\label\s*\{(prop:[^{}\s]+)\}", prior.group(1))
+        if not lbl or lbl.group(1) != key:
+            error(f"{loc}: proposition annotation is not following {key}")
+        between = content[prior.end():match.start()]
+        if re.search(r"\\begin\s*\{formalderivation\}", between):
+            error(f"{loc}: intervening formalderivation before proposition annotation")
+        after = content[match.end():]
+        env = re.match(r"\s*\\begin\s*\{formalderivation\}(?:\[[^\]]*\]){0,2}", after)
+        if not env:
+            error(f"{loc}: proposition annotation must immediately precede formalderivation")
+        end = re.search(r"\\end\s*\{formalderivation\}", after[env.end():])
+        if not end:
+            error(f"{loc}: unclosed formalderivation")
+        trees = TREE.findall(after[env.end():env.end() + end.start()])
+        if len(trees) != 1:
+            error(f"{loc}: proposition proof must contain one prooftree")
+        variants = proof_prop_variants(trees[0], loc)
+        for variant in variants:
+            variant['template'] = resolve_label(variant['template'], targets, loc)
+        if key in entries:
+            error(f"Duplicate proposition registration {key}")
+        number, url = targets[key]
+        entries[key] = dict(id=key, vars=vars_, fresh=fresh,
+                            number=number, url=f"{url}#{key}",
+                            variants=variants)
+    return entries
+
 def main():
     schemata = {}
     expansions = {}
@@ -427,6 +707,12 @@ def main():
         error("No proof-explorer-expansion annotations found in *.tex")
     targets = reference_index()
     registry = {}
+    propositions = {}
+    for path in tex_paths:
+        for key, entry in get_proposition_proofs(path, path.read_text(encoding="utf-8"), targets).items():
+            if key in propositions:
+                error(f"Duplicate proposition registration {key}")
+            propositions[key] = entry
     for key, expansion in expansions.items():
         if key not in schemata:
             error(f"{expansion['location']}: no derivedrule with \\label{{{key}}}")
@@ -463,14 +749,14 @@ def main():
         error("Multiple registered rules have the same inference label")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(
-        json.dumps({"version": 4, "rules": registry}, indent=2, ensure_ascii=False) + "\n",
+        json.dumps({"version": 5, "rules": registry, "propositions": propositions}, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
     print(f"Proof registry: generated {len(registry)} rule(s) "
           f"({sum(len(e['premises']) == 1 and e['kind'] == 'ordinary' for e in registry.values())} unary, "
           f"{sum(len(e['premises']) == 2 for e in registry.values())} binary, "
           f"{sum(e['kind'] == 'subproof' for e in registry.values())} subproof) "
-          f"in {OUT.relative_to(ROOT)}")
+          f"and {len(propositions)} proposition(s) in {OUT.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":
