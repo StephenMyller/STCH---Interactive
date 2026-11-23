@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build Proof Explorer v0.9 registry from explicitly annotated LaTeX rules.
+"""Build Proof Explorer v1.0 registry from explicitly annotated LaTeX rules.
 
 Supports unary, binary, locally discharged assumptions, and subderivation rules, with arbitrary branching in
 justifications provided each schematic premise appears once as either a direct
@@ -224,17 +224,18 @@ def annotation(raw: str, location: str):
         if option in options:
             error(f"{location}: duplicate metadata {option}")
         options[option] = value
-    if "vars" not in options or not options["vars"]:
+    kind = options.get("kind", "ordinary")
+    mode = options.get("mode")
+    if kind != "restricted" and not options.get("vars"):
         error(f"{location}: specify schematic vars (e.g. vars=A,B,C)")
-    if any(k not in ("vars", "fresh", "kind", "discharge", "eigen", "locals") for k in options):
+    if any(k not in ("vars", "fresh", "kind", "discharge", "eigen", "locals", "mode") for k in options):
         error(f"{location}: unknown annotation field")
-    vars_ = [part.strip() for part in options["vars"].split(",") if part.strip()]
+    vars_ = [part.strip() for part in options.get("vars", "").split(",") if part.strip()]
     fresh = [part.strip() for part in options.get("fresh", "").split(",") if part.strip()]
     names = vars_ + fresh
     if len(names) != len(set(names)) or any(not VARNAME.fullmatch(name) for name in names):
         error(f"{location}: variables must be distinct single symbols, optionally subscripted")
-    kind = options.get("kind", "ordinary")
-    if kind not in ("ordinary", "subproof"):
+    if kind not in ("ordinary", "subproof", "restricted"):
         error(f"{location}: unsupported expansion kind {kind!r}")
     tag = options.get("discharge")
     eigen = options.get("eigen")
@@ -242,12 +243,19 @@ def annotation(raw: str, location: str):
         error(f"{location}: kind=subproof requires a single discharge marker, e.g. discharge=n")
     if kind == "subproof" and eigen not in vars_:
         error(f"{location}: kind=subproof requires eigen= naming a schematic variable")
+    if kind == "restricted":
+        if mode not in ("forall-i", "forall-e", "exists-i", "exists-e"):
+            error(f"{location}: restricted rule needs mode=forall-i/forall-e/exists-i/exists-e")
+        if tag or eigen or vars_ or fresh or options.get("locals"):
+            error(f"{location}: restricted annotations require only kind=restricted and mode=...")
+    elif mode:
+        error(f"{location}: mode=... is reserved for restricted quantifiers")
     if kind != "subproof" and (tag or eigen):
         error(f"{location}: discharge=/eigen= are only valid with kind=subproof")
     locals_ = [item.strip() for item in options.get("locals", "").split(",") if item.strip()]
     if any(not re.fullmatch(r"[1-9][0-9]*", n) for n in locals_) or len(set(locals_)) != len(locals_):
         error(f"{location}: locals must be distinct positive assumption numbers")
-    return key, vars_, fresh, kind, tag, eigen, locals_
+    return key, vars_, fresh, kind, tag, eigen, locals_, mode
 
 
 def reference_index():
@@ -604,6 +612,62 @@ def proof_prop_variants(tree: str, location: str):
                  template=part, locals=locals_, kind='direct')]
 
 
+def restricted_schema(tree: str, mode: str, location: str):
+    """Check the schematic inference shape. A restricted-E minor premise can
+    itself have two discharged assumptions, so it is not a plain AxiomC leaf.
+    """
+    root, _ = parse_tree(tree, location)
+    arity = 1 if mode == "forall-i" else 2
+    if len(root['children']) != arity:
+        error(f"{location}: restricted {mode} must have {arity} premise(s)")
+    label = canon(root['label'] or '').replace(r'\(', '').replace(r'\)', '')
+    prefix = {'forall-i': r'\forall_S', 'forall-e': r'\forall_S',
+              'exists-i': r'\exists_S', 'exists-e': r'\exists_S'}[mode]
+    expected = f'{prefix}-' + ('I' if mode.endswith('-i') else 'E')
+    if expected not in label:
+        error(f"{location}: expected label for {expected}, found {root['label']!r}")
+    if mode == 'forall-i':
+        stub = stub_in(tree, location)
+        if canon(root['children'][0]['formula']) != canon(stub['premise']):
+            error(f"{location}: restricted universal introduction needs a dotted subproof")
+    if mode == 'exists-e':
+        # Verify two separate numbered assumptions and a schematic minor subproof.
+        cmds = commands(tree)
+        tags = []
+        for i in range(len(cmds)-2):
+            if (cmds[i]['op'] == 'AxiomC' and canon(cmds[i]['arg']) == ''
+                and cmds[i+1]['op'] in ('RightLabel', 'RL')
+                and cmds[i+2]['op'] == 'UnaryInfC'):
+                tag = canon(cmds[i+1]['arg'])
+                if tag in ('n', 'm'):
+                    tags.append((tag, canon(cmds[i+2]['arg'])))
+        if len(tags) != 2 or {tag for tag, _ in tags} != {'n','m'}:
+            error(f"{location}: exists-e schema requires assumptions n and m")
+        if canon(root['children'][1]['formula']) != canon(root['formula']):
+            error(f"{location}: exists-e minor subderivation must conclude psi")
+        if not all(t in label for t in ('n', 'm')):
+            error(f"{location}: exists-e label must discharge n,m")
+    return [child['formula'] for child in root['children']], root['formula'], root['label']
+
+
+def restricted_justification(tree: str, schema: dict, mode: str, location: str):
+    root, _ = parse_tree(tree, location)
+    if canon(root['formula']) != canon(schema['conclusion']):
+        error(f"{location}: restricted derivation has wrong conclusion")
+    cmds = commands(tree)
+    labels = [canon(c['arg']) for c in cmds if c['op'] in ('RightLabel','RL')]
+    required = {'forall-i': ('to','forall'), 'forall-e': ('forall','to'),
+                'exists-i': ('land','exists'), 'exists-e': ('land','exists')}[mode]
+    # Check the defining proof actually contains the expected primitive rules.
+    if not all(('\\' + op) in ''.join(labels) for op in required):
+        error(f"{location}: restricted {mode} justification misses expected steps")
+    if not any('Def.' in (c['arg'] or '') for c in cmds if c['op'] in ('RightLabel','RL')):
+        error(f"{location}: restricted justification must contain Def. step")
+    # Retain the authored source as registry provenance. At runtime we graft
+    # the actual quantified formulas and full subproof trees, not schematic vdots.
+    return tree
+
+
 def get_proposition_proofs(path: Path, content: str, targets):
     entries = {}
     props = list(PROPOSITION.finditer(content))
@@ -652,11 +716,11 @@ def main():
         content = path.read_text(encoding="utf-8")
         for match in ANNOTATION.finditer(content):
             location = f"{path.relative_to(ROOT)}:{content.count(chr(10), 0, match.start()) + 1}"
-            key, vars_, fresh, kind, tag, eigen, locals_ = annotation(match.group(1), location)
+            key, vars_, fresh, kind, tag, eigen, locals_, mode = annotation(match.group(1), location)
             if key in annotated_options:
                 error(f"Duplicate expansion annotation for {key}")
             annotated_options[key] = {"vars": vars_, "fresh": fresh,
-                                      "kind": kind, "discharge": tag, "eigen": eigen, "locals": locals_}
+                                      "kind": kind, "discharge": tag, "eigen": eigen, "locals": locals_, "mode": mode}
 
     for path in tex_paths:
         content = path.read_text(encoding="utf-8")
@@ -672,7 +736,10 @@ def main():
                 error(f"{path}:{content.count(chr(10), 0, match.start())+1}: rule {key} needs one schematic prooftree")
             kind = annotated_options[key]["kind"]
             assumption = None
-            if kind == "subproof":
+            if kind == "restricted":
+                mode = annotated_options[key]["mode"]
+                premises, conclusion, inf_label = restricted_schema(rule_trees[0], mode, key)
+            elif kind == "subproof":
                 premises, conclusion, inf_label, assumption = schema_from_subproof(
                     rule_trees[0], annotated_options[key]["discharge"], key
                 )
@@ -685,7 +752,7 @@ def main():
                              "inferenceLabel": inf_label, "assumption": assumption}
         for match in ANNOTATION.finditer(content):
             location = f"{path.relative_to(ROOT)}:{content.count(chr(10), 0, match.start()) + 1}"
-            key, vars_, fresh, kind, tag, eigen, locals_ = annotation(match.group(1), location)
+            key, vars_, fresh, kind, tag, eigen, locals_, mode = annotation(match.group(1), location)
             after = content[match.end():]
             env = re.match(r"\s*\\begin\s*\{formalderivation\}(?:\[[^\]]*\]){0,2}", after)
             if not env:
@@ -701,7 +768,7 @@ def main():
                 error(f"Duplicate expansion annotation for {key}")
             expansions[key] = {"vars": vars_, "fresh": fresh, "kind": kind,
                                "discharge": tag, "eigen": eigen, "locals": locals_, "tree": trees[0],
-                               "location": location}
+                               "location": location, "mode": mode}
 
     if not expansions:
         error("No proof-explorer-expansion annotations found in *.tex")
@@ -719,7 +786,10 @@ def main():
         schema = schemata[key]
         # The theorem heading may use different typography from the inference label.
         # Match applications using the actual RightLabel, not the heading text.
-        if expansion["kind"] == "subproof":
+        if expansion["kind"] == "restricted":
+            template = restricted_justification(expansion["tree"], schema,
+                                                expansion["mode"], expansion["location"])
+        elif expansion["kind"] == "subproof":
             template = proof_template_subproof(
                 expansion["tree"], schema["premises"][0], schema["assumption"],
                 schema["conclusion"], expansion["discharge"], key
@@ -738,6 +808,8 @@ def main():
             "conclusion": schema["conclusion"], "template": template,
             "kind": expansion["kind"], "locals": expansion["locals"]
         }
+        if expansion["kind"] == "restricted":
+            entry["mode"] = expansion["mode"]
         if expansion["kind"] == "subproof":
             entry["assumption"] = schema["assumption"]
             entry["discharge"] = expansion["discharge"]
@@ -749,7 +821,7 @@ def main():
         error("Multiple registered rules have the same inference label")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(
-        json.dumps({"version": 5, "rules": registry, "propositions": propositions}, indent=2, ensure_ascii=False) + "\n",
+        json.dumps({"version": 6, "rules": registry, "propositions": propositions}, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
     print(f"Proof registry: generated {len(registry)} rule(s) "
