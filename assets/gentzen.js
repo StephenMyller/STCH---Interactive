@@ -369,3 +369,258 @@ document.addEventListener('DOMContentLoaded', () => {
     waitForMathJax();
   }
 })();
+
+
+
+/* Proof Explorer, phase 1: separate full-window, zoomable viewer.
+   Append this block to assets/gentzen.js; no LaTeX or workflow changes. */
+(() => {
+  const PARAM = 'proof-explorer';
+
+  const style = document.createElement('style');
+  style.textContent = `
+    .proof-explorer-launch {
+      margin-right: .65rem; font: inherit; font-size: .82rem;
+      text-decoration: none; color: inherit !important;
+      border: 1px solid #a9a198; border-radius: .25rem;
+      padding: .35rem .65rem;
+    }
+    .proof-explorer-launch:hover { background: #eeeae3; }
+    html[data-book-theme="dark"] .proof-explorer-launch:hover { background: #343942; }
+    .proof-explorer-overlay {
+      position: fixed; inset: 0; z-index: 100000;
+      display: flex; flex-direction: column;
+      background: #f7f5f0; color: #202126;
+      font-family: Georgia, 'Times New Roman', serif;
+    }
+    html[data-book-theme="dark"] .proof-explorer-overlay {
+      background: #1c2026; color: #e8e9ed;
+    }
+    .proof-explorer-toolbar {
+      display: flex; align-items: center; flex-wrap: wrap;
+      gap: .6rem; padding: .75rem 1.25rem;
+      border-bottom: 1px solid #c7c3bd;
+      background: inherit;
+    }
+    html[data-book-theme="dark"] .proof-explorer-toolbar { border-color: #444b56; }
+    .proof-explorer-title { font-size: 1.08rem; margin-right: auto; }
+    .proof-explorer-toolbar button,
+    .proof-explorer-toolbar a {
+      font: inherit; font-size: .9rem; color: inherit !important;
+      background: transparent; border: 1px solid #999;
+      border-radius: .3rem; padding: .35rem .65rem;
+      cursor: pointer; text-decoration: none;
+    }
+    .proof-explorer-toolbar button:hover,
+    .proof-explorer-toolbar a:hover { background: #8882; }
+    .proof-explorer-viewport {
+      position: relative; flex: 1; min-height: 0;
+      overflow: hidden; cursor: grab; touch-action: none;
+    }
+    .proof-explorer-viewport.dragging { cursor: grabbing; }
+    .proof-explorer-stage {
+      position: absolute; top: 0; left: 0;
+      width: max-content; height: max-content;
+      padding: 3rem; box-sizing: border-box;
+      transform-origin: 0 0;
+    }
+    .proof-explorer-stage .formalderivation {
+      display: block !important; width: max-content;
+      max-width: none !important; overflow: visible !important;
+    }
+    .proof-explorer-stage .formalderivation > p {
+      text-align: center !important; width: max-content;
+      max-width: none; margin: 0;
+    }
+    .proof-explorer-stage mjx-container { color: inherit; }
+    .proof-explorer-stage mjx-container svg a { color: inherit !important; }
+    html.proof-explorer-mode body { overflow: hidden !important; }
+  `;
+  document.head.append(style);
+
+  const originalPageURL = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete(PARAM);
+    return url;
+  };
+
+  function makeExplorer(proofs, requested) {
+    const ordinal = Number(requested);
+    const selected = Number.isSafeInteger(ordinal) && ordinal >= 1
+      ? proofs[ordinal - 1] : undefined;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'proof-explorer-overlay';
+    const toolbar = document.createElement('header');
+    toolbar.className = 'proof-explorer-toolbar';
+    const heading = document.createElement('strong');
+    heading.className = 'proof-explorer-title';
+    heading.textContent = `Proof Explorer · ${ordinal}`;
+    toolbar.append(heading);
+
+    const button = (name, label) => {
+      const element = document.createElement('button');
+      element.type = 'button';
+      element.textContent = label;
+      element.setAttribute('aria-label', name);
+      toolbar.append(element);
+      return element;
+    };
+    const minus = button('Zoom out', '−');
+    const plus = button('Zoom in', '+');
+    const fitButton = button('Fit proof to window', 'Fit');
+    const back = document.createElement('a');
+    back.textContent = 'Back to textbook';
+    back.href = originalPageURL().href;
+    toolbar.append(back);
+
+    const viewport = document.createElement('main');
+    viewport.className = 'proof-explorer-viewport';
+    viewport.setAttribute('aria-label', 'Proof canvas');
+    const stage = document.createElement('div');
+    stage.className = 'proof-explorer-stage';
+    viewport.append(stage);
+    overlay.append(toolbar, viewport);
+    document.body.append(overlay);
+    document.documentElement.classList.add('proof-explorer-mode');
+
+    if (!selected) {
+      stage.textContent = 'This proof could not be found on this page.';
+      minus.disabled = plus.disabled = fitButton.disabled = true;
+      return;
+    }
+    // MOVE, don't clone: MathJax's SVG glyph definitions stay in this document.
+    selected.hidden = false;
+    stage.append(selected);
+
+    let scale = 1;
+    let x = 0;
+    let y = 0;
+    const paint = () => {
+      stage.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+    };
+    const fit = () => {
+      const w = Math.max(stage.offsetWidth, 1);
+      const h = Math.max(stage.offsetHeight, 1);
+      const vw = viewport.clientWidth;
+      const vh = viewport.clientHeight;
+      scale = Math.min(1, (vw - 48) / w, (vh - 48) / h);
+      if (!Number.isFinite(scale) || scale <= 0) scale = 1;
+      x = (vw - w * scale) / 2;
+      y = (vh - h * scale) / 2;
+      paint();
+    };
+    const zoom = (factor, clientX, clientY) => {
+      const rect = viewport.getBoundingClientRect();
+      const cx = clientX - rect.left;
+      const cy = clientY - rect.top;
+      const next = Math.max(0.05, Math.min(6, scale * factor));
+      const ratio = next / scale;
+      x = cx - (cx - x) * ratio;
+      y = cy - (cy - y) * ratio;
+      scale = next;
+      paint();
+    };
+    const zoomInPlace = factor => {
+      const r = viewport.getBoundingClientRect();
+      zoom(factor, r.left + r.width / 2, r.top + r.height / 2);
+    };
+    minus.addEventListener('click', () => zoomInPlace(1 / 1.25));
+    plus.addEventListener('click', () => zoomInPlace(1.25));
+    fitButton.addEventListener('click', fit);
+    viewport.addEventListener('wheel', event => {
+      event.preventDefault();
+      zoom(Math.exp(-event.deltaY * 0.001), event.clientX, event.clientY);
+    }, { passive: false });
+
+    let dragging = null;
+    viewport.addEventListener('pointerdown', event => {
+      if (event.button !== 0 || event.target.closest('a, button')) return;
+      dragging = { px: event.clientX, py: event.clientY, x, y };
+      viewport.classList.add('dragging');
+      viewport.setPointerCapture(event.pointerId);
+    });
+    viewport.addEventListener('pointermove', event => {
+      if (!dragging) return;
+      x = dragging.x + event.clientX - dragging.px;
+      y = dragging.y + event.clientY - dragging.py;
+      paint();
+    });
+    const endDrag = () => {
+      dragging = null;
+      viewport.classList.remove('dragging');
+    };
+    viewport.addEventListener('pointerup', endDrag);
+    viewport.addEventListener('pointercancel', endDrag);
+
+    // Internal proof links should return to the textbook, not scroll behind the overlay.
+    stage.addEventListener('click', event => {
+      const link = event.target.closest('a[href]');
+      if (!link) return;
+      const href = link.getAttribute('href') || link.getAttribute('xlink:href');
+      if (!href) return;
+      const destination = new URL(href, window.location.href);
+      if (destination.origin === location.origin &&
+          destination.pathname === location.pathname) {
+        destination.searchParams.delete(PARAM);
+        event.preventDefault();
+        location.assign(destination.href);
+      }
+    });
+
+    requestAnimationFrame(fit);
+  }
+
+  function initialize() {
+    // gentzen.js has already moved the derivations into this panel.
+    const panel = document.getElementById('gentzen-panel');
+    const proofs = panel ? [...panel.querySelectorAll('.formalderivation')] : [];
+    const requested = new URLSearchParams(location.search).get(PARAM);
+    if (requested !== null) {
+      makeExplorer(proofs, requested);
+      return;
+    }
+    if (!panel || !proofs.length) return;
+
+    const header = panel.querySelector('.gentzen-panel-header');
+    const close = header?.querySelector('.gentzen-close');
+    if (!header || !close) return;
+    const launch = document.createElement('a');
+    launch.textContent = 'Open in Proof Explorer';
+    launch.className = 'proof-explorer-launch';
+    launch.target = '_blank';
+    launch.rel = 'noopener';
+    launch.hidden = true;
+    header.insertBefore(launch, close);
+
+    const refresh = () => {
+      const active = proofs.find(proof => !proof.hidden);
+      const show = Boolean(active && panel.classList.contains('is-open'));
+      if (launch.hidden === show) launch.hidden = !show;
+      if (!show) return;
+      const url = originalPageURL();
+      url.searchParams.set(PARAM, String(proofs.indexOf(active) + 1));
+      url.hash = '';
+      launch.href = url.href;
+    };
+    new MutationObserver(refresh).observe(panel, {
+      attributes: true, subtree: true, attributeFilter: ['hidden', 'class']
+    });
+    refresh();
+  }
+
+  const start = () => {
+    const promise = window.MathJax?.startup?.promise;
+    if (promise?.then) {
+      promise.then(() => requestAnimationFrame(initialize),
+                   () => requestAnimationFrame(initialize));
+    } else {
+      requestAnimationFrame(initialize);
+    }
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else {
+    start();
+  }
+})();
