@@ -190,15 +190,29 @@ def resolve_label(tex: str, targets, location: str):
 def main():
     schemata = {}
     expansions = {}
-    for path in sorted(ROOT.rglob("*.tex")):
-        if "site" in path.parts or path.name == "main_html.tex":
-            continue
+    tex_paths = [
+        path for path in sorted(ROOT.rglob("*.tex"))
+        if "site" not in path.parts and path.name != "main_html.tex"
+    ]
+
+    # Only rules explicitly annotated for Proof Explorer expansion belong to
+    # the v0.5 unary registry. Other textbook rules may be multi-premise or
+    # otherwise unsupported and must not prevent the book from publishing.
+    annotated_keys = set()
+    for path in tex_paths:
+        content = path.read_text(encoding="utf-8")
+        for match in ANNOTATION.finditer(content):
+            annotated_keys.add(match.group(1).split(";", 1)[0].strip())
+
+    for path in tex_paths:
         content = path.read_text(encoding="utf-8")
         for match in DERIVED.finditer(content):
             label_match = re.search(r"\\label\s*\{(rule:[^{}\s]+)\}", match.group(2))
             if not label_match:
                 continue
             key = label_match.group(1)
+            if key not in annotated_keys:
+                continue
             rule_trees = TREE.findall(match.group(2))
             if len(rule_trees) != 1:
                 error(f"{path}:{content.count(chr(10), 0, match.start())+1}: rule {key} needs one schematic prooftree")
