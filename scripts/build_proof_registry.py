@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""Build the Proof Explorer v0.5 unary-rule registry from annotated TeX.
+"""Build Proof Explorer v0.6 registry from explicitly annotated LaTeX rules.
 
-Only simple unary derived rules are supported. Fail explicitly for unsupported
-shapes: silently manufacturing a mathematically incorrect expansion is worse
-than leaving an inference unexpandable.
+Supports unary and binary derived-rule schemata, with arbitrary branching in
+justifications provided each schematic premise appears as exactly one matching
+AxiomC leaf. Other leaves (e.g. locally discharged assumptions) are preserved.
 
 Annotation immediately before a formalderivation:
 % proof-explorer-expansion: rule:set-I; vars=a,A; fresh=B
 
-The rule itself must have \\label{rule:set-I} inside a derivedrule environment.
+This is a proof-exploration tool, NOT a proof checker. It does not verify
+assumption discharge, eigenvariable conditions or general substitutions.
 """
 from __future__ import annotations
 
@@ -21,8 +22,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "assets" / "proof-rules.json"
 
 DERIVED = re.compile(
-    r"\\begin\s*\{derivedrule\}(?:\[([^\]]+)\])?(.*?)\\end\s*\{derivedrule\}",
-    re.S,
+    r"\\begin\s*\{derivedrule\}(?:\[([^\]]+)\])?(.*?)\\end\s*\{derivedrule\}", re.S
 )
 ANNOTATION = re.compile(r"^[ \t]*%[ \t]*proof-explorer-expansion:[ \t]*([^\n\r]+)$", re.M)
 TREE = re.compile(r"\\begin\s*\{prooftree\}(.*?)\\end\s*\{prooftree\}", re.S)
@@ -30,6 +30,8 @@ COMMAND = re.compile(
     r"\\(AxiomC|UnaryInfC|BinaryInfC|TrinaryInfC|QuaternaryInfC|QuinaryInfC|"
     r"RightLabel|RL|LeftLabel|LL|dashedLine|solidLine|noLine|insertBetweenHyps)\b"
 )
+ARITIES = {"UnaryInfC": 1, "BinaryInfC": 2, "TrinaryInfC": 3,
+           "QuaternaryInfC": 4, "QuinaryInfC": 5}
 NUMBER_INDEX = re.compile(
     r'<script\s+id="gentzen-reference-index"\s+type="application/json">(.*?)</script>', re.S
 )
@@ -66,17 +68,17 @@ def braced(text: str, offset: int) -> tuple[str, int]:
 
 
 def commands(tree: str):
-    """Read the bussproofs commands in execution order, with arguments."""
+    """Read bussproofs commands in order, retaining source offsets."""
     pos = 0
     result = []
     while match := COMMAND.search(tree, pos):
         op = match.group(1)
         if op in ("dashedLine", "solidLine", "noLine"):
-            result.append((op, None))
+            result.append({"op": op, "arg": None, "start": match.start(), "end": match.end()})
             pos = match.end()
         else:
             arg, pos = braced(tree, match.end())
-            result.append((op, arg))
+            result.append({"op": op, "arg": arg, "start": match.start(), "end": pos})
     return result
 
 
@@ -87,55 +89,39 @@ def canon(tex: str) -> str:
     return re.sub(r"\s+", "", tex)
 
 
-def schema_from(tree: str, location: str):
-    ops = commands(tree)
+def parse_tree(tree: str, location: str):
+    """Parse stack layout and retain all AxiomC leaves (including assumptions)."""
     stack = []
-    label = None
-    for op, arg in ops:
-        if op in ("RightLabel", "RL"):
-            label = arg.strip()
-        elif op == "AxiomC":
-            stack.append({"formula": arg, "premises": [], "label": None})
-            label = None
-        elif op.endswith("InfC"):
-            arity = {
-                "UnaryInfC": 1, "BinaryInfC": 2, "TrinaryInfC": 3,
-                "QuaternaryInfC": 4, "QuinaryInfC": 5,
-            }[op]
-            if len(stack) < arity:
-                error(f"{location}: malformed rule schematic prooftree")
-            children = stack[-arity:]
-            del stack[-arity:]
-            stack.append({"formula": arg, "premises": children, "label": label})
-            label = None
-    if len(stack) != 1:
-        error(f"{location}: schematic prooftree did not form one tree")
-    root = stack[0]
-    if len(root["premises"]) != 1 or root["premises"][0]["premises"]:
-        error(f"{location}: v0.5 only supports single-step unary rule schemata")
-    return root["premises"][0]["formula"], root["formula"], root["label"]
-
-
-def proof_steps(tree: str, premise: str, conclusion: str, location: str):
-    ops = commands(tree)
-    if not ops or ops[0][0] != "AxiomC" or canon(ops[0][1]) != canon(premise):
-        error(f"{location}: justification must start with the rule's exact premise as AxiomC")
-    steps = []
-    pending_label = ""
-    line = "solid"
-    for op, arg in ops[1:]:
+    pending_label = None
+    leaves = []
+    for cmd in commands(tree):
+        op, arg = cmd["op"], cmd["arg"]
         if op in ("RightLabel", "RL"):
             pending_label = arg.strip()
-        elif op in ("dashedLine", "solidLine", "noLine"):
-            line = {"dashedLine": "dashed", "solidLine": "solid", "noLine": "none"}[op]
-        elif op == "UnaryInfC":
-            steps.append({"label": pending_label, "line": line, "conclusion": arg})
-            pending_label, line = "", "solid"
-        else:
-            error(f"{location}: {op} in justification is unsupported by unary registry v0.5")
-    if not steps or canon(steps[-1]["conclusion"]) != canon(conclusion):
-        error(f"{location}: justification must finish with the schematic conclusion")
-    return steps
+        elif op == "AxiomC":
+            leaf = {"formula": arg, "children": [], "label": None}
+            leaves.append((leaf, cmd))
+            stack.append(leaf)
+            pending_label = None
+        elif op in ARITIES:
+            arity = ARITIES[op]
+            if len(stack) < arity:
+                error(f"{location}: malformed prooftree (not enough premises for {op})")
+            children = stack[-arity:]
+            del stack[-arity:]
+            stack.append({"formula": arg, "children": children, "label": pending_label})
+            pending_label = None
+    if len(stack) != 1:
+        error(f"{location}: prooftree does not form exactly one tree")
+    return stack[0], leaves
+
+
+def schema_from(tree: str, location: str):
+    root, _ = parse_tree(tree, location)
+    premises = root["children"]
+    if len(premises) not in (1, 2) or any(node["children"] for node in premises):
+        error(f"{location}: v0.6 supports only one-step unary/binary rule schemata")
+    return [node["formula"] for node in premises], root["formula"], root["label"]
 
 
 def annotation(raw: str, location: str):
@@ -152,7 +138,7 @@ def annotation(raw: str, location: str):
             error(f"{location}: duplicate metadata {option}")
         options[option] = [s.strip() for s in value.split(",") if s.strip()]
     if "vars" not in options or not options["vars"]:
-        error(f"{location}: specify schematic vars (e.g. vars=a,A)")
+        error(f"{location}: specify schematic vars (e.g. vars=A,B,C)")
     if any(k not in ("vars", "fresh") for k in options):
         error(f"{location}: unknown annotation field")
     names = options["vars"] + options.get("fresh", [])
@@ -187,6 +173,31 @@ def resolve_label(tex: str, targets, location: str):
     return HYPERREF.sub(hyperref, REF.sub(ref, tex))
 
 
+def proof_template(tree: str, premises: list[str], conclusion: str, location: str):
+    """Insert one placeholder for each schematic premise leaf.
+
+    Does not replace other AxiomC leaves: those may represent local assumptions,
+    which remain exactly as the author wrote them. Rejects ambiguous matches.
+    """
+    root, leaves = parse_tree(tree, location)
+    if canon(root["formula"]) != canon(conclusion):
+        error(f"{location}: justification must end in the schematic rule conclusion")
+    if len({canon(p) for p in premises}) != len(premises):
+        error(f"{location}: identical premise formulas are ambiguous in v0.6")
+    replacements = []
+    for i, premise in enumerate(premises):
+        hits = [cmd for leaf, cmd in leaves if canon(leaf["formula"]) == canon(premise)]
+        if len(hits) != 1:
+            error(f"{location}: premise {i+1} occurs {len(hits)} times as an AxiomC leaf; "
+                  "v0.6 requires exactly one occurrence per premise")
+        cmd = hits[0]
+        replacements.append((cmd["start"], cmd["end"], f"@@PE_PREMISE_{i}@@"))
+    template = tree
+    for start, end, marker in sorted(replacements, reverse=True):
+        template = template[:start] + marker + template[end:]
+    return template
+
+
 def main():
     schemata = {}
     expansions = {}
@@ -194,10 +205,6 @@ def main():
         path for path in sorted(ROOT.rglob("*.tex"))
         if "site" not in path.parts and path.name != "main_html.tex"
     ]
-
-    # Only rules explicitly annotated for Proof Explorer expansion belong to
-    # the v0.5 unary registry. Other textbook rules may be multi-premise or
-    # otherwise unsupported and must not prevent the book from publishing.
     annotated_keys = set()
     for path in tex_paths:
         content = path.read_text(encoding="utf-8")
@@ -216,12 +223,12 @@ def main():
             rule_trees = TREE.findall(match.group(2))
             if len(rule_trees) != 1:
                 error(f"{path}:{content.count(chr(10), 0, match.start())+1}: rule {key} needs one schematic prooftree")
-            premise, conclusion, inf_label = schema_from(rule_trees[0], key)
+            premises, conclusion, inf_label = schema_from(rule_trees[0], key)
             if key in schemata:
                 error(f"Duplicate rule identifier {key}")
             schemata[key] = {"display": match.group(1) or inf_label or key,
-                              "premise": premise, "conclusion": conclusion,
-                              "inferenceLabel": inf_label}
+                             "premises": premises, "conclusion": conclusion,
+                             "inferenceLabel": inf_label}
         for match in ANNOTATION.finditer(content):
             location = f"{path.relative_to(ROOT)}:{content.count(chr(10), 0, match.start()) + 1}"
             key, vars_, fresh = annotation(match.group(1), location)
@@ -250,24 +257,28 @@ def main():
         schema = schemata[key]
         if schema["display"].strip() != schema["inferenceLabel"]:
             error(f"{key}: derivedrule title and Gentzen inference label disagree")
-        steps = proof_steps(expansion["tree"], schema["premise"], schema["conclusion"], key)
-        for step in steps:
-            step["label"] = resolve_label(step["label"], targets, expansion["location"])
+        template = proof_template(
+            expansion["tree"], schema["premises"], schema["conclusion"], key
+        )
+        template = resolve_label(template, targets, expansion["location"])
         registry[key] = {
-            "id": key,
-            "label": schema["inferenceLabel"],
-            "vars": expansion["vars"],
-            "fresh": expansion["fresh"],
-            "premise": schema["premise"],
-            "conclusion": schema["conclusion"],
-            "steps": steps,
+            "id": key, "label": schema["inferenceLabel"], "vars": expansion["vars"],
+            "fresh": expansion["fresh"], "premises": schema["premises"],
+            "conclusion": schema["conclusion"], "template": template,
         }
     labels = [entry["label"] for entry in registry.values()]
     if len(labels) != len(set(labels)):
         error("Multiple registered rules have the same inference label")
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps({"version": 1, "rules": registry}, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"Proof registry: generated {len(registry)} unary rule(s) in {OUT.relative_to(ROOT)}")
+    OUT.write_text(
+        json.dumps({"version": 2, "rules": registry}, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    kinds = {len(entry['premises']) for entry in registry.values()}
+    print(f"Proof registry: generated {len(registry)} rule(s) "
+          f"({sum(len(e['premises']) == 1 for e in registry.values())} unary, "
+          f"{sum(len(e['premises']) == 2 for e in registry.values())} binary) "
+          f"in {OUT.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":
