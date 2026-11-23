@@ -186,6 +186,7 @@ Suppose we wish to prove that $A\subseteq B$. By definition, this means showing 
 We capture this familiar pattern of reasoning in the following derived rule.
 
 \begin{derivedrule}[$\pmb{\subseteq}$-I]
+\label{rule:subset-i}
 \begin{prooftree}
     \AxiomC{}
     \RightLabel{\(n\)}
@@ -203,6 +204,7 @@ The label $n$ indicates which assumptions are discharged when the rule is applie
 
 The rule combines three familiar steps: implication introduction, universal generalization, and the definition of subclasshood. The corresponding expanded derivation is displayed alongside the text.
 
+% proof-explorer-expansion: rule:subset-i; vars=A,B,a; fresh=x; kind=subproof; discharge=n; eigen=a
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
