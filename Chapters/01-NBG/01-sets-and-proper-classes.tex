@@ -48,7 +48,8 @@ Since we will use the definition of a set many times, it is worth introducing a 
 In a Gentzen derivation, we read the formulas from top to bottom. Each solid horizontal line represents an inference, with the rule applied indicated on its right. The rules themselves are specified in \underline{\hyperref[sec:rules]{Appendix~\ref*{sec:rules}}}.
 
 
-\begin{derivedrule}[Set-I] 
+\begin{derivedrule}[Set-I]
+\label{rule:set-I}
 
 \begin{prooftree}
     \AxiomC{\(a\in A\)}
@@ -57,6 +58,7 @@ In a Gentzen derivation, we read the formulas from top to bottom. Each solid hor
 \end{prooftree}
 \end{derivedrule}
 
+% proof-explorer-expansion: rule:set-I; vars=a,A; fresh=B
 \begin{formalderivation}
     \begin{prooftree}
         \AxiomC{\(a\in A\)}
