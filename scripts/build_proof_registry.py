@@ -249,10 +249,10 @@ def annotation(raw: str, location: str):
         if tag or eigen or vars_ or fresh or options.get("locals"):
             error(f"{location}: restricted annotations require only kind=restricted and mode=...")
     elif kind == "unique":
-        if mode not in ("intro", "elim"):
-            error(f"{location}: unique-existence rule requires mode=intro/elim")
+        if mode not in ("intro", "elim", "atmost-intro"):
+            error(f"{location}: unique-quantifier rule requires mode=intro/elim/atmost-intro")
         if tag or eigen or vars_ or fresh or options.get("locals"):
-            error(f"{location}: unique-existence annotation requires only kind=unique and mode=...")
+            error(f"{location}: unique-quantifier annotations require only kind=unique and mode=...")
     elif mode:
         error(f"{location}: mode=... is reserved for special quantifier rules")
     if kind != "subproof" and (tag or eigen):
@@ -679,10 +679,22 @@ def restricted_justification(tree: str, schema: dict, mode: str, location: str):
 
 
 def unique_schema(trees: list[str], mode: str, location: str):
-    """Validate the two inference forms sharing the same elimination label."""
-    count = 1 if mode == 'intro' else 2
+    """Validate uniqueness introduction and the unique-existence rules."""
+    count = 2 if mode == 'elim' else 1
     if len(trees) != count:
-        error(f"{location}: unique-existence {mode} needs {count} schematic tree(s)")
+        error(f"{location}: uniqueness-related {mode} needs {count} schematic tree(s)")
+    if mode == 'atmost-intro':
+        root, _ = parse_tree(trees[0], location)
+        if len(root['children']) != 1 or canon(root['children'][0]['formula']) != canon(r'\(a=b\)'):
+            error(f"{location}: at-most-one introduction needs a subderivation ending in a=b")
+        normalized = canon(root['label'] or '').replace(r'\(', '').replace(r'\)', '')
+        if normalized != r'\Unique-I,n,m':
+            error(f"{location}: at-most-one introduction needs label \\Unique-I, n,m")
+        if canon(root['formula']) != canon(r'\(\Unique x\,\varphi(x)\)'):
+            error(f"{location}: unexpected at-most-one schematic conclusion")
+        return [dict(premises=[root['children'][0]['formula']],
+                     conclusion=root['formula'], inferenceLabel=root['label'],
+                     variant='atmost-intro')]
     entries = []
     for index, tree in enumerate(trees):
         premises, conclusion, label = schema_from(tree, location)
@@ -703,6 +715,17 @@ def unique_justification(trees: list[str], schemata: list[dict], location: str):
         error(f"{location}: unique-existence justification count mismatch")
     output = []
     for tree, schema in zip(trees, schemata):
+        if schema['variant'] == 'atmost-intro':
+            root, _ = parse_tree(tree, location)
+            labels = [c['arg'] for c in commands(tree) if c['op'] in ('RightLabel', 'RL')]
+            if (canon(root['formula']) != canon(schema['conclusion'])
+                or not any(r'D\ref{def:unique-existence}' in label for label in labels)
+                or sum(r'\to' in label and '-I' in label for label in labels) != 2
+                or sum(r'\forall' in label and '-I' in label for label in labels) != 2):
+                error(f"{location}: at-most-one justification must show definition, "
+                      "two implication introductions and two universal introductions")
+            output.append(tree)  # Runtime substitutes the complete actual subderivation.
+            continue
         template = proof_template(tree, schema['premises'], schema['conclusion'], location)
         labels = [c['arg'] for c in commands(tree) if c['op'] in ('RightLabel', 'RL')]
         if not any(r'D\ref{def:unique-existence}' in lab for lab in labels):
