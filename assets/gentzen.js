@@ -1853,6 +1853,57 @@ document.addEventListener('DOMContentLoaded', () => {
     return result;
   }
 
+  // Renumber assumptions in a complete theorem proof before inserting it
+  // into another tree. This prevents accidental collisions of discharge labels.
+  function freshenTheoremLabels(source, theorem) {
+    const command = /\\(?:RightLabel|RL|LeftLabel|LL)\b/g;
+    const used = new Set();
+    function scan(text, callback) {
+      const pattern = new RegExp(command.source, 'g');
+      let match;
+      while ((match = pattern.exec(text))) {
+        const arg = braced(text, pattern.lastIndex);
+        if (!arg) throw new Error('Malformed theorem inference label');
+        pattern.lastIndex = arg.end;
+        callback(arg);
+      }
+    }
+    const numbers = /\\\(\s*([1-9]\d*(?:\s*,\s*[1-9]\d*)*)\s*\\\)/g;
+    scan(source, arg => {
+      for (const found of arg.content.matchAll(numbers)) {
+        for (const tag of found[1].split(',')) used.add(Number(tag.trim()));
+      }
+    });
+    const labels = new Set();
+    scan(theorem, arg => {
+      const assumption = arg.content.match(/^\s*\\\(\s*([1-9]\d*)\s*\\\)\s*$/);
+      if (assumption) labels.add(assumption[1]);
+    });
+    const translation = new Map();
+    let next = 1;
+    for (const tag of labels) {
+      while (used.has(next)) next++;
+      translation.set(tag, String(next));
+      used.add(next);
+      next++;
+    }
+    const edits = [];
+    scan(theorem, arg => {
+      const updated = arg.content.replace(numbers, (whole, group) => {
+        const mapped = group.split(',').map(s => translation.get(s.trim()) || s.trim());
+        return `\\(${mapped.join(',')}\\)`;
+      });
+      if (updated !== arg.content) {
+        edits.push([arg.start + 1, arg.end - 1, updated]);
+      }
+    });
+    let result = theorem;
+    for (const [start, end, updated] of edits.reverse()) {
+      result = result.slice(0, start) + updated + result.slice(end);
+    }
+    return result;
+  }
+
   function expandOnce(source, id, rules, propositions) {
     const hit = allApplications(source, rules, propositions).find(item => item.id === id);
     if (!hit) return null;
@@ -1862,10 +1913,14 @@ document.addEventListener('DOMContentLoaded', () => {
         hit.variant.template, substitutions, hit.originalConclusion
       );
       replacement = freshenLocalDischarges(source, replacement, hit.variant.locals);
-      if (!replacement.includes('@@PE_PREMISE_0@@')) {
-        throw new Error('Proposition proof contains no premise attachment point');
+      if (hit.variant.kind === 'theorem') {
+        replacement = freshenTheoremLabels(source, replacement);
+      } else {
+        if (!replacement.includes('@@PE_PREMISE_0@@')) {
+          throw new Error('Proposition proof contains no premise attachment point');
+        }
+        replacement = replacement.replaceAll('@@PE_PREMISE_0@@', hit.premiseSources[0]);
       }
-      replacement = replacement.replaceAll('@@PE_PREMISE_0@@', hit.premiseSources[0]);
       if (/@@PE_(?:PREMISE|LOCAL)_/.test(replacement)) {
         throw new Error('Unresolved placeholder in proposition proof');
       }
