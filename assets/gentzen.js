@@ -789,8 +789,28 @@ document.addEventListener('DOMContentLoaded', () => {
   function normalizeRuleLabel(text) {
     // Lwarp may insert spaces even between punctuation and the math delimiter,
     // e.g. \(\exists! \)-E. Rule labels have no meaningful whitespace.
-    return text.replace(/\s+/g, '');
+    return text.replace(/\\\(|\\\)|\s+/g, '');
   }
+
+  // Assumption numbers are plain text, never enclosed in math delimiters.
+  // The symbols in a rule label may still be in math mode.
+  function labelNumbers(label) {
+    const compact = normalizeRuleLabel(label);
+    if (/^[1-9]\d*$/.test(compact)) return [compact];
+    const match = compact.match(/,([1-9]\d*(?:,[1-9]\d*)*)$/);
+    return match ? match[1].split(',') : [];
+  }
+
+  function rewrittenLabelNumbers(label, renaming) {
+    const stripped = label.trim();
+    if (/^[1-9]\d*$/.test(stripped)) return renaming.get(stripped) || stripped;
+    return label.replace(/(,\s*)([1-9]\d*(?:\s*,\s*[1-9]\d*)*)\s*$/, (_, separator, numbers) =>
+      separator + numbers.split(',').map(part => {
+        const tag = part.trim();
+        return renaming.get(tag) || tag;
+      }).join(','));
+  }
+
   // Restricted-quantifier rules use a FORMULA metavariable. The ordinary
   // single-symbol unifier cannot recognize these. We parse the particular
   // quantified formula instead, checking that its matrix is instantiated
@@ -830,11 +850,22 @@ document.addEventListener('DOMContentLoaded', () => {
     return s ? {binder, body: s} : null;
   }
 
+  // Normalize the two authored spellings of at-most-one uniqueness.
+  // Lwarp/MathJax may expose the expanded symbol rather than the \Unique
+  // macro in a proposition carried into another proof. Match semantics, not
+  // the choice of TeX notation; do not change the displayed source.
+  function canonicalUniquenessSource(source) {
+    return source.replace(
+      /\\exists\s*\^\s*(?:\{\s*\\(?:leqslant|leq|le)\s*1\s*\}|\\(?:leqslant|leq|le)\s*1)/g,
+      '\\Unique'
+    );
+  }
+
   // Unique-existence notation is intentionally unrestricted here.
   // The quantifier parses a complete matrix, rather than a single symbol.
   // All three forms must have the same binder and matrix (no alpha conversion).
   function uniqueQuantifier(formula, expected) {
-    const tokens = mathTokens(bareMath(formula)).filter(
+    const tokens = mathTokens(bareMath(canonicalUniquenessSource(formula))).filter(
       t => !['\\,', '\\;', '\\:', '\\!', '\\quad', '\\qquad'].includes(t)
     );
     let head = expected === 'exact' ? ['\\exists', '!']
@@ -881,7 +912,7 @@ document.addEventListener('DOMContentLoaded', () => {
       '\\bigl', '\\bigr', '\\Bigl', '\\Bigr', '\\left', '\\right',
       '\\,', '\\;', '\\:', '\\!', '\\quad', '\\qquad'
     ]);
-    return forallStarTokens(formula).filter(t => !invisible.has(t));
+    return forallStarTokens(canonicalUniquenessSource(formula)).filter(t => !invisible.has(t));
   }
 
   function uniquenessIntroKey(formula) {
@@ -951,8 +982,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const arg = braced(premiseSource, labels.lastIndex);
       if (!arg) return null;
       labels.lastIndex = arg.end;
-      const normalized = arg.content.replace(/\\\(|\\\)|\s+/g, '');
-      if (normalized.includes(',' + tags[0]) || normalized.includes(',' + tags[1])) return null;
+      const normalized = normalizeRuleLabel(arg.content);
+      if (normalized.includes(',') && tags.some(tag => labelNumbers(arg.content).includes(tag))) return null;
     }
     return {a, b, x, body, tags, phi};
   }
@@ -979,9 +1010,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const z = uniquenessIntroFresh(occupied);
     const conditional = (u, v) => `(${phi(u)})\\to((${phi(v)})\\to ${u}=${v})`;
 
-    replacement += `\n\\RightLabel{\\(\\to\\)-I, \\(${m}\\)}\n` +
+    replacement += `\n\\RightLabel{\\(\\to\\)-I, ${m}}\n` +
       `\\UnaryInfC{\\((${phi(b)})\\to ${a}=${b}\\)}\n` +
-      `\\RightLabel{\\(\\to\\)-I, \\(${n}\\)}\n` +
+      `\\RightLabel{\\(\\to\\)-I, ${n}}\n` +
       `\\UnaryInfC{\\(${conditional(a, b)}\\)}\n` +
       `\\RightLabel{\\(\\forall\\)-I}\n` +
       `\\UnaryInfC{\\(\\forall ${z}\\,(${conditional(a, z)})\\)}\n` +
@@ -1032,19 +1063,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function restrictedLabel(rule, actual) {
-    const s = normalizeRuleLabel(actual).replace(/\s+/g, '');
-    const q = rule.mode.startsWith('forall') ? '\\forall_S' : '\\exists_S';
+    const s = normalizeRuleLabel(actual);
+    const quantifier = rule.mode.startsWith('forall') ? '\\forall_S' : '\\exists_S';
     const op = rule.mode.endsWith('-i') ? 'I' : 'E';
-    const head = '\\(' + q + '\\)-' + op;
+    const head = `${quantifier}-${op}`;
     if (rule.mode === 'forall-e' || rule.mode === 'exists-i') {
       return s === head ? {tag: null} : null;
     }
-    const tail = s.startsWith(head) ? s.slice(head.length) : '';
+    if (!s.startsWith(head + ',')) return null;
+    const tail = s.slice(head.length + 1);
     if (rule.mode === 'forall-i') {
-      const match = tail.match(/^,\\\(([1-9][0-9]*)\\\)$/);
-      return match ? {tag: match[1]} : null;
+      return /^[1-9]\d*$/.test(tail) ? {tag: tail} : null;
     }
-    const match = tail.match(/^,\\\(([1-9][0-9]*),([1-9][0-9]*)\\\)$/);
+    const match = tail.match(/^([1-9]\d*),([1-9]\d*)$/);
     return match && match[1] !== match[2]
       ? {tag: null, n: match[1], m: match[2]} : null;
   }
@@ -1056,8 +1087,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const arg = braced(source, labels.lastIndex);
       if (!arg) return true;
       labels.lastIndex = arg.end;
-      if (new RegExp(',\\\\\\(' + tag + '(?:,|\\\\\\))').test(
-        arg.content.replace(/\s+/g, ''))) return true;
+      if (normalizeRuleLabel(arg.content).includes(',') && labelNumbers(arg.content).includes(tag)) {
+        return true;
+      }
     }
     return false;
   }
@@ -1191,7 +1223,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const final = hit.originalConclusion;
     switch (hit.rule.mode) {
       case 'forall-i':
-        return `@@PE_PREMISE_0@@\n\\RightLabel{\\(\\to\\)-I, \\(${hit.restricted.tag}\\)}\n` +
+        return `@@PE_PREMISE_0@@\n\\RightLabel{\\(\\to\\)-I, ${hit.restricted.tag}}\n` +
           `\\UnaryInfC{${instanceImp}}\n\\RightLabel{\\(\\forall\\)-I}\n` +
           `\\UnaryInfC{${universal}}\n\\RightLabel{Def.}\n\\dashedLine\n\\UnaryInfC{${final}}`;
       case 'forall-e':
@@ -1245,7 +1277,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function isForallIStarLabel(label) {
-    const compact = label.replace(/\\\(|\\\)|\s+/g, '');
+    const compact = normalizeRuleLabel(label);
     return /^\\forall-I(?:\^\{(?:\*|\\ast)\}|\^(?:\*|\\ast)|\*)$/.test(compact);
   }
 
@@ -1265,7 +1297,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!arg) return null;
       command.lastIndex = arg.end;
       if (hit[1] === 'RightLabel' || hit[1] === 'RL') {
-        pending = arg.content.replace(/\\\(|\\\)|\s+/g, '');
+        pending = normalizeRuleLabel(arg.content);
         continue;
       }
       if (hit[1] === 'AxiomC') {
@@ -1432,33 +1464,24 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
 
-  // Introduction rules have a numbered discharged assumption, e.g.
-  // \RightLabel{\(\subseteq\)-I, \(3\)}. Its number is a parameter,
-  // NOT literally the schema's 'n'. Reject compound discharge identifiers.
+  // Match a discharge rule with a schematic label such as
+  // \RightLabel{\(\subseteq\)-I, n}; concrete applications use plain numbers.
   function applicationLabel(rule, actual) {
     if (rule.kind === 'unique' && rule.variant === 'atmost-intro') {
-      const compact = normalizeRuleLabel(actual).replace(/\\\(|\\\)/g, '');
-      const match = compact.match(/^\\Unique-I,([1-9][0-9]*),([1-9][0-9]*)$/);
+      const compact = normalizeRuleLabel(canonicalUniquenessSource(actual));
+      const match = compact.match(/^\\Unique-I,([1-9]\d*),([1-9]\d*)$/);
       return match && match[1] !== match[2]
         ? {tag: null, tags: [match[1], match[2]]} : null;
     }
     if (rule.kind === 'restricted') return restrictedLabel(rule, actual);
-    if (rule.kind !== 'subproof') {
-      return normalizeRuleLabel(rule.label) === normalizeRuleLabel(actual)
-        ? {tag: null} : null;
-    }
     const expected = normalizeRuleLabel(rule.label);
     const observed = normalizeRuleLabel(actual);
-    const comma1 = expected.lastIndexOf(',');
-    const comma2 = observed.lastIndexOf(',');
-    if (comma1 < 0 || comma2 < 0) return null;
-    const clean = text => text.replace(/\s+/g, '');
-    if (clean(expected.slice(0, comma1)) !== clean(observed.slice(0, comma2))) {
-      return null;
-    }
-    if (clean(expected.slice(comma1 + 1)) !== `\\(${rule.discharge}\\)`) return null;
-    const match = clean(observed.slice(comma2 + 1)).match(/^\\\(([A-Za-z0-9]+)\\\)$/);
-    return match ? {tag: match[1]} : null;
+    if (rule.kind !== 'subproof') return expected === observed ? {tag: null} : null;
+    const schematic = expected.match(/^(.*),([A-Za-z0-9]+)$/);
+    const concrete = observed.match(/^(.*),([1-9]\d*)$/);
+    if (!schematic || !concrete || schematic[1] !== concrete[1] ||
+        schematic[2] !== rule.discharge) return null;
+    return {tag: concrete[2]};
   }
 
   // This narrow open-assumption inspection deliberately fails closed when
@@ -1491,7 +1514,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const children = stack.splice(-arity, arity);
       let leaves = children.flatMap(child => child.leaves);
       if (arity === 1 && children[0].empty) {
-        const marker = pending?.match(/^\\\(([A-Za-z0-9]+)\\\)$/);
+        const marker = pending?.match(/^([1-9]\d*)$/);
         leaves = [{formula: arg.content, tag: marker ? marker[1] : null}];
       }
       stack.push({empty: false, leaves});
@@ -1532,8 +1555,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const content = braced(branch, rightLabels.lastIndex);
       if (!content) return false;
       rightLabels.lastIndex = content.end;
-      const normalized = content.content.replace(/\s+/g, '');
-      if (normalized.includes(',' + `\\(${tag}\\)`)) return false;
+      if (normalizeRuleLabel(content.content).includes(',') && labelNumbers(content.content).includes(tag)) return false;
     }
     return true;
   }
@@ -1815,91 +1837,74 @@ document.addEventListener('DOMContentLoaded', () => {
       leftText + tex.slice(right.end);
   }
 
-  // Local assumption numbers in defining justifications (e.g. the 3 in
-  // negation introduction) are bound labels. Rename them to an unused number
-  // so they cannot accidentally capture assumptions from the surrounding proof.
+  // Freshen local assumptions by editing only inference labels.
   function freshenLocalDischarges(source, template, localNumbers) {
     if (!localNumbers?.length) return template;
     const used = new Set();
     const command = /\\(?:RightLabel|RL|LeftLabel|LL)\b/g;
-    const harvest = text => {
+    const harvest = tex => {
+      const re = new RegExp(command.source, 'g');
       let match;
-      while ((match = command.exec(text))) {
-        const arg = braced(text, command.lastIndex);
-        if (!arg) break;
-        command.lastIndex = arg.end;
-        for (const tag of arg.content.matchAll(/\\\(\s*([1-9][0-9]*)\s*\\\)/g)) {
-          used.add(Number(tag[1]));
-        }
+      while ((match = re.exec(tex))) {
+        const arg = braced(tex, re.lastIndex);
+        if (!arg) throw new Error('Malformed assumption label');
+        re.lastIndex = arg.end;
+        for (const tag of labelNumbers(arg.content)) used.add(Number(tag));
       }
-      command.lastIndex = 0;
     };
     harvest(source);
     harvest(template);
     let result = template;
     for (const local of localNumbers) {
       const placeholder = `@@PE_LOCAL_${local}@@`;
-      if (!result.includes(placeholder)) {
-        throw new Error(`Missing local discharge slot ${local}`);
-      }
+      if (!result.includes(placeholder)) throw new Error(`Missing local discharge slot ${local}`);
       let candidate = 1;
       while (used.has(candidate)) candidate++;
       used.add(candidate);
-      result = result.replaceAll(placeholder, `\\(${candidate}\\)`);
+      result = result.replaceAll(placeholder, String(candidate));
     }
-    if (result.includes('@@PE_LOCAL_')) {
-      throw new Error('Unresolved local discharge slot');
-    }
+    if (result.includes('@@PE_LOCAL_')) throw new Error('Unresolved local discharge slot');
     return result;
   }
 
-  // Renumber assumptions in a complete theorem proof before inserting it
-  // into another tree. This prevents accidental collisions of discharge labels.
+  // Rename assumption classes in a complete theorem proof, along with ALL
+  // of their discharge references, to avoid capture in its surrounding proof.
   function freshenTheoremLabels(source, theorem) {
     const command = /\\(?:RightLabel|RL|LeftLabel|LL)\b/g;
-    const used = new Set();
-    function scan(text, callback) {
-      const pattern = new RegExp(command.source, 'g');
+    const scan = (tex, fn) => {
+      const re = new RegExp(command.source, 'g');
       let match;
-      while ((match = pattern.exec(text))) {
-        const arg = braced(text, pattern.lastIndex);
+      while ((match = re.exec(tex))) {
+        const arg = braced(tex, re.lastIndex);
         if (!arg) throw new Error('Malformed theorem inference label');
-        pattern.lastIndex = arg.end;
-        callback(arg);
+        re.lastIndex = arg.end;
+        fn(arg);
       }
-    }
-    const numbers = /\\\(\s*([1-9]\d*(?:\s*,\s*[1-9]\d*)*)\s*\\\)/g;
+    };
+    const used = new Set();
     scan(source, arg => {
-      for (const found of arg.content.matchAll(numbers)) {
-        for (const tag of found[1].split(',')) used.add(Number(tag.trim()));
-      }
+      for (const tag of labelNumbers(arg.content)) used.add(Number(tag));
     });
     const labels = new Set();
     scan(theorem, arg => {
-      const assumption = arg.content.match(/^\s*\\\(\s*([1-9]\d*)\s*\\\)\s*$/);
-      if (assumption) labels.add(assumption[1]);
+      const label = normalizeRuleLabel(arg.content);
+      if (/^[1-9]\d*$/.test(label)) labels.add(label);
     });
     const translation = new Map();
-    let next = 1;
-    for (const tag of labels) {
-      while (used.has(next)) next++;
-      translation.set(tag, String(next));
-      used.add(next);
-      next++;
+    let candidate = 1;
+    for (const label of labels) {
+      while (used.has(candidate)) candidate++;
+      translation.set(label, String(candidate));
+      used.add(candidate++);
     }
     const edits = [];
     scan(theorem, arg => {
-      const updated = arg.content.replace(numbers, (whole, group) => {
-        const mapped = group.split(',').map(s => translation.get(s.trim()) || s.trim());
-        return `\\(${mapped.join(',')}\\)`;
-      });
-      if (updated !== arg.content) {
-        edits.push([arg.start + 1, arg.end - 1, updated]);
-      }
+      const updated = rewrittenLabelNumbers(arg.content, translation);
+      if (updated !== arg.content) edits.push([arg.start + 1, arg.end - 1, updated]);
     });
     let result = theorem;
-    for (const [start, end, updated] of edits.reverse()) {
-      result = result.slice(0, start) + updated + result.slice(end);
+    for (const [start, end, replacement] of edits.reverse()) {
+      result = result.slice(0, start) + replacement + result.slice(end);
     }
     return result;
   }
@@ -1979,7 +1984,7 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error('Missing discharge marker in the registered subproof');
       }
       replacement = replacement.replaceAll('@@PE_DISCHARGE@@',
-        `\\(${hit.dischargeTag}\\)`);
+        hit.dischargeTag);
     }
     replacement = freshenLocalDischarges(source, replacement, hit.rule.locals);
     if (hit.premiseOrder?.length === 2 && hit.premiseOrder[0] === 1) {
