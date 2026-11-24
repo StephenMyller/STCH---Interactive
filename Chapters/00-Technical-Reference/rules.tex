@@ -400,39 +400,114 @@ This is made precise by the following side conditions:
 
 \vspace{0.35cm}
 
-\nbgpara{14}{Unique Existence}
 
-\begin{definition}[Unique Existence]
-\label{def:unique-existence}
-We write $\Unique x\,\varphi(x)$ to express that
-\emph{at most one} object satisfies $\varphi$.
-This is an abbreviation for the condition that
-any two objects satisfying $\varphi$ are identical:
+
+
+
+
+\nbgpara{14}{Uniqueness and Unique Existence}
+
+\begin{definition}[Uniqueness]
+\label{def:uniqueness}
+We write $\Unique x\,\varphi(x)$ to say that \emph{at most one}
+object satisfies $\varphi$. This is an abbreviation for
 \[
 \Unique x\,\varphi(x)
 \quad\defequiv\quad
 \forall y\forall z\bigl(
-(\varphi(y)\land\varphi(z))\to y=z
+\varphi(y)\to(\varphi(z)\to y=z)
 \bigr).
 \]
+\end{definition}
 
-We write $\exists!x\,\varphi(x)$ to express that
-\emph{exactly one} object satisfies $\varphi$.
-This abbreviates existence together with at-most-one uniqueness:
+\begin{definition}[Unique Existence]\label{def:unique-existence}
+We write $\exists!x\,\varphi(x)$ to say that \emph{exactly one}
+object satisfies $\varphi$. This abbreviates existence together
+with at-most-one uniqueness:
 \[
 \exists!x\,\varphi(x)
 \quad\defequiv\quad
-\exists x\,\varphi(x) \
-\land \ \Unique x\,\varphi(x).
+\exists x\,\varphi(x) \ \land \ \Unique x\,\varphi(x).
 \]
-Here $y$ and $z$ are fresh variables, and
-$\varphi(y)$ and $\varphi(z)$ denote the
-corresponding substitutions for $x$.
 \end{definition}
 
+Here $y$ and $z$ are distinct fresh variables, and $\varphi(y)$ and
+$\varphi(z)$ denote the corresponding substitutions for $x$.
+The notation $\Unique$ thus expresses \emph{uniqueness} alone,
+whereas $\exists!$ expresses \emph{unique existence}.
+
 Neither abbreviation introduces a primitive logical rule.
-The definition of unique existence licenses the following
-derived introduction and elimination rules.
+We first establish an introduction rule for at-most-one uniqueness,
+and then introduction and elimination rules for unique existence.
+
+\begin{derivedrule}[Uniqueness Introduction]
+\label{rule:uniqueness-intro}
+Suppose $a$ and $b$ are distinct variables. If a derivation of $a=b$
+depends on assumptions $\varphi(a)$ and $\varphi(b)$, marked with
+$n$ and $m$ respectively, then both assumption classes may be
+discharged to conclude at-most-one uniqueness:
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(n\)}
+    \UnaryInfC{\(\varphi(a)\)}
+    \AxiomC{}
+    \RightLabel{\(m\)}
+    \UnaryInfC{\(\varphi(b)\)}
+    \noLine
+    \BinaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(a=b\)}
+    \RightLabel{\(\Unique\)-I, \(n,m\)}
+    \UnaryInfC{\(\Unique x\,\varphi(x)\)}
+\end{prooftree}
+The application discharges every still-undischarged occurrence
+marked with $n$ or $m$ in its premise subderivation. The variables
+$a$ and $b$ must be distinct, free for $x$ in $\varphi(x)$, and
+absent free from $\varphi(x)$ and from all other undischarged
+assumptions on which the premise depends. The labels $n$ and $m$
+are distinct and do not label assumptions discharged earlier.
+\end{derivedrule}
+
+To justify the rule, let $\mathcal D$ be the given derivation
+of $a=b$ from the two marked assumption classes. First apply
+$\to$-I to discharge the occurrences marked $m$, and then apply
+$\to$-I to discharge those marked $n$. The result has the form
+$\varphi(a)\to(\varphi(b)\to a=b)$. Next introduce the two
+universal quantifiers and invoke the definition of uniqueness.
+
+% proof-explorer-expansion: rule:uniqueness-intro; kind=unique; mode=atmost-intro
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(n\)}
+    \UnaryInfC{\(\varphi(a)\)}
+    \AxiomC{}
+    \RightLabel{\(m\)}
+    \UnaryInfC{\(\varphi(b)\)}
+    \noLine
+    \BinaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(a=b\)}
+    \RightLabel{\(\to\)-I, \(m\)}
+    \UnaryInfC{\(\varphi(b)\to a=b\)}
+    \RightLabel{\(\to\)-I, \(n\)}
+    \UnaryInfC{\(\varphi(a)\to(\varphi(b)\to a=b)\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall z\,(\varphi(a)\to(\varphi(z)\to a=z))\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall y\forall z\,(\varphi(y)\to(\varphi(z)\to y=z))\)}
+    \RightLabel{D\ref{def:uniqueness}}
+    \dashedLine
+    \UnaryInfC{\(\Unique x\,\varphi(x)\)}
+\end{prooftree}
+\end{formalderivation}
+
+The two $\to$-I applications discharge exactly the two specified
+assumption classes.
+The $\forall$-I applications are legitimate because $a$ and $b$
+occur free in no remaining undischarged assumption and are absent
+free from $\varphi(x)$. Consequently, the last formula is
+$\Unique x\,\varphi(x)$ by definition, so $\Unique$-I is admissible.
 
 \begin{derivedrule}[Unique Existence Introduction]
 \label{rule:unique-existence-intro}
@@ -459,15 +534,13 @@ derived introduction and elimination rules.
 
 \begin{derivedrule}[Unique Existence Elimination]
 \label{rule:unique-existence-elim}
-From a statement of unique existence, we may infer
-existence or at-most-one uniqueness independently.
-
+From unique existence we may infer existence or at-most-one
+uniqueness independently.
 \begin{prooftree}
     \AxiomC{\(\exists!x\,\varphi(x)\)}
     \RightLabel{\(\exists!\)-E}
     \UnaryInfC{\(\exists x\,\varphi(x)\)}
 \end{prooftree}
-
 \begin{prooftree}
     \AxiomC{\(\exists!x\,\varphi(x)\)}
     \RightLabel{\(\exists!\)-E}
@@ -475,7 +548,7 @@ existence or at-most-one uniqueness independently.
 \end{prooftree}
 \end{derivedrule}
 
-Both forms follow by the definition and Conjunction Elimination.
+Both forms follow by definition and Conjunction Elimination.
 
 % proof-explorer-expansion: rule:unique-existence-elim; kind=unique; mode=elim
 \begin{formalderivation}
@@ -497,6 +570,7 @@ Both forms follow by the definition and Conjunction Elimination.
     \UnaryInfC{\(\Unique x\,\varphi(x)\)}
 \end{prooftree}
 \end{formalderivation}
+
 
 \vspace{0.35cm}
 \nbgpara{15}{Identity}

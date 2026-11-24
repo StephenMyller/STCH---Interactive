@@ -313,16 +313,9 @@ both classes satisfy the specification, we obtain:
     \UnaryInfC{\(\forall x(x\in A\leftrightarrow x\in B)\)}
     \RightLabel{\(\mathrm{Ext}\)}
     \UnaryInfC{\(A=B\)}
-    \RightLabel{\(\to\)-I, \(3\)}
-    \UnaryInfC{
-        \(\bigl(
-        \forall x(x\in A\leftrightarrow\varphi(x))
-        \land
-        \forall x(x\in B\leftrightarrow\varphi(x))
-        \bigr)\to A=B\)
-    }
 \end{prooftree}
 \end{formalderivation}
+
 
 
 \begin{explorerderivation}{uniqueness-class-specification}
@@ -330,54 +323,42 @@ both classes satisfy the specification, we obtain:
     \AxiomC{}
     \RightLabel{\(3\)}
     \UnaryInfC{
-        \(\forall x(x\in A\leftrightarrow\varphi(x))
-        \land
-        \forall x(x\in B\leftrightarrow\varphi(x))\)
+        \(\forall x(x\in C\leftrightarrow\varphi(x))\)
     }
-    \RightLabel{\(\land\)-E}
-    \UnaryInfC{\(\forall x(x\in A\leftrightarrow\varphi(x))\)}
     \RightLabel{\(\forall\)-E}
-    \UnaryInfC{\(a\in A\leftrightarrow\varphi(a)\)}
+    \UnaryInfC{\(a\in C\leftrightarrow\varphi(a)\)}
 %
     \AxiomC{}
     \RightLabel{\(1\)}
-    \UnaryInfC{\(a\in A\)}
+    \UnaryInfC{\(a\in C\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
     \BinaryInfC{\(\varphi(a)\)}
 %
     \AxiomC{}
-    \RightLabel{\(3\)}
+    \RightLabel{\(4\)}
     \UnaryInfC{
-        \(\forall x(x\in A\leftrightarrow\varphi(x))
-        \land
-        \forall x(x\in B\leftrightarrow\varphi(x))\)
+        \(\forall x(x\in D\leftrightarrow\varphi(x))\)
     }
-    \RightLabel{\(\land\)-E}
-    \UnaryInfC{\(\forall x(x\in B\leftrightarrow\varphi(x))\)}
     \RightLabel{\(\forall\)-E}
-    \UnaryInfC{\(a\in B\leftrightarrow\varphi(a)\)}
+    \UnaryInfC{\(a\in D\leftrightarrow\varphi(a)\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
-    \BinaryInfC{\(a\in B\)}
+    \BinaryInfC{\(a\in D\)}
     \RightLabel{\(\to\)-I, \(1\)}
-    \UnaryInfC{\(a\in A\to a\in B\)}
+    \UnaryInfC{\(a\in C\to a\in D\)}
 %
     \AxiomC{}
-    \RightLabel{\(3\)}
+    \RightLabel{\(4\)}
     \UnaryInfC{
-        \(\forall x(x\in A\leftrightarrow\varphi(x))
-        \land
-        \forall x(x\in B\leftrightarrow\varphi(x))\)
+        \(\forall x(x\in D\leftrightarrow\varphi(x))\)
     }
-    \RightLabel{\(\land\)-E}
-    \UnaryInfC{\(\forall x(x\in B\leftrightarrow\varphi(x))\)}
     \RightLabel{\(\forall\)-E}
-    \UnaryInfC{\(a\in B\leftrightarrow\varphi(a)\)}
+    \UnaryInfC{\(a\in D\leftrightarrow\varphi(a)\)}
 %
     \AxiomC{}
     \RightLabel{\(2\)}
-    \UnaryInfC{\(a\in B\)}
+    \UnaryInfC{\(a\in D\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
     \BinaryInfC{\(\varphi(a)\)}
@@ -385,50 +366,32 @@ both classes satisfy the specification, we obtain:
     \AxiomC{}
     \RightLabel{\(3\)}
     \UnaryInfC{
-        \(\forall x(x\in A\leftrightarrow\varphi(x))
-        \land
-        \forall x(x\in B\leftrightarrow\varphi(x))\)
+        \(\forall x(x\in C\leftrightarrow\varphi(x))\)
     }
-    \RightLabel{\(\land\)-E}
-    \UnaryInfC{\(\forall x(x\in A\leftrightarrow\varphi(x))\)}
     \RightLabel{\(\forall\)-E}
-    \UnaryInfC{\(a\in A\leftrightarrow\varphi(a)\)}
+    \UnaryInfC{\(a\in C\leftrightarrow\varphi(a)\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
-    \BinaryInfC{\(a\in A\)}
+    \BinaryInfC{\(a\in C\)}
     \RightLabel{\(\to\)-I, \(2\)}
-    \UnaryInfC{\(a\in B\to a\in A\)}
+    \UnaryInfC{\(a\in D\to a\in C\)}
 %
     \RightLabel{\(\leftrightarrow\)-I}
-    \BinaryInfC{\(a\in A\leftrightarrow a\in B\)}
+    \BinaryInfC{\(a\in C\leftrightarrow a\in D\)}
     \RightLabel{\(\forall\)-I}
-    \UnaryInfC{\(\forall x(x\in A\leftrightarrow x\in B)\)}
+    \UnaryInfC{
+        \(\forall x(x\in C\leftrightarrow x\in D)\)
+    }
     \RightLabel{\(\mathrm{Ext}\)}
-    \UnaryInfC{\(A=B\)}
-    \RightLabel{\(\to\)-I, \(3\)}
-    \UnaryInfC{
-        \(\bigl(
-        \forall x(x\in A\leftrightarrow\varphi(x))
-        \land
-        \forall x(x\in B\leftrightarrow\varphi(x))
-        \bigr)\to A=B\)
-    }
-    \RightLabel{\(\forall\)-I*}
-    \UnaryInfC{
-        \(\forall A\forall B\bigl(
-        (\forall x(x\in A\leftrightarrow\varphi(x))
-        \land
-        \forall x(x\in B\leftrightarrow\varphi(x)))
-        \to A=B\bigr)\)
-    }
-    \RightLabel{D\ref{def:unique-existence}}
-    \dashedLine
+    \UnaryInfC{\(C=D\)}
+    \RightLabel{\(\Unique\)-I, \(3,4\)}
     \UnaryInfC{
         \(\Unique A\,\forall x
         (x\in A\leftrightarrow\varphi(x))\)
     }
 \end{prooftree}
 \end{explorerderivation}
+
 
 
 
