@@ -786,14 +786,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // Locate inference nodes by executing the bussproofs stack operations.
   // For each subtree, retain the actual TeX source span: this is what must be
   // grafted into the defining derivation, not just the premise's last formula.
-  function normalizeRuleLabel(text) {
-    // Lwarp may insert spaces even between punctuation and the math delimiter,
-    // e.g. \(\exists! \)-E. Rule labels have no meaningful whitespace.
-    return text.replace(/\\\(|\\\)|\s+/g, '');
+  // Labels are metadata, not formulas. Math-mode delimiters are formatting:
+  // RightLabel{3}, RightLabel{\(3\)}, RightLabel{$3$}, and their schematic
+  // equivalents have the same identity. Record source offsets so renumbering
+  // changes ONLY the assumption tokens, preserving the authored TeX.
+  function labelProjection(source) {
+    const chars = [], offsets = [];
+    const markup = /\\\(|\\\)|\\\[|\\\]|\$|\s+/g;
+    let start = 0, match;
+    while ((match = markup.exec(source))) {
+      for (let i = start; i < match.index; ++i) {
+        chars.push(source[i]); offsets.push(i);
+      }
+      start = markup.lastIndex;
+    }
+    for (let i = start; i < source.length; ++i) {
+      chars.push(source[i]); offsets.push(i);
+    }
+    return {key: chars.join(''), offsets};
   }
 
-  // Assumption numbers are plain text, never enclosed in math delimiters.
-  // The symbols in a rule label may still be in math mode.
+  function normalizeRuleLabel(text) {
+    return labelProjection(text || '').key;
+  }
+
   function labelNumbers(label) {
     const compact = normalizeRuleLabel(label);
     if (/^[1-9]\d*$/.test(compact)) return [compact];
@@ -802,13 +818,30 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function rewrittenLabelNumbers(label, renaming) {
-    const stripped = label.trim();
-    if (/^[1-9]\d*$/.test(stripped)) return renaming.get(stripped) || stripped;
-    return label.replace(/(,\s*)([1-9]\d*(?:\s*,\s*[1-9]\d*)*)\s*$/, (_, separator, numbers) =>
-      separator + numbers.split(',').map(part => {
-        const tag = part.trim();
-        return renaming.get(tag) || tag;
-      }).join(','));
+    const {key, offsets} = labelProjection(label);
+    let spans = [];
+    if (/^[1-9]\d*$/.test(key)) {
+      spans = [{start: 0, end: key.length, token: key}];
+    } else {
+      const match = /,([1-9]\d*(?:,[1-9]\d*)*)$/.exec(key);
+      if (match) {
+        const start = key.length - match[1].length;
+        const re = /[1-9]\d*/g;
+        let part;
+        while ((part = re.exec(match[1]))) {
+          spans.push({start: start + part.index,
+                      end: start + part.index + part[0].length,
+                      token: part[0]});
+        }
+      }
+    }
+    for (const span of spans.reverse()) {
+      const replacement = renaming.get(span.token);
+      if (replacement === undefined || replacement === span.token) continue;
+      const from = offsets[span.start], to = offsets[span.end - 1] + 1;
+      label = label.slice(0, from) + replacement + label.slice(to);
+    }
+    return label;
   }
 
   // Restricted-quantifier rules use a FORMULA metavariable. The ordinary
@@ -1464,8 +1497,8 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
 
-  // Match a discharge rule with a schematic label such as
-  // \RightLabel{\(\subseteq\)-I, n}; concrete applications use plain numbers.
+  // Match discharge tags by label meaning, not by math-mode typography.
+  // Both schematic n and concrete 3 may be authored inside or outside math mode.
   function applicationLabel(rule, actual) {
     if (rule.kind === 'unique' && rule.variant === 'atmost-intro') {
       const compact = normalizeRuleLabel(canonicalUniquenessSource(actual));
