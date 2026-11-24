@@ -97,11 +97,26 @@ def commands(tree: str):
     return result
 
 
+# The preamble defines \Unique as \mathop{\exists^{\leq 1}}.
+# Only normalize this specific operator: other \mathop forms keep their meaning.
+_WEAK_UNIQUENESS = re.compile(
+    r'\\exists\s*\^\s*(?:\{\s*\\(?:leqslant|leq|le)\s*1\s*\}|\\(?:leqslant|leq|le)\s*1)'
+)
+_MATHOP_UNIQUENESS = re.compile(r'\\mathop\s*\{\s*\\Unique\s*\}')
+
+
+def canonical_uniqueness(tex: str) -> str:
+    return _MATHOP_UNIQUENESS.sub(
+        lambda _match: r'\Unique',
+        _WEAK_UNIQUENESS.sub(lambda _match: r'\Unique', tex),
+    )
+
+
 def canon(tex: str) -> str:
     tex = tex.strip()
     if tex.startswith(r"\(") and tex.endswith(r"\)"):
         tex = tex[2:-2]
-    return re.sub(r"\s+", "", tex)
+    return re.sub(r"\s+", "", canonical_uniqueness(tex))
 
 
 # A label is metadata, not a formula. Its comparison must be independent of
@@ -126,8 +141,8 @@ def label_projection(label: str):
 
 
 def label_key(label: str | None) -> str:
-    """Compare inference and assumption labels without TeX math delimiters."""
-    return label_projection(label or '')[0]
+    """Compare labels independent of math-mode and uniqueness typography."""
+    return canonical_uniqueness(label_projection(label or '')[0])
 
 
 def rewrite_label_tokens(label: str, mapping: dict[str, str]) -> str:
