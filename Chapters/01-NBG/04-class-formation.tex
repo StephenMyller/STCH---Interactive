@@ -296,27 +296,28 @@ In Gentzen derivations, a direct instance of Class Formation may be introduced w
 \end{prooftree}
 
 
+
 \nbgpara{6}{}
-We have already established that a membership condition can determine at most one class. Class Formation now supplies the missing existence claim for predicative conditions. Together, these results yield the following proposition.
+We have already established that a membership condition determines at
+most one class. The Axiom of Class Formation now guarantees that every
+predicative condition determines a class. Together, these results yield
+unique existence.
 
 \begin{proposition}[Existence and Uniqueness of Predicatively Specified Classes]
 \label{prop:existence-uniqueness-class-formation}
-Let \(\varphi(x)\) be a predicative condition on \(x\). Then there exists exactly one class \(A\) satisfying
+Let \(\varphi(x)\) be a predicative condition on \(x\), and let
+\(A\) be a variable that does not occur free in \(\varphi(x)\).
+Then there exists exactly one class \(A\) satisfying
 \[
 \forall_S x
-\bigl(
-x\in A\leftrightarrow\varphi(x)
-\bigr).
+\bigl(x\in A\leftrightarrow\varphi(x)\bigr).
 \]
 \end{proposition}
 
-
 \begin{proof}
-Existence follows from the Axiom of Class Formation. Uniqueness follows from Proposition~\ref{prop:uniqueness-class-specification}.
-
-
-
-
+Existence follows from the Axiom of Class Formation.
+Uniqueness follows from Proposition~\ref{prop:uniqueness-class-specification}.
+Applying Unique Existence Introduction gives the result.
 
 \begin{formalderivation}
 \begin{prooftree}
@@ -341,10 +342,6 @@ Existence follows from the Axiom of Class Formation. Uniqueness follows from Pro
     }
 \end{prooftree}
 \end{formalderivation}
-
-
-
-
 \end{proof}
 
 

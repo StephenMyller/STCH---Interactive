@@ -237,96 +237,127 @@ Unlike the derived subclass rules introduced earlier, Mutual Inclusion (\(\mathr
 
 Unlike Mutual Inclusion, neither of these rules depends on Extensionality. Non-Inclusion Introduction follows from the definition of subclasshood, while Non-Identity Introduction follows from the logical rules for identity.
 
-\nbgpara{7}{} Suppose we specify a class by giving a condition \(\varphi(x)\) that characterizes exactly which objects belong to it. Could two different classes satisfy this same specification? If every member of either class must satisfy \(\varphi(x)\), and every object satisfying \(\varphi(x)\) must belong to both, then the two classes necessarily have the same members. Extensionality tells us they must be identical.
 
-Importantly, this argument does not depend on what the condition \(\varphi(x)\) says. It gives us a general principle of uniqueness.
+\nbgpara{7}{} Suppose we specify a class by giving a condition
+\(\varphi(x)\) that characterizes exactly which sets belong to it.
+Could two different classes satisfy the same specification?
 
-
+Every member of a class is a set. Thus, if two classes agree on
+which sets they contain, they agree on all their members.
+Extensionality then tells us that they must be identical.
+The argument does not depend on the particular condition
+\(\varphi(x)\) and establishes uniqueness independently of existence.
 
 \begin{proposition}[Uniqueness of Class Specifications]
 \label{prop:uniqueness-class-specification}
-Let \(\varphi(x)\) be a fixed condition on \(x\)
-that does not depend on \(A\) or \(B\).
+Let \(\varphi(x)\) be a fixed condition on \(x\), and let
+\(A\) be a variable that does not occur free in \(\varphi(x)\).
 Then
 \[
-\Unique A\,\forall x
+\Unique A\,\forall_S x
 \bigl(x\in A\leftrightarrow\varphi(x)\bigr).
 \]
 \end{proposition}
 
 \begin{proof}
-Suppose \(A\) and \(B\) both satisfy the given
-specification. Then, for every object \(x\),
-\[
-x\in A\quad\text{iff}\quad
-\varphi(x)\quad\text{iff}\quad x\in B.
-\]
-Hence they have exactly the same members,
-and Extensionality gives \(A=B\).
-Thus at most one class satisfies the specification.
+Suppose two classes \(C\) and \(D\) both satisfy the given
+specification. If an object belongs to \(C\), then it is a set.
+The two specifications therefore imply that it satisfies
+\(\varphi(x)\), and hence belongs to \(D\). The same reasoning
+with \(C\) and \(D\) interchanged shows that every member of
+\(D\) belongs to \(C\).
+
+The classes consequently have exactly the same members.
+Extensionality gives \(C=D\). Since \(C\) and \(D\) were arbitrary,
+Uniqueness Introduction establishes that at most one class satisfies
+the specification.
 \end{proof}
 
 \begin{formalderivation}[0rem][uniqueness-class-specification]
 \begin{derivationnote}
-Choose \(a\) fresh for the two specifications.
-We first derive: \bookvspace{0.3cm}
+Choose distinct variables \(C\) and \(D\), fresh for \(\varphi\),
+and a further fresh variable \(a\). Assume that both classes
+satisfy the specification. From \(a\in C\), we obtain
+\(\Set(a)\), which permits both restricted universal
+instantiations. We first derive: \bookvspace{0.3cm}
 \end{derivationnote}
 \begin{prooftree}
-    \AxiomC{\(\forall x(x\in A\leftrightarrow\varphi(x))\)}
-    \RightLabel{\(\forall\)-E}
-    \UnaryInfC{\(a\in A\leftrightarrow\varphi(a)\)}
+    \AxiomC{\(\forall_S x(x\in C\leftrightarrow\varphi(x))\)}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(a\in C\)}
+    \RightLabel{\(\Set\)-I}
+    \UnaryInfC{\(\Set(a)\)}
+    \RightLabel{\(\forall_S\)-E}
+    \BinaryInfC{\(a\in C\leftrightarrow\varphi(a)\)}
 %
     \AxiomC{}
     \RightLabel{\(1\)}
-    \UnaryInfC{\(a\in A\)}
+    \UnaryInfC{\(a\in C\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
     \BinaryInfC{\(\varphi(a)\)}
 %
-    \AxiomC{\(\forall x(x\in B\leftrightarrow\varphi(x))\)}
-    \RightLabel{\(\forall\)-E}
-    \UnaryInfC{\(a\in B\leftrightarrow\varphi(a)\)}
+    \AxiomC{\(\forall_S x(x\in D\leftrightarrow\varphi(x))\)}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(a\in C\)}
+    \RightLabel{\(\Set\)-I}
+    \UnaryInfC{\(\Set(a)\)}
+    \RightLabel{\(\forall_S\)-E}
+    \BinaryInfC{\(a\in D\leftrightarrow\varphi(a)\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
-    \BinaryInfC{\(a\in B\)}
+    \BinaryInfC{\(a\in D\)}
     \RightLabel{\(\to\)-I, \(1\)}
-    \UnaryInfC{\(a\in A\to a\in B\)}
+    \UnaryInfC{\(a\in C\to a\in D\)}
 \end{prooftree} \bookvspace{0.3cm}
 
 \begin{derivationnote}
-Interchanging \(A\) and \(B\) gives the converse implication.
-Combining both directions under the assumption that
-both classes satisfy the specification, we obtain:
+Interchanging \(C\) and \(D\) yields the converse implication.
+Combining both directions gives agreement on membership for
+all objects, not merely all sets:
 \end{derivationnote}
 \begin{prooftree}
-    \AxiomC{$\vdots$}
+    \AxiomC{\(\vdots\)}
     \noLine
-    \UnaryInfC{\(a\in A\to a\in B\)}
+    \UnaryInfC{\(a\in C\to a\in D\)}
 %
     \AxiomC{\(\vdots\)}
     \noLine
-    \UnaryInfC{\(a\in B\to a\in A\)}
+    \UnaryInfC{\(a\in D\to a\in C\)}
 %
     \RightLabel{\(\leftrightarrow\)-I}
-    \BinaryInfC{\(a\in A\leftrightarrow a\in B\)}
+    \BinaryInfC{\(a\in C\leftrightarrow a\in D\)}
     \RightLabel{\(\forall\)-I}
-    \UnaryInfC{\(\forall x(x\in A\leftrightarrow x\in B)\)}
+    \UnaryInfC{\(\forall x(x\in C\leftrightarrow x\in D)\)}
     \RightLabel{\(\mathrm{Ext}\)}
-    \UnaryInfC{\(A=B\)}
+    \UnaryInfC{\(C=D\)}
+    \RightLabel{\(\Unique\)-I}
+    \UnaryInfC{
+        \(\Unique A\,\forall_S x
+        (x\in A\leftrightarrow\varphi(x))\)
+    }
 \end{prooftree}
 \end{formalderivation}
 
 
-
+% proof-explorer-proposition: prop:uniqueness-class-specification; vars=A; fresh=C,D,a
 \begin{explorerderivation}{uniqueness-class-specification}
 \begin{prooftree}
     \AxiomC{}
     \RightLabel{\(3\)}
     \UnaryInfC{
-        \(\forall x(x\in C\leftrightarrow\varphi(x))\)
+        \(\forall_S x(x\in C\leftrightarrow\varphi(x))\)
     }
-    \RightLabel{\(\forall\)-E}
-    \UnaryInfC{\(a\in C\leftrightarrow\varphi(a)\)}
+%
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(a\in C\)}
+    \RightLabel{\(\Set\)-I}
+    \UnaryInfC{\(\Set(a)\)}
+    \RightLabel{\(\forall_S\)-E}
+    \BinaryInfC{\(a\in C\leftrightarrow\varphi(a)\)}
 %
     \AxiomC{}
     \RightLabel{\(1\)}
@@ -338,10 +369,16 @@ both classes satisfy the specification, we obtain:
     \AxiomC{}
     \RightLabel{\(4\)}
     \UnaryInfC{
-        \(\forall x(x\in D\leftrightarrow\varphi(x))\)
+        \(\forall_S x(x\in D\leftrightarrow\varphi(x))\)
     }
-    \RightLabel{\(\forall\)-E}
-    \UnaryInfC{\(a\in D\leftrightarrow\varphi(a)\)}
+%
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(a\in C\)}
+    \RightLabel{\(\Set\)-I}
+    \UnaryInfC{\(\Set(a)\)}
+    \RightLabel{\(\forall_S\)-E}
+    \BinaryInfC{\(a\in D\leftrightarrow\varphi(a)\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
     \BinaryInfC{\(a\in D\)}
@@ -351,10 +388,16 @@ both classes satisfy the specification, we obtain:
     \AxiomC{}
     \RightLabel{\(4\)}
     \UnaryInfC{
-        \(\forall x(x\in D\leftrightarrow\varphi(x))\)
+        \(\forall_S x(x\in D\leftrightarrow\varphi(x))\)
     }
-    \RightLabel{\(\forall\)-E}
-    \UnaryInfC{\(a\in D\leftrightarrow\varphi(a)\)}
+%
+    \AxiomC{}
+    \RightLabel{\(2\)}
+    \UnaryInfC{\(a\in D\)}
+    \RightLabel{\(\Set\)-I}
+    \UnaryInfC{\(\Set(a)\)}
+    \RightLabel{\(\forall_S\)-E}
+    \BinaryInfC{\(a\in D\leftrightarrow\varphi(a)\)}
 %
     \AxiomC{}
     \RightLabel{\(2\)}
@@ -366,10 +409,16 @@ both classes satisfy the specification, we obtain:
     \AxiomC{}
     \RightLabel{\(3\)}
     \UnaryInfC{
-        \(\forall x(x\in C\leftrightarrow\varphi(x))\)
+        \(\forall_S x(x\in C\leftrightarrow\varphi(x))\)
     }
-    \RightLabel{\(\forall\)-E}
-    \UnaryInfC{\(a\in C\leftrightarrow\varphi(a)\)}
+%
+    \AxiomC{}
+    \RightLabel{\(2\)}
+    \UnaryInfC{\(a\in D\)}
+    \RightLabel{\(\Set\)-I}
+    \UnaryInfC{\(\Set(a)\)}
+    \RightLabel{\(\forall_S\)-E}
+    \BinaryInfC{\(a\in C\leftrightarrow\varphi(a)\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
     \BinaryInfC{\(a\in C\)}
@@ -386,7 +435,7 @@ both classes satisfy the specification, we obtain:
     \UnaryInfC{\(C=D\)}
     \RightLabel{\(\Unique\)-I, \(3,4\)}
     \UnaryInfC{
-        \(\Unique A\,\forall x
+        \(\Unique A\,\forall_S x
         (x\in A\leftrightarrow\varphi(x))\)
     }
 \end{prooftree}
