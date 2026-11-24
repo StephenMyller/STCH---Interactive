@@ -592,6 +592,46 @@ def proof_prop_variants(tree: str, location: str):
     leaves = [n for n in all_nodes(root)
               if n['op'] == 'AxiomC' and canon(n['formula'])]
     formulas = list(dict.fromkeys(canon(n['formula']) for n in leaves))
+    if not formulas:
+        # A theorem may have no open premises. Its proof can contain
+        # numbered temporary assumptions, provided each is discharged.
+        if any(r'\vdots' in (node['formula'] or '')
+               for node in all_nodes(root)):
+            error(f"{location}: theorem expansion contains an omitted subderivation")
+
+        assumption_formulas = {}
+        discharge_sites = {}
+
+        def remaining_dependencies(node):
+            label = assumption_tag(node)
+            if label is not None:
+                formula = canon(node['formula'])
+                if label in assumption_formulas and assumption_formulas[label] != formula:
+                    error(f"{location}: assumption class {label} has different formulas")
+                assumption_formulas[label] = formula
+                return {label}
+
+            remaining = set().union(*(remaining_dependencies(child)
+                                       for child in node['children']))
+            if node['label'] and node['op'] == 'UnaryInfC':
+                raw = re.sub(r'\s+', '', node['label']).replace(r'\(', '').replace(r'\)', '')
+                match = re.search(r',([1-9]\d*(?:,[1-9]\d*)*)$', raw)
+                if match and (any(rule in raw for rule in
+                                  (r'\to-I', r'\neg-I', r'\Unique-I', 'CR,'))):
+                    for tag in match.group(1).split(','):
+                        discharge_sites[tag] = discharge_sites.get(tag, 0) + 1
+                        remaining.discard(tag)
+            return remaining
+
+        open_assumptions = remaining_dependencies(root)
+        if open_assumptions:
+            error(f"{location}: theorem proof has undischarged assumptions "
+                  f"{sorted(open_assumptions, key=int)}")
+        if any(discharge_sites.get(tag) != 1 for tag in assumption_formulas):
+            error(f"{location}: every theorem assumption class must be discharged exactly once")
+
+        return [dict(premises=[''], conclusion=root['formula'],
+                     template=tree, locals=[], kind='theorem')]
     if len(formulas) not in (1, 2):
         error(f"{location}: direct proposition needs one or two distinct premises")
     original = {canon(n['formula']): n['formula'] for n in leaves}
@@ -748,16 +788,21 @@ def get_proposition_proofs(path: Path, content: str, targets):
         lbl = re.search(r"\\label\s*\{(prop:[^{}\s]+)\}", prior.group(1))
         if not lbl or lbl.group(1) != key:
             error(f"{loc}: proposition annotation is not following {key}")
-        between = content[prior.end():match.start()]
-        if re.search(r"\\begin\s*\{formalderivation\}", between):
-            error(f"{loc}: intervening formalderivation before proposition annotation")
         after = content[match.end():]
         env = re.match(r"\s*\\begin\s*\{formalderivation\}(?:\[[^\]]*\]){0,2}", after)
-        if not env:
-            error(f"{loc}: proposition annotation must immediately precede formalderivation")
-        end = re.search(r"\\end\s*\{formalderivation\}", after[env.end():])
+        if env:
+            environment = 'formalderivation'
+        else:
+            # For a theorem with a separately authored complete tree, the
+            # annotation belongs immediately above explorerderivation.
+            env = re.match(r"\s*\\begin\s*\{explorerderivation\}\s*\{[^{}]+\}", after)
+            if not env:
+                error(f"{loc}: proposition annotation must immediately precede "
+                      "formalderivation or explorerderivation")
+            environment = 'explorerderivation'
+        end = re.search(r"\\end\s*\{" + environment + r"\}", after[env.end():])
         if not end:
-            error(f"{loc}: unclosed formalderivation")
+            error(f"{loc}: unclosed {environment}")
         trees = TREE.findall(after[env.end():env.end() + end.start()])
         if len(trees) != 1:
             error(f"{loc}: proposition proof must contain one prooftree")
