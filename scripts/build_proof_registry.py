@@ -9,7 +9,7 @@ Other leaves (e.g. locally discharged assumptions) are preserved.
 For a discharge rule, use:
 % proof-explorer-expansion: rule:subset-i; vars=A,B,a; fresh=x; kind=subproof; discharge=n; eigen=a
 The defining tree must contain a single conventional dotted schematic subproof:
-  AxiomC{} / RightLabel{(n)} / UnaryInfC{assumption} / noLine /
+  AxiomC{} / RightLabel{n} / UnaryInfC{assumption} / noLine /
   UnaryInfC{vdots} / noLine / UnaryInfC{premise}.
 The engine checks the selected discharge assumption and conservatively rejects
 applications if the eigenvariable occurs in other assumption leaves.
@@ -172,8 +172,8 @@ def schema_from_subproof(tree: str, tag: str, location: str):
         error(f"{location}: subproof schema must be one introduction step "
               "from the dotted subderivation")
     if not root["label"] or not re.search(
-        r",\s*\\\(\s*" + re.escape(tag) + r"\s*\\\)\s*$", root["label"]):
-        error(f"{location}: final rule label must end with ', \\({tag}\\)'")
+        r",\s*" + re.escape(tag) + r"\s*$", root["label"]):
+        error(f"{location}: final rule label must end with ', {tag}'")
     return [stub["premise"]], root["formula"], root["label"], stub["assumption"]
 
 
@@ -197,8 +197,8 @@ def proof_template_subproof(tree: str, premise: str, assumption: str,
         if cmd["op"] not in ("RightLabel", "RL") or cmd["start"] < stub["end"]:
             continue
         old = tree[cmd["start"]:cmd["end"]]
-        marker = re.compile(r"\\\(\s*" + re.escape(tag) + r"\s*\\\)")
-        new, count = marker.subn("@@PE_DISCHARGE@@", old)
+        marker = re.compile(r"(?<=,)\s*" + re.escape(tag) + r"(?=\s*})")
+        new, count = marker.subn(" @@PE_DISCHARGE@@", old)
         if count:
             edits.append((cmd["start"], cmd["end"], new))
             discharge_count += count
@@ -335,45 +335,50 @@ def proof_template(tree: str, premises: list[str], conclusion: str, location: st
 
 
 def freshen_local_template_labels(template: str, labels: list[str], location: str):
-    """Mark explicitly listed LOCAL assumption/discharge pairs for alpha-renaming.
+    """Mark local assumption classes and their discharges for fresh numbering.
 
-    A local tag must appear once as a numbered assumption line and once in a
-    discharge inference. All schema premise stubs have already been replaced
-    with placeholders, so their outer assumptions cannot be mistaken for local.
+    A numbered label is plain text. Multi-discharge inference labels, such as
+    lor-E, 1,2, are processed as a unit so the same command is edited once.
     """
     if not labels:
         return template
-    cmds = commands(template)
+    local = set(labels)
+    assumptions = {tag: 0 for tag in local}
+    discharges = {tag: 0 for tag in local}
     edits = []
-    for tag in labels:
-        assumption_count = 0
-        discharge_count = 0
-        needle = re.compile(r"\\\(\s*" + re.escape(tag) + r"\s*\\\)")
-        for cmd in cmds:
-            if cmd["op"] not in ("RightLabel", "RL", "LeftLabel", "LL"):
-                continue
-            arg = cmd["arg"]
-            occurrences = list(needle.finditer(arg))
-            if not occurrences:
-                continue
-            plain = canon(arg) == tag
-            discharge = bool(re.search(r",\s*\\\(\s*" + re.escape(tag) + r"\s*\\\)\s*$", arg))
-            if not (plain or discharge) or len(occurrences) != 1:
-                error(f"{location}: local assumption {tag} appears in an unsupported label")
-            if plain:
-                assumption_count += 1
-            else:
-                discharge_count += 1
+    for cmd in commands(template):
+        if cmd["op"] not in ("RightLabel", "RL", "LeftLabel", "LL"):
+            continue
+        arg = cmd["arg"]
+        updated = arg
+        if arg.strip() in local:
+            tag = arg.strip()
+            assumptions[tag] += 1
+            updated = f"@@PE_LOCAL_{tag}@@"
+        else:
+            match = re.search(r",\s*([1-9]\d*(?:\s*,\s*[1-9]\d*)*)\s*$", arg)
+            if match:
+                tags = [part.strip() for part in match.group(1).split(',')]
+                for tag in tags:
+                    if tag in local:
+                        discharges[tag] += 1
+                if any(tag in local for tag in tags):
+                    updated = (arg[:match.start(1)] +
+                               ','.join(f"@@PE_LOCAL_{tag}@@" if tag in local else tag
+                                        for tag in tags) +
+                               arg[match.end(1):])
+        if updated != arg:
             old = template[cmd["start"]:cmd["end"]]
-            edited = needle.sub(f"@@PE_LOCAL_{tag}@@", old)
-            edits.append((cmd["start"], cmd["end"], edited))
-        if assumption_count != 1 or discharge_count != 1:
-            error(f"{location}: local assumption {tag} must appear exactly once as an "
-                  f"assumption and once as a discharge (found {assumption_count} and {discharge_count})")
+            edits.append((cmd["start"], cmd["end"],
+                          old.replace("{" + arg + "}", "{" + updated + "}", 1)))
+    for tag in local:
+        if assumptions[tag] != 1 or discharges[tag] != 1:
+            error(f"{location}: local assumption {tag} must appear exactly once "
+                  f"as an assumption and once as a discharge "
+                  f"(found {assumptions[tag]} and {discharges[tag]})")
     for start, end, replacement in sorted(edits, reverse=True):
         template = template[:start] + replacement + template[end:]
     return template
-
 
 
 def proposition_annotation(raw: str, location: str):
@@ -432,24 +437,31 @@ def all_nodes(node):
         yield from all_nodes(child)
 
 
-def number_of_discharge(label: str | None):
+def discharge_numbers(label: str | None) -> list[str]:
+    """Read plain numeric discharge labels; never inspect formula notation."""
     if not label:
-        return None
-    m = re.search(r",\s*\\\(\s*([1-9][0-9]*)\s*\\\)\s*$", label)
-    return m.group(1) if m else None
+        return []
+    match = re.search(r",\s*([1-9]\d*(?:\s*,\s*[1-9]\d*)*)\s*$", label)
+    return [part.strip() for part in match.group(1).split(',')] if match else []
+
+
+def number_of_discharge(label: str | None):
+    """Return a tag only for the single-discharge variant."""
+    tags = discharge_numbers(label)
+    return tags[0] if len(tags) == 1 else None
 
 
 def assumption_tag(node):
-    """User's standard numbered assumption: empty leaf, label, unary formula."""
+    """Plain numbered assumption: empty leaf, RightLabel{3}, unary formula."""
     if (node['op'] != 'UnaryInfC' or len(node['children']) != 1
             or canon(node['children'][0]['formula']) != ''):
         return None
-    m = re.fullmatch(r"\s*\\\(\s*([1-9][0-9]*)\s*\\\)\s*", node['label'] or '')
-    return m.group(1) if m else None
+    match = re.fullmatch(r"\s*([1-9][0-9]*)\s*", node['label'] or '')
+    return match.group(1) if match else None
 
 
 def local_discharge_numbers(template: str):
-    """Locate canonical proof's temporary numbered assumption/discharge pairs."""
+    """Find local assumption/discharge pairs in a canonical proof."""
     cmds = commands(template)
     uses = {}
     for i, cmd in enumerate(cmds):
@@ -457,16 +469,15 @@ def local_discharge_numbers(template: str):
             continue
         if (i + 2 < len(cmds) and cmds[i + 1]['op'] in ('RightLabel', 'RL')
                 and cmds[i + 2]['op'] == 'UnaryInfC'):
-            label = cmds[i + 1]['arg']
-            m = re.fullmatch(r"\s*\\\(\s*([1-9][0-9]*)\s*\\\)\s*", label)
-            if m:
-                uses[m.group(1)] = uses.get(m.group(1), 0) + 1
+            match = re.fullmatch(r"\s*([1-9][0-9]*)\s*", cmds[i + 1]['arg'])
+            if match:
+                tag = match.group(1)
+                uses[tag] = uses.get(tag, 0) + 1
     discharges = {}
     for cmd in cmds:
         if cmd['op'] in ('RightLabel', 'RL'):
-            n = number_of_discharge(cmd['arg'])
-            if n is not None:
-                discharges[n] = discharges.get(n, 0) + 1
+            for tag in discharge_numbers(cmd['arg']):
+                discharges[tag] = discharges.get(tag, 0) + 1
     return sorted([tag for tag, count in uses.items()
                    if count == 1 and discharges.get(tag) == 1], key=int)
 
@@ -532,9 +543,9 @@ def verify_numbered_assumptions_are_local(template: str, locals_: list[str], loc
                 or cmds[i + 1]['op'] not in ('RightLabel', 'RL')
                 or cmds[i + 2]['op'] != 'UnaryInfC'):
             continue
-        m = re.fullmatch(r"\s*\\\(\s*([1-9][0-9]*)\s*\\\)\s*", cmds[i + 1]['arg'])
-        if m and m.group(1) not in locals_:
-            error(f"{location}: unaccounted open assumption {m.group(1)} in canonical proof")
+        match = re.fullmatch(r"\s*([1-9][0-9]*)\s*", cmds[i + 1]['arg'])
+        if match and match.group(1) not in locals_:
+            error(f"{location}: unaccounted open assumption {match.group(1)} in canonical proof")
 
 def proof_prop_variants(tree: str, location: str):
     """Compile a proof into applications without constructing a theorem-statement detour.
