@@ -734,9 +734,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const TOKEN = /\\[A-Za-z@]+|\\.|[A-Za-z](?:_\{?[0-9]+\}?)?|[0-9]+|\s+|[^\s]/g;
   const SIMPLE_VAR = /^[A-Za-z](?:_\{?[0-9]+\}?)?$/;
   function mathTokens(source) {
-    const s = source.trim()
+    const s = canonicalUniquenessSource(source.trim()
       .replace(/^\\\(\s*/, '').replace(/\s*\\\)$/, '')
-      .replace(/^\$\s*/, '').replace(/\s*\$$/, '');
+      .replace(/^\$\s*/, '').replace(/\s*\$$/, ''));
     return (s.match(TOKEN) || []).filter(token => !/^\s+$/.test(token));
   }
 
@@ -807,7 +807,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function normalizeRuleLabel(text) {
-    return labelProjection(text || '').key;
+    return canonicalUniquenessSource(labelProjection(text || '').key);
   }
 
   function labelNumbers(label) {
@@ -883,15 +883,18 @@ document.addEventListener('DOMContentLoaded', () => {
     return s ? {binder, body: s} : null;
   }
 
-  // Normalize the two authored spellings of at-most-one uniqueness.
-  // Lwarp/MathJax may expose the expanded symbol rather than the \Unique
-  // macro in a proposition carried into another proof. Match semantics, not
-  // the choice of TeX notation; do not change the displayed source.
+  // Accept the authored macro and its expanded TeX notation everywhere
+  // formulas and inference labels are compared. The preamble defines
+  // \Unique as \mathop{\exists^{\leq 1}}: normalize the COMPLETE operator,
+  // including \mathop{...}, rather than leaving an extra wrapper in the
+  // formula. Never modify the original display source or other \mathop uses.
   function canonicalUniquenessSource(source) {
-    return source.replace(
-      /\\exists\s*\^\s*(?:\{\s*\\(?:leqslant|leq|le)\s*1\s*\}|\\(?:leqslant|leq|le)\s*1)/g,
-      '\\Unique'
-    );
+    return source
+      .replace(
+        /\\exists\s*\^\s*(?:\{\s*\\(?:leqslant|leq|le)\s*1\s*\}|\\(?:leqslant|leq|le)\s*1)/g,
+        '\\Unique'
+      )
+      .replace(/\\mathop\s*\{\s*\\Unique\s*\}/g, '\\Unique');
   }
 
   // Unique-existence notation is intentionally unrestricted here.
@@ -1284,7 +1287,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const FORALL_STAR_VAR = /^(?:[A-Za-z](?:_\{?[A-Za-z0-9]+\}?)?|\\[A-Za-z]+(?:_\{?[A-Za-z0-9]+\}?)?)$/;
 
   function forallStarTokens(formula) {
-    let s = bareMath(formula);
+    let s = canonicalUniquenessSource(bareMath(formula));
     while (balancedOuterParen(s)) s = s.slice(1, -1).trim();
     return (s.match(FORALL_STAR_TOKEN) || []).filter(
       token => !/^\s+$/.test(token) && !FORALL_STAR_SPACE.has(token)
