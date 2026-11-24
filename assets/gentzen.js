@@ -1764,9 +1764,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let result = source;
     // Only replace each label, never entire overlapping nested subtrees.
     for (const hit of hits.slice().reverse()) {
-      const marker = hit.type === 'proposition'
-        ? `\\${hit.labelCommand}{${hit.originalLabel}\\(\\,\\)\\href{${PROP_LINK_PREFIX}${hit.id}}{\\(\\oplus\\)}}`
-        : `\\${hit.labelCommand}{\\href{${LINK_PREFIX}${hit.id}}{${hit.originalLabel}}}`;
+      // Math mode is allowed both in the inference symbol and in numbered
+      // assumption labels. Never nest an authored label inside \href:
+      // MathJax may then parse \( ... \) as invalid nested math and
+      // silently omit the link. Keep the label untouched and provide the
+      // same separate expansion control used successfully by propositions.
+      const prefix = hit.type === 'proposition' ? PROP_LINK_PREFIX : LINK_PREFIX;
+      const marker = `\\${hit.labelCommand}{${hit.originalLabel}\\(\\,\\)\\href{${prefix}${hit.id}}{\\(\\oplus\\)}}`;
       result = result.slice(0, hit.labelStart) + marker + result.slice(hit.labelEnd);
     }
     return {tex: result, hits};
@@ -2153,7 +2157,7 @@ document.addEventListener('DOMContentLoaded', () => {
           {duration: 200, easing: 'ease-out'});
       }
       hint.textContent = prepared.hits.length
-        ? `Click a derived rule or ⊕ beside a proposition to expand (${prepared.hits.length} available).`
+        ? `Click ⊕ beside a derived rule or proposition to expand (${prepared.hits.length} available).`
         : history.length ? 'No further registered expansions in this tree.'
           : 'No registered expandable rules in this tree.';
       undo.disabled = history.length === 0;
