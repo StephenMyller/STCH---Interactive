@@ -719,7 +719,7 @@ def unique_justification(trees: list[str], schemata: list[dict], location: str):
             root, _ = parse_tree(tree, location)
             labels = [c['arg'] for c in commands(tree) if c['op'] in ('RightLabel', 'RL')]
             if (canon(root['formula']) != canon(schema['conclusion'])
-                or not any(r'D\ref{def:unique-existence}' in label for label in labels)
+                or not any(r'D\ref{def:uniqueness}' in label for label in labels)
                 or sum(r'\to' in label and '-I' in label for label in labels) != 2
                 or sum(r'\forall' in label and '-I' in label for label in labels) != 2):
                 error(f"{location}: at-most-one justification must show definition, "
@@ -869,7 +869,11 @@ def main():
                     template=resolve_label(template, targets, expansion['location']),
                     kind='unique', mode=expansion['mode'],
                     variant=variant['variant'], locals=[],
-                    definitionLabel=resolve_label(r'D\ref{def:unique-existence}', targets, expansion['location'])
+                    definitionLabel=resolve_label(
+                        r'D\ref{def:uniqueness}' if variant['variant'] == 'atmost-intro'
+                        else r'D\ref{def:unique-existence}',
+                        targets, expansion['location']
+                    )
                 )
             continue
         # The theorem heading may use different typography from the inference label.
