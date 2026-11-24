@@ -57,23 +57,23 @@ Since \(x\) was arbitrary, the two classes have exactly the same members. By the
     \AxiomC{\(A\subseteq B\)}
 %
     \AxiomC{}
-    \RightLabel{\(1\)}
+    \RightLabel{1}
     \UnaryInfC{\(a\in A\)}
 %
     \RightLabel{\(\subseteq\)-E}
     \BinaryInfC{\(a\in B\)}
-    \RightLabel{\(\to\)-I, \(1\)}
+    \RightLabel{\(\to\)-I, 1}
     \UnaryInfC{\(a\in A\to a\in B\)}
 %
     \AxiomC{\(B\subseteq A\)}
 %
     \AxiomC{}
-    \RightLabel{\(2\)}
+    \RightLabel{2}
     \UnaryInfC{\(a\in B\)}
 %
     \RightLabel{\(\subseteq\)-E}
     \BinaryInfC{\(a\in A\)}
-    \RightLabel{\(\to\)-I, \(2\)}
+    \RightLabel{\(\to\)-I, 2}
     \UnaryInfC{\(a\in B\to a\in A\)}
 %
     \RightLabel{\(\leftrightarrow\)-I}
@@ -113,19 +113,19 @@ By Proposition~\ref{prop:identity-implies-mutual-subclasshood}, if \(A=B\), then
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
-    \RightLabel{\(1\)}
+    \RightLabel{1}
     \UnaryInfC{\(A=B\)}
     \RightLabel{P\ref{prop:identity-implies-mutual-subclasshood}}
     \UnaryInfC{\(A\subseteq B\land B\subseteq A\)}
-    \RightLabel{\(\to\)-I, \(1\)}
+    \RightLabel{\(\to\)-I, 1}
     \UnaryInfC{\(A=B\to(A\subseteq B\land B\subseteq A)\)}
 %
     \AxiomC{}
-    \RightLabel{\(2\)}
+    \RightLabel{2}
     \UnaryInfC{\(A\subseteq B\land B\subseteq A\)}
     \RightLabel{P\ref{prop:subclasshood-antisymmetric}}
     \UnaryInfC{\(A=B\)}
-    \RightLabel{\(\to\)-I, \(2\)}
+    \RightLabel{\(\to\)-I, 2}
     \UnaryInfC{\((A\subseteq B\land B\subseteq A)\to A=B\)}
     \RightLabel{\(\leftrightarrow\)-I}
     \BinaryInfC{\(A=B\leftrightarrow(A\subseteq B\land B\subseteq A)\)}
@@ -178,23 +178,23 @@ Unlike the derived subclass rules introduced earlier, Mutual Inclusion (\(\mathr
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
-    \RightLabel{\(3\)}
+    \RightLabel{3}
     \UnaryInfC{\(A\subseteq B\)}
 %
     \AxiomC{}
-    \RightLabel{\(1\)}
+    \RightLabel{1}
     \UnaryInfC{\(a\in A\)}
 %
     \RightLabel{\(\subseteq\)-E}
     \BinaryInfC{\(a\in B\)}
 %
     \AxiomC{}
-    \RightLabel{\(2\)}
+    \RightLabel{2}
     \UnaryInfC{\(a\notin B\)}
 %
     \RightLabel{\(\neg\)-E}
     \BinaryInfC{\(\bot\)}
-    \RightLabel{\(\neg\)-I, \(3\)}
+    \RightLabel{\(\neg\)-I, 3}
     \UnaryInfC{\(A\nsubseteq B\)}
 \end{prooftree}
 \end{formalderivation}
@@ -214,23 +214,23 @@ Unlike the derived subclass rules introduced earlier, Mutual Inclusion (\(\mathr
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
-    \RightLabel{\(3\)}
+    \RightLabel{3}
     \UnaryInfC{\(A=B\)}
 %
     \AxiomC{}
-    \RightLabel{\(1\)}
+    \RightLabel{1}
     \UnaryInfC{\(a\in A\)}
 %
     \RightLabel{\(=\)-E}
     \BinaryInfC{\(a\in B\)}
 %
     \AxiomC{}
-    \RightLabel{\(2\)}
+    \RightLabel{2}
     \UnaryInfC{\(a\notin B\)}
 %
     \RightLabel{\(\neg\)-E}
     \BinaryInfC{\(\bot\)}
-    \RightLabel{\(\neg\)-I, \(3\)}
+    \RightLabel{\(\neg\)-I, 3}
     \UnaryInfC{\(A\neq B\)}
 \end{prooftree}
 \end{formalderivation}
@@ -284,15 +284,15 @@ instantiations. We first derive: \bookvspace{0.3cm}
 \begin{prooftree}
     \AxiomC{\(\forall_S x(x\in C\leftrightarrow\varphi(x))\)}
     \AxiomC{}
-    \RightLabel{\(1\)}
+    \RightLabel{1}
     \UnaryInfC{\(a\in C\)}
-    \RightLabel{\(\Set\)-I}
+    \RightLabel{Set-I}
     \UnaryInfC{\(\Set(a)\)}
     \RightLabel{\(\forall_S\)-E}
     \BinaryInfC{\(a\in C\leftrightarrow\varphi(a)\)}
 %
     \AxiomC{}
-    \RightLabel{\(1\)}
+    \RightLabel{1}
     \UnaryInfC{\(a\in C\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
@@ -300,16 +300,16 @@ instantiations. We first derive: \bookvspace{0.3cm}
 %
     \AxiomC{\(\forall_S x(x\in D\leftrightarrow\varphi(x))\)}
     \AxiomC{}
-    \RightLabel{\(1\)}
+    \RightLabel{1}
     \UnaryInfC{\(a\in C\)}
-    \RightLabel{\(\Set\)-I}
+    \RightLabel{Set-I}
     \UnaryInfC{\(\Set(a)\)}
     \RightLabel{\(\forall_S\)-E}
     \BinaryInfC{\(a\in D\leftrightarrow\varphi(a)\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
     \BinaryInfC{\(a\in D\)}
-    \RightLabel{\(\to\)-I, \(1\)}
+    \RightLabel{\(\to\)-I, 1}
     \UnaryInfC{\(a\in C\to a\in D\)}
 \end{prooftree} \bookvspace{0.3cm}
 
@@ -346,83 +346,83 @@ all objects, not merely all sets:
 \begin{explorerderivation}{uniqueness-class-specification}
 \begin{prooftree}
     \AxiomC{}
-    \RightLabel{\(3\)}
+    \RightLabel{3}
     \UnaryInfC{
         \(\forall_S x(x\in C\leftrightarrow\varphi(x))\)
     }
 %
     \AxiomC{}
-    \RightLabel{\(1\)}
+    \RightLabel{1}
     \UnaryInfC{\(a\in C\)}
-    \RightLabel{\(\Set\)-I}
+    \RightLabel{Set-I}
     \UnaryInfC{\(\Set(a)\)}
     \RightLabel{\(\forall_S\)-E}
     \BinaryInfC{\(a\in C\leftrightarrow\varphi(a)\)}
 %
     \AxiomC{}
-    \RightLabel{\(1\)}
+    \RightLabel{1}
     \UnaryInfC{\(a\in C\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
     \BinaryInfC{\(\varphi(a)\)}
 %
     \AxiomC{}
-    \RightLabel{\(4\)}
+    \RightLabel{4}
     \UnaryInfC{
         \(\forall_S x(x\in D\leftrightarrow\varphi(x))\)
     }
 %
     \AxiomC{}
-    \RightLabel{\(1\)}
+    \RightLabel{1}
     \UnaryInfC{\(a\in C\)}
-    \RightLabel{\(\Set\)-I}
+    \RightLabel{Set-I}
     \UnaryInfC{\(\Set(a)\)}
     \RightLabel{\(\forall_S\)-E}
     \BinaryInfC{\(a\in D\leftrightarrow\varphi(a)\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
     \BinaryInfC{\(a\in D\)}
-    \RightLabel{\(\to\)-I, \(1\)}
+    \RightLabel{\(\to\)-I, 1}
     \UnaryInfC{\(a\in C\to a\in D\)}
 %
     \AxiomC{}
-    \RightLabel{\(4\)}
+    \RightLabel{4}
     \UnaryInfC{
         \(\forall_S x(x\in D\leftrightarrow\varphi(x))\)
     }
 %
     \AxiomC{}
-    \RightLabel{\(2\)}
+    \RightLabel{2}
     \UnaryInfC{\(a\in D\)}
-    \RightLabel{\(\Set\)-I}
+    \RightLabel{Set-I}
     \UnaryInfC{\(\Set(a)\)}
     \RightLabel{\(\forall_S\)-E}
     \BinaryInfC{\(a\in D\leftrightarrow\varphi(a)\)}
 %
     \AxiomC{}
-    \RightLabel{\(2\)}
+    \RightLabel{2}
     \UnaryInfC{\(a\in D\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
     \BinaryInfC{\(\varphi(a)\)}
 %
     \AxiomC{}
-    \RightLabel{\(3\)}
+    \RightLabel{3}
     \UnaryInfC{
         \(\forall_S x(x\in C\leftrightarrow\varphi(x))\)
     }
 %
     \AxiomC{}
-    \RightLabel{\(2\)}
+    \RightLabel{2}
     \UnaryInfC{\(a\in D\)}
-    \RightLabel{\(\Set\)-I}
+    \RightLabel{Set-I}
     \UnaryInfC{\(\Set(a)\)}
     \RightLabel{\(\forall_S\)-E}
     \BinaryInfC{\(a\in C\leftrightarrow\varphi(a)\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
     \BinaryInfC{\(a\in C\)}
-    \RightLabel{\(\to\)-I, \(2\)}
+    \RightLabel{\(\to\)-I, 2}
     \UnaryInfC{\(a\in D\to a\in C\)}
 %
     \RightLabel{\(\leftrightarrow\)-I}
@@ -433,7 +433,7 @@ all objects, not merely all sets:
     }
     \RightLabel{\(\mathrm{Ext}\)}
     \UnaryInfC{\(C=D\)}
-    \RightLabel{\(\Unique\)-I, \(3,4\)}
+    \RightLabel{\(\Unique\)-I, 3,4}
     \UnaryInfC{
         \(\Unique A\,\forall_S x
         (x\in A\leftrightarrow\varphi(x))\)

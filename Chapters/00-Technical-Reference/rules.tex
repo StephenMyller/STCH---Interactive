@@ -665,44 +665,44 @@ To justify this rule, we derive
 
 \begin{prooftree}
     \AxiomC{}
-    \RightLabel{\(1\)}
+    \RightLabel{1}
     \UnaryInfC{\(\varphi\leftrightarrow\psi\)}
     \AxiomC{}
-    \RightLabel{\(2\)}
+    \RightLabel{2}
     \UnaryInfC{\(\psi\)}
     \RightLabel{\(\leftrightarrow\)-E}
     \BinaryInfC{\(\varphi\)}
     \AxiomC{}
-    \RightLabel{\(3\)}
+    \RightLabel{3}
     \UnaryInfC{\(\neg\varphi\)}
     \RightLabel{\(\neg\)-E}
     \BinaryInfC{\(\bot\)}
-    \RightLabel{\(\neg\)-I, \(2\)}
+    \RightLabel{\(\neg\)-I, 2}
     \UnaryInfC{\(\neg\psi\)}
-    \RightLabel{\(\to\)-I, \(3\)}
+    \RightLabel{\(\to\)-I, 3}
     \UnaryInfC{\(\neg\varphi\to\neg\psi\)}
 %
     \AxiomC{}
-    \RightLabel{\(1\)}
+    \RightLabel{1}
     \UnaryInfC{\(\varphi\leftrightarrow\psi\)}
     \AxiomC{}
-    \RightLabel{\(4\)}
+    \RightLabel{4}
     \UnaryInfC{\(\varphi\)}
     \RightLabel{\(\leftrightarrow\)-E}
     \BinaryInfC{\(\psi\)}
     \AxiomC{}
-    \RightLabel{\(5\)}
+    \RightLabel{5}
     \UnaryInfC{\(\neg\psi\)}
     \RightLabel{\(\neg\)-E}
     \BinaryInfC{\(\bot\)}
-    \RightLabel{\(\neg\)-I, \(4\)}
+    \RightLabel{\(\neg\)-I, 4}
     \UnaryInfC{\(\neg\varphi\)}
-    \RightLabel{\(\to\)-I, \(5\)}
+    \RightLabel{\(\to\)-I, 5}
     \UnaryInfC{\(\neg\psi\to\neg\varphi\)}
 %
     \RightLabel{\(\leftrightarrow\)-I}
     \BinaryInfC{\(\neg\varphi\leftrightarrow\neg\psi\)}
-    \RightLabel{\(\to\)-I, \(1\)}
+    \RightLabel{\(\to\)-I, 1}
     \UnaryInfC{
         \((\varphi\leftrightarrow\psi)
         \to
@@ -733,14 +733,14 @@ To justify this rule, we derive
 
 \begin{prooftree}
     \AxiomC{}
-    \RightLabel{\(1\)}
+    \RightLabel{1}
     \UnaryInfC{\(\xi=\eta\)}
     \AxiomC{}
     \RightLabel{\(=\)-I}
     \UnaryInfC{\(\xi=\xi\)}
     \RightLabel{\(=\)-E}
     \BinaryInfC{\(\eta=\xi\)}
-    \RightLabel{\(\to\)-I, \(1\)}
+    \RightLabel{\(\to\)-I, 1}
     \UnaryInfC{\(\xi=\eta\to\eta=\xi\)}
 \end{prooftree}
 
@@ -783,15 +783,15 @@ To justify this rule, we derive
 
 \begin{prooftree}
     \AxiomC{}
-    \RightLabel{\(1\)}
+    \RightLabel{1}
     \UnaryInfC{\(\varphi\lor\psi\)}
 
     \AxiomC{}
-    \RightLabel{\(3\)}
+    \RightLabel{3}
     \UnaryInfC{\(\varphi\)}
 
     \AxiomC{}
-    \RightLabel{\(2\)}
+    \RightLabel{2}
     \UnaryInfC{\(\neg\varphi\)}
 
     \RightLabel{\(\neg\)-E}
@@ -800,15 +800,15 @@ To justify this rule, we derive
     \UnaryInfC{\(\psi\)}
 
     \AxiomC{}
-    \RightLabel{\(4\)}
+    \RightLabel{4}
     \UnaryInfC{\(\psi\)}
 
     \RightLabel{\(\lor\)-E, \(3,4\)}
     \TrinaryInfC{\(\psi\)}
 
-    \RightLabel{\(\to\)-I, \(2\)}
+    \RightLabel{\(\to\)-I, 2}
     \UnaryInfC{\(\neg\varphi\to\psi\)}
-    \RightLabel{\(\to\)-I, \(1\)}
+    \RightLabel{\(\to\)-I, 1}
     \UnaryInfC{
         \((\varphi\lor\psi)\to
         (\neg\varphi\to\psi)\)
