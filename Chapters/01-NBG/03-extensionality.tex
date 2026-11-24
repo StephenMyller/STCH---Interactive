@@ -299,27 +299,11 @@ Combining both directions under the assumption that
 both classes satisfy the specification, we obtain:
 \end{derivationnote}
 \begin{prooftree}
-    \AxiomC{}
-    \RightLabel{\(3\)}
-    \UnaryInfC{
-        \(\forall x(x\in A\leftrightarrow\varphi(x))
-        \land
-        \forall x(x\in B\leftrightarrow\varphi(x))\)
-    }
-    \noLine
-    \UnaryInfC{\(\vdots\)}
+    \AxiomC{$\vdots$}
     \noLine
     \UnaryInfC{\(a\in A\to a\in B\)}
 %
-    \AxiomC{}
-    \RightLabel{\(3\)}
-    \UnaryInfC{
-        \(\forall x(x\in A\leftrightarrow\varphi(x))
-        \land
-        \forall x(x\in B\leftrightarrow\varphi(x))\)
-    }
-    \noLine
-    \UnaryInfC{\(\vdots\)}
+    \AxiomC{\(\vdots\)}
     \noLine
     \UnaryInfC{\(a\in B\to a\in A\)}
 %
@@ -336,20 +320,6 @@ both classes satisfy the specification, we obtain:
         \land
         \forall x(x\in B\leftrightarrow\varphi(x))
         \bigr)\to A=B\)
-    }
-    \RightLabel{\(\forall\)-I\(^{*}\)}
-    \UnaryInfC{
-        \(\forall A\forall B\bigl(
-        (\forall x(x\in A\leftrightarrow\varphi(x))
-        \land
-        \forall x(x\in B\leftrightarrow\varphi(x)))
-        \to A=B\bigr)\)
-    }
-    \RightLabel{D\ref{def:unique-existence}}
-    \dashedLine
-    \UnaryInfC{
-        \(\Unique A\,\forall x
-        (x\in A\leftrightarrow\varphi(x))\)
     }
 \end{prooftree}
 \end{formalderivation}
@@ -443,15 +413,7 @@ both classes satisfy the specification, we obtain:
         \forall x(x\in B\leftrightarrow\varphi(x))
         \bigr)\to A=B\)
     }
-    \RightLabel{\(\forall\)-I}
-    \UnaryInfC{
-        \(\forall B\bigl(
-        (\forall x(x\in A\leftrightarrow\varphi(x))
-        \land
-        \forall x(x\in B\leftrightarrow\varphi(x)))
-        \to A=B\bigr)\)
-    }
-    \RightLabel{\(\forall\)-I}
+    \RightLabel{\(\forall\)-I*}
     \UnaryInfC{
         \(\forall A\forall B\bigl(
         (\forall x(x\in A\leftrightarrow\varphi(x))
