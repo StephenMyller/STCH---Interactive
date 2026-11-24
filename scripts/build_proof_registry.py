@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build Proof Explorer v1.1 registry from explicitly annotated LaTeX rules.
+r"""Build Proof Explorer v1.1 registry from explicitly annotated LaTeX rules.
 
 Supports unary, binary, locally discharged assumptions, and subderivation rules, with arbitrary branching in
 justifications provided each schematic premise appears once as either a direct
@@ -16,6 +16,10 @@ applications if the eigenvariable occurs in other assumption leaves.
 
 Annotation immediately before a formalderivation:
 % proof-explorer-expansion: rule:set-I; vars=a,A; fresh=B
+
+Assumption labels and discharge tags may appear in plain text, \( ... \), or
+$...$. These forms are compared semantically, without requiring edits to the
+LaTeX source; the original typesetting is preserved when labels are renamed.
 
 This is a proof-exploration tool, NOT a general proof checker.
 Direction-sensitive proposition extraction is opt-in and structurally conservative.
@@ -100,6 +104,66 @@ def canon(tex: str) -> str:
     return re.sub(r"\s+", "", tex)
 
 
+# A label is metadata, not a formula. Its comparison must be independent of
+# whether an author types a component as plain text, $...$, or \(...\).
+# Keep the source offsets so number substitutions preserve the authored TeX.
+_LABEL_MARKUP = re.compile(r'\\\(|\\\)|\\\[|\\\]|\$|\s+')
+
+
+def label_projection(label: str):
+    """Return (semantic label, raw offset of each retained character)."""
+    chars, offsets = [], []
+    pos = 0
+    for match in _LABEL_MARKUP.finditer(label):
+        for i in range(pos, match.start()):
+            chars.append(label[i])
+            offsets.append(i)
+        pos = match.end()
+    for i in range(pos, len(label)):
+        chars.append(label[i])
+        offsets.append(i)
+    return ''.join(chars), offsets
+
+
+def label_key(label: str | None) -> str:
+    """Compare inference and assumption labels without TeX math delimiters."""
+    return label_projection(label or '')[0]
+
+
+def rewrite_label_tokens(label: str, mapping: dict[str, str]) -> str:
+    """Rewrite only assumption tokens, preserving the rest of the label verbatim.
+
+    This handles a stand-alone assumption number and any numeric discharge
+    suffix, even with separate math wrappers around each number or around
+    the complete label.
+    """
+    normalized, offsets = label_projection(label)
+    if re.fullmatch(r'[1-9]\d*', normalized):
+        selected = [(0, len(normalized))]
+    else:
+        suffix = re.search(r',([1-9]\d*(?:,[1-9]\d*)*)$', normalized)
+        selected = [(suffix.start(1) + m.start(), suffix.start(1) + m.end())
+                    for m in re.finditer(r'[1-9]\d*', suffix.group(1))] if suffix else []
+    edits = []
+    for start, end in selected:
+        old = normalized[start:end]
+        if old in mapping and mapping[old] != old:
+            edits.append((offsets[start], offsets[end - 1] + 1, mapping[old]))
+    for start, end, text in reversed(edits):
+        label = label[:start] + text + label[end:]
+    return label
+
+
+def rewrite_schematic_discharge(label: str, tag: str, replacement: str):
+    """Replace a final schematic discharge tag without disturbing math mode."""
+    normalized, offsets = label_projection(label)
+    suffix = ',' + tag
+    if not normalized.endswith(suffix):
+        return label, False
+    start = len(normalized) - len(tag)
+    return (label[:offsets[start]] + replacement + label[offsets[-1] + 1:], True)
+
+
 def parse_tree(tree: str, location: str):
     """Parse stack layout and retain all AxiomC leaves (including assumptions)."""
     stack = []
@@ -155,7 +219,7 @@ def stub_in(tree: str, location: str):
                 "start": block[0]["start"], "end": block[-1]["end"],
                 "assumption": block[2]["arg"],
                 "premise": block[6]["arg"],
-                "tag": canon(block[1]["arg"]),
+                "tag": label_key(block[1]["arg"]),
             })
     if len(matches) != 1:
         error(f"{location}: subproof rule needs exactly one dotted schematic "
@@ -171,8 +235,7 @@ def schema_from_subproof(tree: str, tag: str, location: str):
     if len(root["children"]) != 1 or canon(root["children"][0]["formula"]) != canon(stub["premise"]):
         error(f"{location}: subproof schema must be one introduction step "
               "from the dotted subderivation")
-    if not root["label"] or not re.search(
-        r",\s*" + re.escape(tag) + r"\s*$", root["label"]):
+    if not label_key(root["label"]).endswith("," + tag):
         error(f"{location}: final rule label must end with ', {tag}'")
     return [stub["premise"]], root["formula"], root["label"], stub["assumption"]
 
@@ -196,12 +259,13 @@ def proof_template_subproof(tree: str, premise: str, assumption: str,
     for cmd in commands(tree):
         if cmd["op"] not in ("RightLabel", "RL") or cmd["start"] < stub["end"]:
             continue
-        old = tree[cmd["start"]:cmd["end"]]
-        marker = re.compile(r"(?<=,)\s*" + re.escape(tag) + r"(?=\s*})")
-        new, count = marker.subn(" @@PE_DISCHARGE@@", old)
-        if count:
-            edits.append((cmd["start"], cmd["end"], new))
-            discharge_count += count
+        new_label, replaced = rewrite_schematic_discharge(
+            cmd["arg"], tag, "@@PE_DISCHARGE@@")
+        if replaced:
+            old = tree[cmd["start"]:cmd["end"]]
+            edits.append((cmd["start"], cmd["end"],
+                          old.replace("{" + cmd["arg"] + "}", "{" + new_label + "}", 1)))
+            discharge_count += 1
     if discharge_count != 1:
         error(f"{location}: expected exactly one inference label discharging "
               f"assumption {tag!r}; found {discharge_count}")
@@ -335,11 +399,7 @@ def proof_template(tree: str, premises: list[str], conclusion: str, location: st
 
 
 def freshen_local_template_labels(template: str, labels: list[str], location: str):
-    """Mark local assumption classes and their discharges for fresh numbering.
-
-    A numbered label is plain text. Multi-discharge inference labels, such as
-    lor-E, 1,2, are processed as a unit so the same command is edited once.
-    """
+    """Freshen numbered local assumptions and discharge sites in any math style."""
     if not labels:
         return template
     local = set(labels)
@@ -350,23 +410,15 @@ def freshen_local_template_labels(template: str, labels: list[str], location: st
         if cmd["op"] not in ("RightLabel", "RL", "LeftLabel", "LL"):
             continue
         arg = cmd["arg"]
-        updated = arg
-        if arg.strip() in local:
-            tag = arg.strip()
-            assumptions[tag] += 1
-            updated = f"@@PE_LOCAL_{tag}@@"
+        key = label_key(arg)
+        if key in local:
+            assumptions[key] += 1
         else:
-            match = re.search(r",\s*([1-9]\d*(?:\s*,\s*[1-9]\d*)*)\s*$", arg)
-            if match:
-                tags = [part.strip() for part in match.group(1).split(',')]
-                for tag in tags:
-                    if tag in local:
-                        discharges[tag] += 1
-                if any(tag in local for tag in tags):
-                    updated = (arg[:match.start(1)] +
-                               ','.join(f"@@PE_LOCAL_{tag}@@" if tag in local else tag
-                                        for tag in tags) +
-                               arg[match.end(1):])
+            for tag in discharge_numbers(arg):
+                if tag in local:
+                    discharges[tag] += 1
+        updated = rewrite_label_tokens(
+            arg, {tag: f"@@PE_LOCAL_{tag}@@" for tag in local})
         if updated != arg:
             old = template[cmd["start"]:cmd["end"]]
             edits.append((cmd["start"], cmd["end"],
@@ -438,11 +490,9 @@ def all_nodes(node):
 
 
 def discharge_numbers(label: str | None) -> list[str]:
-    """Read plain numeric discharge labels; never inspect formula notation."""
-    if not label:
-        return []
-    match = re.search(r",\s*([1-9]\d*(?:\s*,\s*[1-9]\d*)*)\s*$", label)
-    return [part.strip() for part in match.group(1).split(',')] if match else []
+    """Read numeric discharge labels regardless of source math delimiters."""
+    match = re.search(r",([1-9]\d*(?:,[1-9]\d*)*)$", label_key(label))
+    return match.group(1).split(',') if match else []
 
 
 def number_of_discharge(label: str | None):
@@ -452,11 +502,11 @@ def number_of_discharge(label: str | None):
 
 
 def assumption_tag(node):
-    """Plain numbered assumption: empty leaf, RightLabel{3}, unary formula."""
+    r"""Numbered assumption in RightLabel{3} or RightLabel{\(3\)}."""
     if (node['op'] != 'UnaryInfC' or len(node['children']) != 1
             or canon(node['children'][0]['formula']) != ''):
         return None
-    match = re.fullmatch(r"\s*([1-9][0-9]*)\s*", node['label'] or '')
+    match = re.fullmatch(r"([1-9][0-9]*)", label_key(node['label']))
     return match.group(1) if match else None
 
 
@@ -469,7 +519,7 @@ def local_discharge_numbers(template: str):
             continue
         if (i + 2 < len(cmds) and cmds[i + 1]['op'] in ('RightLabel', 'RL')
                 and cmds[i + 2]['op'] == 'UnaryInfC'):
-            match = re.fullmatch(r"\s*([1-9][0-9]*)\s*", cmds[i + 1]['arg'])
+            match = re.fullmatch(r"([1-9][0-9]*)", label_key(cmds[i + 1]['arg']))
             if match:
                 tag = match.group(1)
                 uses[tag] = uses.get(tag, 0) + 1
@@ -543,7 +593,7 @@ def verify_numbered_assumptions_are_local(template: str, locals_: list[str], loc
                 or cmds[i + 1]['op'] not in ('RightLabel', 'RL')
                 or cmds[i + 2]['op'] != 'UnaryInfC'):
             continue
-        match = re.fullmatch(r"\s*([1-9][0-9]*)\s*", cmds[i + 1]['arg'])
+        match = re.fullmatch(r"([1-9][0-9]*)", label_key(cmds[i + 1]['arg']))
         if match and match.group(1) not in locals_:
             error(f"{location}: unaccounted open assumption {match.group(1)} in canonical proof")
 
@@ -555,7 +605,7 @@ def proof_prop_variants(tree: str, location: str):
     repeated premise or two distinct premises (joined by conjunction).
     """
     root = nodes_with_spans(tree, location)
-    if (root['label'] and re.sub(r'\\\(|\\\)|\s+', '', root['label']) == r'\leftrightarrow-I'
+    if (root['label'] and label_key(root['label']) == r'\leftrightarrow-I'
             and len(root['children']) == 2):
         theorem_halves = split_top_connective(root['formula'], 'leftrightarrow')
         if theorem_halves is None:
@@ -564,7 +614,7 @@ def proof_prop_variants(tree: str, location: str):
         for branch in root['children']:
             tag = number_of_discharge(branch['label'])
             if (branch['op'] != 'UnaryInfC' or not tag or
-                not re.sub(r'\\\(|\\\)|\s+', '', branch['label']).startswith(r'\to-I,')):
+                not label_key(branch['label']).startswith(r'\to-I,')):
                 error(f"{location}: biconditional branch must end with a numbered \\to-I")
             body = branch['children'][0]
             selected = [n for n in all_nodes(body) if assumption_tag(n) == tag]
@@ -625,7 +675,7 @@ def proof_prop_variants(tree: str, location: str):
             remaining = set().union(*(remaining_dependencies(child)
                                        for child in node['children']))
             if node['label'] and node['op'] == 'UnaryInfC':
-                raw = re.sub(r'\s+', '', node['label']).replace(r'\(', '').replace(r'\)', '')
+                raw = label_key(node['label'])
                 match = re.search(r',([1-9]\d*(?:,[1-9]\d*)*)$', raw)
                 if match and (any(rule in raw for rule in
                                   (r'\to-I', r'\neg-I', r'\Unique-I', 'CR,'))):
@@ -676,7 +726,7 @@ def restricted_schema(tree: str, mode: str, location: str):
     arity = 1 if mode == "forall-i" else 2
     if len(root['children']) != arity:
         error(f"{location}: restricted {mode} must have {arity} premise(s)")
-    label = canon(root['label'] or '').replace(r'\(', '').replace(r'\)', '')
+    label = label_key(root['label'])
     prefix = {'forall-i': r'\forall_S', 'forall-e': r'\forall_S',
               'exists-i': r'\exists_S', 'exists-e': r'\exists_S'}[mode]
     expected = f'{prefix}-' + ('I' if mode.endswith('-i') else 'E')
@@ -694,7 +744,7 @@ def restricted_schema(tree: str, mode: str, location: str):
             if (cmds[i]['op'] == 'AxiomC' and canon(cmds[i]['arg']) == ''
                 and cmds[i+1]['op'] in ('RightLabel', 'RL')
                 and cmds[i+2]['op'] == 'UnaryInfC'):
-                tag = canon(cmds[i+1]['arg'])
+                tag = label_key(cmds[i+1]['arg'])
                 if tag in ('n', 'm'):
                     tags.append((tag, canon(cmds[i+2]['arg'])))
         if len(tags) != 2 or {tag for tag, _ in tags} != {'n','m'}:
@@ -711,7 +761,7 @@ def restricted_justification(tree: str, schema: dict, mode: str, location: str):
     if canon(root['formula']) != canon(schema['conclusion']):
         error(f"{location}: restricted derivation has wrong conclusion")
     cmds = commands(tree)
-    labels = [canon(c['arg']) for c in cmds if c['op'] in ('RightLabel','RL')]
+    labels = [label_key(c['arg']) for c in cmds if c['op'] in ('RightLabel','RL')]
     required = {'forall-i': ('to','forall'), 'forall-e': ('forall','to'),
                 'exists-i': ('land','exists'), 'exists-e': ('land','exists')}[mode]
     # Check the defining proof actually contains the expected primitive rules.
@@ -738,7 +788,7 @@ def unique_schema(trees: list[str], mode: str, location: str):
         root, _ = parse_tree(trees[0], location)
         if len(root['children']) != 1 or canon(root['children'][0]['formula']) != canon(r'\(a=b\)'):
             error(f"{location}: at-most-one introduction needs a subderivation ending in a=b")
-        normalized = canon(root['label'] or '').replace(r'\(', '').replace(r'\)', '')
+        normalized = label_key(root['label'])
         if normalized != r'\Unique-I,n,m':
             error(f"{location}: at-most-one introduction needs label \\Unique-I, n,m")
         if canon(root['formula']) != canon(r'\(\Unique x\,\varphi(x)\)'):
@@ -752,7 +802,7 @@ def unique_schema(trees: list[str], mode: str, location: str):
         expected_arity = 2 if mode == 'intro' else 1
         if len(premises) != expected_arity:
             error(f"{location}: unique-existence {mode} requires {expected_arity} premises")
-        normalized = canon(label or '').replace(r'\(', '').replace(r'\)', '').replace('$', '')
+        normalized = label_key(label)
         if r'\exists!' + ('-I' if mode == 'intro' else '-E') not in normalized:
             error(f"{location}: wrong inference label for unique-existence {mode}: {label!r}")
         entries.append(dict(premises=premises, conclusion=conclusion, inferenceLabel=label,
@@ -964,10 +1014,9 @@ def main():
             entry["eigen"] = expansion["eigen"]
         registry[key] = entry
 
-    labels = [entry["label"] for entry in registry.values()]
     for i, entry in enumerate(registry.values()):
         for other in list(registry.values())[:i]:
-            if entry['label'] == other['label'] and not (
+            if label_key(entry['label']) == label_key(other['label']) and not (
                 entry['kind'] == other['kind'] == 'unique' and
                 entry['mode'] == other['mode'] == 'elim'):
                 error("Multiple unrelated registered rules have the same inference label")
