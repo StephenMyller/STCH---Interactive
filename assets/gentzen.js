@@ -872,6 +872,126 @@ document.addEventListener('DOMContentLoaded', () => {
       ? {bindings: {}, order: [0], unique: q} : null;
   }
 
+  // At-most-one introduction: a complete subderivation of a=b from two
+  // independently labelled assumptions phi(a), phi(b) is sufficient to
+  // derive \Unique x phi(x). Both labels are discharged in the expansion.
+  // This is a specialized FORMULA-metavariable rule, not ordinary unification.
+  function uniquenessIntroTokens(formula) {
+    const invisible = new Set([
+      '\\bigl', '\\bigr', '\\Bigl', '\\Bigr', '\\left', '\\right',
+      '\\,', '\\;', '\\:', '\\!', '\\quad', '\\qquad'
+    ]);
+    return forallStarTokens(formula).filter(t => !invisible.has(t));
+  }
+
+  function uniquenessIntroKey(formula) {
+    return forallStarUnwrapTokens(uniquenessIntroTokens(formula)).join('');
+  }
+
+  function uniquenessIntroFresh(occupied) {
+    for (const candidate of ['y', 'z', 'u', 'v', 'w', 't']) {
+      if (!occupied.has(candidate)) {
+        occupied.add(candidate);
+        return candidate;
+      }
+    }
+    for (let index = 0; ; index++) {
+      const candidate = `z_{${index}}`;
+      if (!occupied.has(forallStarVariableKey(candidate))) {
+        occupied.add(forallStarVariableKey(candidate));
+        return candidate;
+      }
+    }
+  }
+
+  function matchAtMostIntroduction(branch, conclusion, premiseSource, tags) {
+    if (!tags || tags.length !== 2 || tags[0] === tags[1] ||
+        /\\(?:vdots|cdots|ldots)\b/.test(premiseSource)) return null;
+    const equality = uniquenessIntroTokens(branch.formula);
+    if (equality.length !== 3 || equality[1] !== '=' ||
+        !FORALL_STAR_VAR.test(equality[0]) ||
+        !FORALL_STAR_VAR.test(equality[2])) return null;
+    const [a, , b] = equality;
+    if (a === b) return null;
+    const quantified = uniquenessIntroTokens(conclusion);
+    if (quantified[0] !== '\\Unique' || !FORALL_STAR_VAR.test(quantified[1] || '')) return null;
+    const x = quantified[1];
+    const body = quantified.slice(2);
+    if (!body.length || a === x || b === x) return null;
+
+    // The witnesses must be genuinely fresh for the quantified matrix;
+    // reject possible capture or shadowing rather than guessing at binding.
+    const inner = forallStarInnerBinders(body);
+    if (!inner || inner.has(x) || inner.has(a) || inner.has(b) ||
+        body.includes(a) || body.includes(b)) return null;
+    const phi = value => forallStarJoin(body.map(token => token === x ? value : token));
+    const expected = [phi(a), phi(b)];
+
+    // Inspect DEPENDENCIES, not all historical assumption occurrences:
+    // discharged temporary assumptions must not block this rule.
+    const dependencies = forallStarDependencies(premiseSource);
+    if (!dependencies) return null;
+    const found = [0, 0];
+    for (const leaf of dependencies) {
+      const position = tags.indexOf(leaf.tag);
+      if (position >= 0) {
+        if (uniquenessIntroKey(leaf.formula) !== uniquenessIntroKey(expected[position])) return null;
+        found[position]++;
+      } else if (uniquenessIntroTokens(leaf.formula).some(t => t === a || t === b)) {
+        return null;
+      }
+    }
+    if (found.some(n => n === 0)) return null;
+
+    // Do not allow an inner inference to have already discharged either
+    // of the two chosen assumption classes.
+    const labels = /\\(?:RightLabel|RL)\b/g;
+    let label;
+    while ((label = labels.exec(premiseSource))) {
+      const arg = braced(premiseSource, labels.lastIndex);
+      if (!arg) return null;
+      labels.lastIndex = arg.end;
+      const normalized = arg.content.replace(/\\\(|\\\)|\s+/g, '');
+      if (normalized.includes(',' + tags[0]) || normalized.includes(',' + tags[1])) return null;
+    }
+    return {a, b, x, body, tags, phi};
+  }
+
+  // Expand at-most-one introduction directly from its existing proof.
+  // The premise tree contains open assumptions phi(a)^n and phi(b)^m.
+  // Ordinary implication introduction discharges m, then n; two ordinary
+  // universal introductions and the defining abbreviation complete the tree.
+  // No conjunction assumption or replacement of premise leaves is necessary.
+  function expandAtMostIntroduction(source, hit) {
+    const info = hit.uniquenessIntro;
+    const phi = info.phi;
+    const [n, m] = info.tags;
+    const a = info.a;
+    const b = info.b;
+    let replacement = hit.premiseSources[0];
+
+    // Choose fresh *bound* variables, avoiding capture of any variable
+    // already occurring in the actual source proof.
+    const occupied = new Set([
+      ...uniquenessIntroTokens(source), ...uniquenessIntroTokens(hit.originalConclusion)
+    ].filter(token => FORALL_STAR_VAR.test(token)).map(forallStarVariableKey));
+    const y = uniquenessIntroFresh(occupied);
+    const z = uniquenessIntroFresh(occupied);
+    const conditional = (u, v) => `(${phi(u)})\\to((${phi(v)})\\to ${u}=${v})`;
+
+    replacement += `\n\\RightLabel{\\(\\to\\)-I, \\(${m}\\)}\n` +
+      `\\UnaryInfC{\\((${phi(b)})\\to ${a}=${b}\\)}\n` +
+      `\\RightLabel{\\(\\to\\)-I, \\(${n}\\)}\n` +
+      `\\UnaryInfC{\\(${conditional(a, b)}\\)}\n` +
+      `\\RightLabel{\\(\\forall\\)-I}\n` +
+      `\\UnaryInfC{\\(\\forall ${z}\\,(${conditional(a, z)})\\)}\n` +
+      `\\RightLabel{\\(\\forall\\)-I}\n` +
+      `\\UnaryInfC{\\(\\forall ${y}\\forall ${z}\\,(${conditional(y, z)})\\)}\n` +
+      `\\RightLabel{${hit.rule.definitionLabel}}\n\\dashedLine\n` +
+      `\\UnaryInfC{${hit.originalConclusion}}`;
+    return source.slice(0, hit.start) + replacement + source.slice(hit.end);
+  }
+
   function uniqueTemplate(hit) {
     const {binder: x, body} = hit.unique;
     const exists = `\\exists ${x}\\,${body}`;
@@ -1316,6 +1436,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // \RightLabel{\(\subseteq\)-I, \(3\)}. Its number is a parameter,
   // NOT literally the schema's 'n'. Reject compound discharge identifiers.
   function applicationLabel(rule, actual) {
+    if (rule.kind === 'unique' && rule.variant === 'atmost-intro') {
+      const compact = normalizeRuleLabel(actual).replace(/\\\(|\\\)/g, '');
+      const match = compact.match(/^\\Unique-I,([1-9][0-9]*),([1-9][0-9]*)$/);
+      return match && match[1] !== match[2]
+        ? {tag: null, tags: [match[1], match[2]]} : null;
+    }
     if (rule.kind === 'restricted') return restrictedLabel(rule, actual);
     if (rule.kind !== 'subproof') {
       return normalizeRuleLabel(rule.label) === normalizeRuleLabel(actual)
@@ -1461,7 +1587,14 @@ document.addEventListener('DOMContentLoaded', () => {
             ? matchRestrictedApplication(candidate, branches, arg.content,
                 candidateLabel, source)
             : candidate.kind === 'unique'
-              ? matchUniqueApplication(candidate, branches, arg.content)
+              ? candidate.variant === 'atmost-intro'
+                ? (() => {
+                    if (arity !== 1) return null;
+                    const info = matchAtMostIntroduction(branches[0], arg.content,
+                      source.slice(branches[0].start, branches[0].end), candidateLabel.tags);
+                    return info ? {bindings: {}, order: [0], uniquenessIntro: info} : null;
+                  })()
+                : matchUniqueApplication(candidate, branches, arg.content)
               : matchRule(candidate, branches.map(branch => branch.formula), arg.content);
           if (!candidateMatch) continue;
           if (candidate.kind === 'subproof' && !isSafeSubproof(
@@ -1480,6 +1613,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dischargeTag: matchedLabel.tag,
             restricted: matched.restricted,
             unique: matched.unique,
+            uniquenessIntro: matched.uniquenessIntro,
             forallStar: matched.forallStar,
             originalLabel: label.value,
             start: branches[0].start, end: arg.end,
@@ -1743,6 +1877,9 @@ document.addEventListener('DOMContentLoaded', () => {
         replacement += `\n\\RightLabel{\\(\\forall\\)-I}\n\\UnaryInfC{${formula}}`;
       }
       return source.slice(0, hit.start) + replacement + source.slice(hit.end);
+    }
+    if (hit.rule.kind === 'unique' && hit.rule.variant === 'atmost-intro') {
+      return expandAtMostIntroduction(source, hit);
     }
     if (hit.rule.kind === 'unique') {
       let replacement = uniqueTemplate(hit);
