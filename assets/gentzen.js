@@ -734,7 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const TOKEN = /\\[A-Za-z@]+|\\.|[A-Za-z](?:_\{?[0-9]+\}?)?|[0-9]+|\s+|[^\s]/g;
   const SIMPLE_VAR = /^[A-Za-z](?:_\{?[0-9]+\}?)?$/;
   function mathTokens(source) {
-    const s = canonicalUniquenessSource(source.trim()
+    const s = canonicalMathSource(source.trim()
       .replace(/^\\\(\s*/, '').replace(/\s*\\\)$/, '')
       .replace(/^\$\s*/, '').replace(/\s*\$$/, ''));
     return (s.match(TOKEN) || []).filter(token => !/^\s+$/.test(token));
@@ -807,7 +807,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function normalizeRuleLabel(text) {
-    return canonicalUniquenessSource(labelProjection(text || '').key);
+    return canonicalMathSource(labelProjection(text || '').key);
   }
 
   function labelNumbers(label) {
@@ -871,7 +871,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function restrictedQuantifier(formula, expected) {
-    let s = bareMath(formula);
+    let s = canonicalMathSource(bareMath(formula));
     const prefix = '\\' + expected + '_S';
     if (!s.startsWith(prefix)) return null;
     s = s.slice(prefix.length);
@@ -883,13 +883,15 @@ document.addEventListener('DOMContentLoaded', () => {
     return s ? {binder, body: s} : null;
   }
 
-  // Accept the authored macro and its expanded TeX notation everywhere
-  // formulas and inference labels are compared. The preamble defines
-  // \Unique as \mathop{\exists^{\leq 1}}: normalize the COMPLETE operator,
-  // including \mathop{...}, rather than leaving an extra wrapper in the
-  // formula. Never modify the original display source or other \mathop uses.
-  function canonicalUniquenessSource(source) {
+  // Lwarp / MathJax can turn the authored restricted quantifier \forall_S
+  // into \forall \_S (likewise for \exists_S). Normalize both spellings
+  // while MATCHING formulas and labels; do not change the rendered source.
+  // The preamble also defines \Unique as \mathop{\exists^{\leq 1}}.
+  // Centralize these source-equivalent math spellings in ONE normalizer,
+  // rather than duplicating ad-hoc fixes across specialized rule matchers.
+  function canonicalMathSource(source) {
     return source
+      .replace(/\\(forall|exists)\s*\\?_S\b/g, (_, quantifier) => `\\${quantifier}_S`)
       .replace(
         /\\exists\s*\^\s*(?:\{\s*\\(?:leqslant|leq|le)\s*1\s*\}|\\(?:leqslant|leq|le)\s*1)/g,
         '\\Unique'
@@ -900,16 +902,23 @@ document.addEventListener('DOMContentLoaded', () => {
   // Unique-existence notation is intentionally unrestricted here.
   // The quantifier parses a complete matrix, rather than a single symbol.
   // All three forms must have the same binder and matrix (no alpha conversion).
+  // Parse the quantifier's prefix, but preserve the matrix as original TeX.
+  // Token-joining a formula without separators is unsafe: "\\in A" would
+  // become the nonexistent command "\\inA", and "\\forall_S x" can become
+  // "\\forall_Sx".  Normalization is only for recognition, not re-rendering.
   function uniqueQuantifier(formula, expected) {
-    const tokens = mathTokens(bareMath(canonicalUniquenessSource(formula))).filter(
-      t => !['\\,', '\\;', '\\:', '\\!', '\\quad', '\\qquad'].includes(t)
-    );
-    let head = expected === 'exact' ? ['\\exists', '!']
-      : expected === 'atmostone' ? ['\\Unique'] : ['\\exists'];
-    if (!head.every((token, i) => tokens[i] === token)) return null;
-    const binder = tokens[head.length];
-    if (!binder || !SIMPLE_VAR.test(binder)) return null;
-    const body = tokens.slice(head.length + 1).join('');
+    let source = canonicalMathSource(bareMath(formula));
+    const prefix = expected === 'exact' ? /^\\exists\s*!/ :
+      expected === 'atmostone' ? /^\\Unique\b/ : /^\\exists\b(?!\s*!)/;
+    const head = source.match(prefix);
+    if (!head) return null;
+    source = source.slice(head[0].length)
+      .replace(/^(?:\s|\\[,;:!])+/, '');
+    const bound = source.match(/^([A-Za-z](?:_\{?[0-9]+\}?)?)/);
+    if (!bound || !SIMPLE_VAR.test(bound[1])) return null;
+    const binder = bound[1];
+    const body = source.slice(bound[0].length)
+      .replace(/^(?:\s|\\[,;:!])+/, '').trim();
     return body ? {binder, body} : null;
   }
 
@@ -948,7 +957,7 @@ document.addEventListener('DOMContentLoaded', () => {
       '\\bigl', '\\bigr', '\\Bigl', '\\Bigr', '\\left', '\\right',
       '\\,', '\\;', '\\:', '\\!', '\\quad', '\\qquad'
     ]);
-    return forallStarTokens(canonicalUniquenessSource(formula)).filter(t => !invisible.has(t));
+    return forallStarTokens(canonicalMathSource(formula)).filter(t => !invisible.has(t));
   }
 
   function uniquenessIntroKey(formula) {
@@ -1287,7 +1296,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const FORALL_STAR_VAR = /^(?:[A-Za-z](?:_\{?[A-Za-z0-9]+\}?)?|\\[A-Za-z]+(?:_\{?[A-Za-z0-9]+\}?)?)$/;
 
   function forallStarTokens(formula) {
-    let s = canonicalUniquenessSource(bareMath(formula));
+    let s = canonicalMathSource(bareMath(formula));
     while (balancedOuterParen(s)) s = s.slice(1, -1).trim();
     return (s.match(FORALL_STAR_TOKEN) || []).filter(
       token => !/^\s+$/.test(token) && !FORALL_STAR_SPACE.has(token)
@@ -1504,7 +1513,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Both schematic n and concrete 3 may be authored inside or outside math mode.
   function applicationLabel(rule, actual) {
     if (rule.kind === 'unique' && rule.variant === 'atmost-intro') {
-      const compact = normalizeRuleLabel(canonicalUniquenessSource(actual));
+      const compact = normalizeRuleLabel(canonicalMathSource(actual));
       const match = compact.match(/^\\Unique-I,([1-9]\d*),([1-9]\d*)$/);
       return match && match[1] !== match[2]
         ? {tag: null, tags: [match[1], match[2]]} : null;
