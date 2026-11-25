@@ -491,7 +491,44 @@ document.addEventListener('DOMContentLoaded', () => {
       overflow: visible !important;
     }
     .proof-explorer-stage .pe-tree mjx-container svg { overflow: visible; }
+    /* Explorer actions are grouped by purpose; status and provenance are quiet. */
+    .proof-explorer-toolbar { display: flex; flex-direction: column; align-items: stretch;
+      gap: .4rem; padding: .5rem 1rem; }
+    .pe-toolbar-head, .pe-toolbar-actions, .pe-toolbar-status {
+      display: flex; gap: .7rem; align-items: center; flex-wrap: wrap;
+    }
+    .pe-toolbar-head { justify-content: space-between; }
+    .pe-toolbar-actions { justify-content: space-between; }
+    .pe-toolbar-action-group { display: inline-flex; gap: .35rem; align-items: center; }
+    .pe-toolbar-status { min-height: 1.1em; font-size: .85rem; opacity: .75; }
+    .pe-toolbar-status .proof-explorer-expansion-note,
+    .pe-toolbar-status .proof-explorer-provenance { font-size: inherit; margin: 0; }
+    .pe-expanded-count { font-size: .78rem; opacity: .7; margin-left: .4rem; }
+    .pe-workspace { display: flex; flex: 1 1 auto; min-height: 0; }
+    .pe-workspace > .proof-explorer-viewport { flex: 1 1 auto; min-width: 0; }
+    .pe-dependency-panel { box-sizing: border-box; width: 325px; min-width: 250px;
+      max-width: min(40vw, 430px); overflow-y: auto; padding: 1rem;
+      border-left: 1px solid #a9a198; background: inherit; font: inherit; }
+    .pe-dependency-panel[hidden] { display: none !important; }
+    html[data-book-theme="dark"] .pe-dependency-panel { border-color: #444b56; }
+    .pe-dependency-panel h2 { font-size: 1rem; margin: 0 0 .6rem; }
+    .pe-dependency-tabs { display: flex; gap: .4rem; margin-bottom: .7rem; }
+    .pe-dependency-tabs button { flex: 1; font: inherit; padding: .3rem .5rem;
+      border: 1px solid #888; background: transparent; color: inherit; border-radius: .3rem; cursor: pointer; }
+    .pe-dependency-tabs button[aria-selected="true"] { background: #8883; font-weight: bold; }
+    .pe-dependency-list { margin: 0; padding: 0; list-style: none; }
+    .pe-dependency-list li { margin: .3rem 0; padding: .3rem 0; }
+    .pe-dependency-list a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+    .pe-dependency-category { font-size: .72rem; text-transform: uppercase;
+      letter-spacing: .055em; opacity: .65; display: block; margin-bottom: .12rem; }
+    .pe-dependency-note { font-size: .8rem; opacity: .75; margin: .8rem 0; line-height: 1.45; }
+    .pe-dependency-empty { font-size: .9rem; opacity: .8; }
     html.proof-explorer-mode body { overflow: hidden !important; }
+    @media (max-width: 760px) {
+      .pe-workspace { flex-direction: column; }
+      .pe-dependency-panel { width: 100%; max-width: none; min-width: 0;
+        max-height: 39vh; border-left: 0; border-top: 1px solid #888; }
+    }
   `;
   document.head.append(style);
 
@@ -2301,7 +2338,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
 
-  function initialize(stage, item, rules, propositions) {
+  function initialize(stage, item, rules, propositions, dependencies = {}) {
     const texEngine = window.MathJax;
     if (typeof texEngine?.tex2svgPromise !== 'function') {
       console.warn('Proof Explorer: MathJax SVG renderer unavailable.');
@@ -2312,9 +2349,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const fit = toolbar.querySelector('button[aria-label="Fit proof to window"]');
     let output = item.typesetRoot;
     let source = item.math;
+    const initialSource = source; // Immutable: the mathematical dependency view is not expansion-dependent.
     const history = [];
     const origins = [];  // provenance links, one per expansion
+    const originSnapshots = []; // allow undoing Contract All and bulk operations exactly
     let busy = false;
+    let bulkBusy = false;
 
     const undo = document.createElement('button');
     undo.type = 'button';
@@ -2325,9 +2365,165 @@ document.addEventListener('DOMContentLoaded', () => {
     hint.setAttribute('role', 'status');
     const provenance = document.createElement('span');
     provenance.className = 'proof-explorer-provenance';
-    toolbar.insertBefore(undo, fit || toolbar.firstChild);
-    toolbar.insertBefore(hint, fit || toolbar.firstChild);
-    toolbar.insertBefore(provenance, fit || toolbar.firstChild);
+    // The original viewer supplies zoom controls and textbook navigation.
+    // Move these existing controls rather than duplicating their event handlers.
+    const heading = toolbar.querySelector('.proof-explorer-title');
+    const back = toolbar.querySelector('a[href]');
+    const minus = toolbar.querySelector('button[aria-label="Zoom out"]');
+    const plus = toolbar.querySelector('button[aria-label="Zoom in"]');
+    const makeButton = (name, text) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = text; b.setAttribute('aria-label', name);
+      return b;
+    };
+    const expandAll = makeButton('Expand all rules', 'Expand all');
+    const contractAll = makeButton('Contract all rules', 'Contract all');
+    const depsToggle = makeButton('Toggle theorem dependencies', 'Dependencies');
+    depsToggle.setAttribute('aria-expanded', 'false');
+    const count = document.createElement('span');
+    count.className = 'pe-expanded-count';
+    const head = document.createElement('div'); head.className = 'pe-toolbar-head';
+    const title = document.createElement('span');
+    if (heading) title.append(heading, count);
+    head.append(title);
+    if (back) head.append(back);
+    const actions = document.createElement('div'); actions.className = 'pe-toolbar-actions';
+    const expansionGroup = document.createElement('div'); expansionGroup.className = 'pe-toolbar-action-group';
+    expansionGroup.append(expandAll, contractAll, undo);
+    const navigationGroup = document.createElement('div'); navigationGroup.className = 'pe-toolbar-action-group';
+    if (minus) navigationGroup.append(minus);
+    if (plus) navigationGroup.append(plus);
+    if (fit) navigationGroup.append(fit);
+    navigationGroup.append(depsToggle);
+    actions.append(expansionGroup, navigationGroup);
+    const statusRow = document.createElement('div'); statusRow.className = 'pe-toolbar-status';
+    statusRow.append(hint, provenance);
+    toolbar.replaceChildren(head, actions, statusRow);
+
+    // The side panel does not observe visual proof expansions. Its inputs are
+    // the original authored proof and build-time result metadata, exclusively.
+    const overlay = toolbar.closest('.proof-explorer-overlay');
+    const viewport = overlay?.querySelector('.proof-explorer-viewport');
+    const workspace = document.createElement('div'); workspace.className = 'pe-workspace';
+    const sidebar = document.createElement('aside'); sidebar.className = 'pe-dependency-panel';
+    sidebar.setAttribute('aria-label', 'Theorem and axiom dependencies');
+    sidebar.hidden = true;
+    if (viewport && overlay) {
+      overlay.insertBefore(workspace, viewport);
+      workspace.append(viewport, sidebar);
+    }
+    const dependencyIndex = dependencies?.results || {};
+    const axiomLookup = dependencies?.axioms || {};
+    function extractDependencies(tex) {
+      const found = new Map();
+      const commands = /\\(?:RightLabel|RL)\b/g;
+      let match;
+      while ((match = commands.exec(tex))) {
+        const arg = braced(tex, commands.lastIndex);
+        if (!arg) continue;
+        commands.lastIndex = arg.end;
+        const label = arg.content;
+        // Only actual inference citations count; adjacent prose and theorem
+        // statements are deliberately not treated as dependencies.
+        const citations = /\\href\s*\{([^{}]+)#((?:prop|th|thm|lem|lemma|cor|axiom|ax):[^{}]+)\}\s*\{([^{}]*)\}/g;
+        let citation;
+        while ((citation = citations.exec(label))) {
+          const id = citation[2];
+          found.set(id, {id, url: `${citation[1]}#${id}`,
+            kind: /^(?:ax|axiom):/.test(id) ? 'axiom' : 'result',
+            name: dependencyIndex[id]?.title || `${id.split(':')[0].toUpperCase()} ${citation[3]}`});
+        }
+        // Some axiom applications have no \ref, e.g. \mathrm{A}_2.
+        const plain = label.replace(/\\(?:\(|\)|\[|\])/g, '')
+          .replace(/\\mathrm\s*\{A\}/g, 'A').replace(/\\mathrm\s+A/g, 'A')
+          .replace(/\s+/g, '');
+        const ax = /^A_?\{?(\d+)\}?$/.exec(plain);
+        if (ax) {
+          const number = ax[1];
+          const record = axiomLookup[number];
+          const id = record?.id || `axiom:number:${number}`;
+          found.set(id, {id, url: record?.url || null, kind: 'axiom',
+            name: record?.title || `Axiom A${number}`});
+        }
+      }
+      return [...found.values()];
+    }
+    const immediateDependencies = extractDependencies(initialSource);
+    function recursiveDependencies() {
+      const found = new Map();
+      const active = new Set();
+      const add = dependency => {
+        if (found.has(dependency.id)) return;
+        found.set(dependency.id, dependency);
+        if (active.has(dependency.id)) return;
+        active.add(dependency.id);
+        const node = dependencyIndex[dependency.id];
+        for (const id of node?.requires || []) {
+          const child = dependencyIndex[id];
+          if (!child && !id.startsWith('axiom:number:')) continue;
+          const axNumber = id.startsWith('axiom:number:') ? id.split(':').pop() : null;
+          const ax = axNumber ? axiomLookup[axNumber] : null;
+          add({id, kind: axNumber || child?.kind === 'axiom' ? 'axiom' : 'result',
+            name: child?.title || ax?.title || (axNumber ? `Axiom A${axNumber}` : `${child.kind} ${child.number}`),
+            url: child?.url || ax?.url || null});
+        }
+        active.delete(dependency.id);
+      };
+      immediateDependencies.forEach(add);
+      return [...found.values()];
+    }
+    let dependencyView = 'direct';
+    function renderDependencies() {
+      sidebar.replaceChildren();
+      const title = document.createElement('h2'); title.textContent = 'Dependencies';
+      sidebar.append(title);
+      const tabs = document.createElement('div'); tabs.className = 'pe-dependency-tabs';
+      for (const mode of ['direct', 'all']) {
+        const tab = document.createElement('button'); tab.type = 'button';
+        tab.textContent = mode === 'direct' ? 'Direct' : 'Recursive';
+        tab.setAttribute('aria-selected', String(mode === dependencyView));
+        tab.addEventListener('click', () => {dependencyView = mode; renderDependencies();});
+        tabs.append(tab);
+      }
+      sidebar.append(tabs);
+      const items = dependencyView === 'direct' ? immediateDependencies : recursiveDependencies();
+      const list = document.createElement('ul'); list.className = 'pe-dependency-list';
+      const order = {axiom: 0, result: 1};
+      items.sort((a, b) => (order[a.kind] || 1) - (order[b.kind] || 1) ||
+        a.name.localeCompare(b.name));
+      for (const item of items) {
+        const li = document.createElement('li');
+        const category = document.createElement('span'); category.className = 'pe-dependency-category';
+        category.textContent = item.kind === 'axiom' ? 'Axiom' : 'Earlier result';
+        li.append(category);
+        if (item.url) {
+          const link = document.createElement('a'); link.href = item.url;
+          link.textContent = item.name; link.title = 'Open result in textbook';
+          li.append(link);
+        } else {
+          li.append(document.createTextNode(item.name));
+        }
+        list.append(li);
+      }
+      if (!items.length) {
+        const empty = document.createElement('p'); empty.className = 'pe-dependency-empty';
+        empty.textContent = 'No explicit axiom or result citations found in this proof.';
+        sidebar.append(empty);
+      } else sidebar.append(list);
+      const note = document.createElement('p'); note.className = 'pe-dependency-note';
+      note.textContent = dependencyView === 'direct'
+        ? 'Shows citations in the originally authored proof, independently of expansions.'
+        : 'Follows indexed citations in earlier results where available. This is a first-pass citation graph, not a complete logical dependency analysis.';
+      sidebar.append(note);
+    }
+    renderDependencies();
+    depsToggle.addEventListener('click', () => {
+      sidebar.hidden = !sidebar.hidden;
+      depsToggle.setAttribute('aria-expanded', String(!sidebar.hidden));
+      // The proof should stay at its existing scale and may be panned as usual.
+      stage.proofExplorerCenterIfFits?.();
+      stage.proofExplorerSyncLines?.();
+    });
 
     function showProvenance() {
       provenance.replaceChildren();
@@ -2335,7 +2531,7 @@ document.addEventListener('DOMContentLoaded', () => {
         Array.isArray(value) ? value : value ? [value] : []);
       if (!refs.length) return;
       provenance.append(document.createTextNode('Expanded from: '));
-      refs.forEach((ref, i) => {
+      refs.slice(-8).forEach((ref, i) => {
         if (i) provenance.append(document.createTextNode(' · '));
         const link = document.createElement('a');
         link.href = ref.url;
@@ -2343,6 +2539,7 @@ document.addEventListener('DOMContentLoaded', () => {
         link.title = 'Open the original proposition in the textbook';
         provenance.append(link);
       });
+      if (refs.length > 8) provenance.append(document.createTextNode(` · +${refs.length - 8} earlier`));
     }
 
     // Lay out the entire inference subtree, not only the width of its last
@@ -2622,24 +2819,36 @@ document.addEventListener('DOMContentLoaded', () => {
         : history.length ? 'No further registered expansions in this tree.'
           : 'No registered expandable rules in this tree.';
       undo.disabled = history.length === 0;
+      expandAll.disabled = prepared.hits.length === 0;
+      contractAll.disabled = source === initialSource;
+      count.textContent = `${history.length} action${history.length === 1 ? '' : 's'}`;
       showProvenance();
     }
 
-    async function change(next, revert = false, origin = null) {
+    async function change(next, revert = false, origin = null, resetOrigins = false) {
       if (busy) return;
       busy = true;
       const before = source;
       const previousHistory = history.slice();
       const previousOrigins = origins.slice();
+      const previousOriginSnapshots = originSnapshots.map(snapshot => snapshot.slice());
       source = next;
-      if (revert) { history.pop(); origins.pop(); }
-      else { history.push(before); origins.push(origin); }
+      if (revert) {
+        history.pop();
+        origins.splice(0, origins.length, ...(originSnapshots.pop() || []));
+      } else {
+        history.push(before);
+        originSnapshots.push(previousOrigins);
+        if (resetOrigins) origins.splice(0);
+        else origins.push(origin);
+      }
       try {
         await render();
       } catch (error) {
         source = before;
         history.splice(0, history.length, ...previousHistory);
         origins.splice(0, origins.length, ...previousOrigins);
+        originSnapshots.splice(0, originSnapshots.length, ...previousOriginSnapshots);
         undo.disabled = history.length === 0;
         hint.textContent = 'Could not redraw the tree; original kept.';
         console.error('Proof Explorer expansion:', error);
@@ -2648,7 +2857,63 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    // Expand All is recursive: newly revealed rules are eligible immediately.
+    // Commit as ONE history action and redraw only when the batch finishes.
+    // Bounded work avoids locking a browser on a very large textbook proof.
+    expandAll.addEventListener('click', async () => {
+      if (busy || bulkBusy) return;
+      bulkBusy = true;
+      expandAll.disabled = contractAll.disabled = undo.disabled = true;
+      let next = source;
+      let expanded = 0;
+      const acquired = [];
+      const MAX_STEPS = 150;
+      const MAX_SOURCE_LENGTH = 1000000;
+      try {
+        while (expanded < MAX_STEPS && next.length < MAX_SOURCE_LENGTH) {
+          const candidates = allApplications(next, rules, propositions);
+          if (!candidates.length) break;
+          let replacement = null;
+          for (const candidate of candidates.slice().reverse()) {
+            try {
+              const proposed = expandWithForwarding(next, candidate.id, rules, propositions);
+              if (proposed && proposed.source !== next) {
+                replacement = proposed; break;
+              }
+            } catch (error) {
+              console.warn('Skipping unavailable expansion:', error);
+            }
+          }
+          if (!replacement) break;
+          next = replacement.source;
+          acquired.push(...replacement.origins);
+          expanded++;
+          if (expanded % 8 === 0) {
+            hint.textContent = `Expanding… ${expanded} inferences`;
+            await new Promise(resolve => requestAnimationFrame(resolve));
+          }
+        }
+        if (next !== source) await change(next, false, acquired);
+        if (expanded >= MAX_STEPS || next.length >= MAX_SOURCE_LENGTH) {
+          hint.textContent = `Expanded ${expanded} inferences; safety limit reached. Expand all again to continue.`;
+        }
+      } catch (error) {
+        console.error('Expand All:', error);
+        hint.textContent = 'Expand All could not finish. The previous proof is unchanged.';
+      } finally {
+        bulkBusy = false;
+        undo.disabled = history.length === 0;
+        contractAll.disabled = source === initialSource;
+        expandAll.disabled = allApplications(source, rules, propositions).length === 0;
+      }
+    });
+    contractAll.addEventListener('click', () => {
+      if (busy || bulkBusy || source === initialSource) return;
+      change(initialSource, false, null, true);
+    });
+
     stage.addEventListener('click', event => {
+      if (busy || bulkBusy) return;
       const link = event.target.closest?.('a[href]');
       const href = link?.getAttribute('href');
       const prefix = href?.startsWith(LINK_PREFIX) ? LINK_PREFIX
@@ -2668,7 +2933,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }, true);
     undo.addEventListener('click', () => {
-      if (busy || !history.length) return;
+      if (busy || bulkBusy || !history.length) return;
       change(history[history.length - 1], true);
     });
 
@@ -2678,7 +2943,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function start(rules, propositions) {
+  function start(rules, propositions, dependencies) {
     const stage = document.querySelector('.proof-explorer-stage');
     if (!stage) return false;
     const snippet = stage.querySelector(':scope > .formalderivation');
@@ -2687,7 +2952,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .some(el => el.style.getPropertyValue('--explorer-id').trim() === key)) return false;
     const item = locateExplorerMath(stage);
     if (!item) return false;
-    initialize(stage, item, rules, propositions);
+    initialize(stage, item, rules, propositions, dependencies);
     return true;
   }
 
@@ -2707,9 +2972,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const rules = Object.values(data.rules);
     const propositions = data.propositions;
-    if (start(rules, propositions)) return;
+    const dependencies = data.dependencies || {};
+    if (start(rules, propositions, dependencies)) return;
     const observer = new MutationObserver(() => {
-      if (start(rules, propositions)) observer.disconnect();
+      if (start(rules, propositions, dependencies)) observer.disconnect();
     });
     observer.observe(document.body, {childList: true, subtree: true});
     setTimeout(() => observer.disconnect(), 12000);
