@@ -894,83 +894,266 @@ def get_proposition_proofs(path: Path, content: str, targets):
     return entries
 
 
-# Result dependencies are an index of *authored citations*, independent of
-# whether an Explorer proof is visually expanded. This is not a proof checker.
+# Proof-dependency indexing is about the provenance of the AUTHOR'S proof,
+# not the logical indispensability of an axiom. No proof checking is performed.
+# Nodes in the public graph are axioms/results; rule justifications are
+# transparent edges and definitions never create dependency nodes.
 _RESULT_ENV = re.compile(
-    r'\\begin\s*\{(axiom|proposition|theorem|lemma|corollary)\}'
+    r'\\begin\s*\{(axiom|proposition|theorem|lemma|corollary|metatheorem)\}'
     r'(?:\[([^\]]*)\])?(.*?)\\end\s*\{\1\}', re.S)
 _RESULT_LABEL = re.compile(r'\\label\s*\{([^{}]+)\}')
 _PROOF_ENV = re.compile(r'\\begin\s*\{proof\}(?:\[[^\]]*\])?(.*?)\\end\s*\{proof\}', re.S)
+_FORMAL_ENV = re.compile(r'\\begin\s*\{formalderivation\}(?:\[[^\]]*\]){0,2}(.*?)\\end\s*\{formalderivation\}', re.S)
+_EXPLORER_ENV = re.compile(r'\\begin\s*\{explorerderivation\}\s*\{([^{}]+)\}(.*?)\\end\s*\{explorerderivation\}', re.S)
 _STRUCTURE_BREAK = re.compile(r'\\(?:section|subsection|subsubsection|nbgpara|nbgparar)\b')
 _AXIOM_LABEL = re.compile(r'^A_?\{?(\d+)\}?$')
+_RULE_REF = re.compile(r'\\href\s*\{[^{}#]*#([^{}#]+)\}\s*\{[^{}]*\}')
+_PROOF_RULE_HEADERS = re.compile(r'\\begin\s*\{derivedrule\}')
+
+# The Ext rule is defined in the technical reference as a direct instance of
+# Axiom A1, rather than as a separately registered derivedrule. Recognize it
+# as an axiom invocation; do not create a separate Ext node.
+# Add future unregistered axiom-rule spellings here, only when justified.
+_AXIOM_RULE_ALIASES = {'Ext': '1'}
+_PURE_INFERENCE = re.compile(
+    r'^(?:\\(?:forall|exists|land|lor|leftrightarrow|to|neg|bot|top|equiv|'
+    r'forall_S|exists_S|forall\\_S|exists\\_S)(?:-I|-[IE]|-I\\*|-[IE]\\*)?'
+    r'|=-(?:I|E)|CR|RAA|\\mathrm\{CR\}|\\mathrm\{RAA\})$')
 
 
-def _result_citations(body: str) -> list[str]:
-    """Return explicit references (not implicit mathematical dependencies)."""
-    ids = set()
-    # References in a proof's prose and its authored trees may both be genuine.
-    for ref in REF.findall(body):
-        if ref.startswith(('prop:', 'th:', 'thm:', 'lem:', 'lemma:', 'cor:', 'ax:', 'axiom:')):
-            ids.add(ref)
-    for tree in TREE.findall(body):
-        for cmd in commands(tree):
-            if cmd['op'] not in ('RightLabel', 'RL'):
-                continue
-            name = label_key(cmd['arg'])
-            name = re.sub(r'\\mathrm\s*\{A\}|\\mathrm\s+A', 'A', name)
-            ax = _AXIOM_LABEL.fullmatch(name)
-            if ax:
-                ids.add('axiom:number:' + ax.group(1))
-    return sorted(ids)
+def _base_inference_label(label: str) -> str:
+    """Omit discharge tags; leave the mathematical rule name intact."""
+    text = label_key(label)
+    text = re.sub(r'\\(?:mathrm|text|operatorname)\{([^{}]*)\}', r'\1', text)
+    text = re.sub(r'\\mathrm([A-Za-z]+)', r'\1', text)
+    # Lwarp sometimes emits \\forall \\_S in place of \\forall_S.
+    text = re.sub(r'\\(forall|exists)\\_S', r'\\\1_S', text)
+    return text.split(',', 1)[0]
 
 
-def dependency_index(tex_paths: list[Path], targets: dict):
-    """An optional, conservative citation graph for the dependency sidebar.
+def _axiom_number(value: str):
+    compact = _base_inference_label(value)
+    result = _AXIOM_LABEL.fullmatch(compact)
+    return result.group(1) if result else None
 
-    Store only references actually written in the theorem's proof. When a
-    theorem has no explicit citations or lacks an accessible formal proof,
-    no dependencies are invented. An axiom's A-number can be linked to its
-    labeled source when unambiguous in the generated reference index.
+
+def _collect_proof_dependencies(text: str, rule_labels: dict):
+    """Return (immediate references, explicit missing paths).
+
+    We inspect inference labels, not arbitrary formulas. A secondary pass over
+    proof prose gathers references not repeated in a formal proof tree.
     """
-    index = {}
-    axioms = {}
-    for path in tex_paths:
-        source = path.read_text(encoding='utf-8')
-        statements = list(_RESULT_ENV.finditer(source))
-        for n, match in enumerate(statements):
-            kind, heading, content = match.groups()
-            label = _RESULT_LABEL.search(content)
+    deps, issues = set(), set()
+    trees = TREE.findall(text)
+    if trees:
+        for tree in trees:
+            for cmd in commands(tree):
+                if cmd['op'] not in ('RightLabel', 'RL'):
+                    continue
+                label = cmd['arg'] or ''
+                for target in (REF.findall(label) + _RULE_REF.findall(label) +
+                               [anchor for anchor, _ in HYPERREF.findall(label)]):
+                    if target.startswith(('ax:', 'axiom:', 'prop:', 'th:', 'thm:', 'lem:',
+                                          'lemma:', 'cor:', 'meta:')):
+                        deps.add(target)
+                if REF.search(label) or _RULE_REF.search(label) or HYPERREF.search(label):
+                    continue
+                number = _axiom_number(label)
+                if number:
+                    deps.add('axiom:number:' + number)
+                    continue
+                base = _base_inference_label(label)
+                if not base or re.fullmatch(r'[1-9]\d*|[A-Za-z]', base):
+                    continue
+                if base in _AXIOM_RULE_ALIASES:
+                    deps.add('axiom:number:' + _AXIOM_RULE_ALIASES[base])
+                    continue
+                if base in rule_labels:
+                    deps.update(rule_labels[base])
+                    continue
+                if base.startswith('D') or base in ('Def.', 'Def', 'Definition'):
+                    continue
+                if _PURE_INFERENCE.fullmatch(base):
+                    continue
+                # Some abbreviated first-order rules are pure logical steps.
+                if re.fullmatch(r'\\(?:forall|exists|land|lor|leftrightarrow|to|neg)(?:-[IE]\\*?)?', base):
+                    continue
+                issues.add('Unindexed inference rule: ' + base)
+    # References in the ordinary prose proof provide a fallback for proofs
+    # that use prose instead of displaying every cited result as a step.
+    without_trees = TREE.sub('', text)
+    for target in REF.findall(without_trees) + [anchor for anchor, _ in HYPERREF.findall(without_trees)]:
+        if target.startswith(('ax:', 'axiom:', 'prop:', 'th:', 'thm:', 'lem:',
+                              'lemma:', 'cor:', 'meta:')):
+            deps.add(target)
+    return sorted(deps), sorted(issues)
+
+
+def _number_for_axiom(number: str, title: str):
+    # Prefer the actual reference-index number. An axiom might be displayed
+    # as A_1, A1, or simply 1 depending on the user's numbering macros.
+    number = str(number).strip()
+    hit = re.fullmatch(r'(?:A[_ ]?)?\{?(\d+)\}?', number)
+    if hit:
+        return hit.group(1)
+    # The two existing NBG axioms have known explicit names; do not infer
+    # numbers for later axioms from file order or an unrelated section number.
+    if re.search(r'\bExtensionality\b', title, re.I):
+        return '1'
+    if re.search(r'\bClass Formation\b', title, re.I):
+        return '2'
+    return None
+
+
+def _display_heading(kind: str, heading: str):
+    text = re.sub(r'\\(?:textbf|emph|textit)\s*\{([^{}]*)\}', r'\1', heading or '')
+    text = re.sub(r'\\[A-Za-z]+|[{}$]', '', text).strip()
+    return text or kind.title()
+
+
+def _authored_proof(source: str, after: int, bound: int, result_id: str):
+    """Return (authored proof source, coverage category).
+
+    A standalone explorerderivation commonly follows the proof environment.
+    For other results, formalderivations may likewise be outside the proof.
+    Never regard a prose-only or abbreviated proof as fully indexed.
+    """
+    trailing = source[after:bound]
+    barrier = _STRUCTURE_BREAK.search(trailing)
+    if barrier:
+        trailing = trailing[:barrier.start()]
+    other_rule = _PROOF_RULE_HEADERS.search(trailing)
+    if other_rule:
+        trailing = trailing[:other_rule.start()]
+    explorers = list(_EXPLORER_ENV.finditer(trailing))
+    expected = result_id.partition(':')[2]
+    for match in explorers:
+        if match.group(1) == expected:
+            return match.group(2), 'complete'
+    if explorers:
+        return explorers[0].group(2), 'complete'
+    proof = _PROOF_ENV.search(trailing)
+    prose = proof.group(1) if proof else ''
+    # Include standalone displays as well as displays inside proof. The
+    # prose remains useful when it cites an earlier result explicitly.
+    forms = list(_FORMAL_ENV.finditer(trailing))
+    if forms:
+        content = prose + '\n' + '\n'.join(form.group(1) for form in forms)
+        return content, 'abbreviated' if r'\vdots' in content else 'complete'
+    if proof:
+        return prose, 'prose'
+    return '', 'missing'
+
+
+def dependency_index(tex_paths: list[Path], targets: dict, registered_rules: dict):
+    """Build the authored result/axiom DAG and transparent rule edges.
+
+    The graph stores uncertainty instead of mistaking an unindexed proof for
+    a proof with no axiomatic premises. No dependence on live expansion state.
+    """
+    results, axioms, rule_nodes, rule_labels = {}, {}, {}, {}
+    documents = [(path, path.read_text(encoding='utf-8')) for path in tex_paths]
+    # Map registered rule labels (including variant labels) to their source ID.
+    for key, entry in registered_rules.items():
+        base = _base_inference_label(entry.get('label', ''))
+        if base:
+            rule_labels.setdefault(base, set()).add(key.partition(':')[0] + ':' +
+                key.split(':')[1] if key.count(':') > 1 else key)
+    # Also discover authored derived rules not yet expandable in the Explorer.
+    for path, source in documents:
+        for match in DERIVED.finditer(source):
+            label = re.search(r'\\label\s*\{(rule:[^{}\s]+)\}', match.group(2))
+            if not label:
+                continue
+            key = label.group(1)
+            if key in rule_nodes:
+                continue
+            body = match.group(2)
+            trees = TREE.findall(body)
+            for tree in trees:
+                try:
+                    root, _ = parse_tree(tree, str(path))
+                except ValueError:
+                    # Indexing must not newly reject older, unregistered
+                    # pedagogical rule displays. Report missing provenance
+                    # rather than breaking a previously valid site build.
+                    continue
+                base = _base_inference_label(root.get('label') or '')
+                if base:
+                    rule_labels.setdefault(base, set()).add(key)
+            rule_nodes[key] = {'id': key, 'requires': [], 'issues': ['Rule justification not indexed']}
+    label_lookup = {key: sorted(ids) for key, ids in rule_labels.items()}
+    # For each rule, use the justification immediately following its schema.
+    for path, source in documents:
+        rules = list(DERIVED.finditer(source))
+        for i, match in enumerate(rules):
+            label = re.search(r'\\label\s*\{(rule:[^{}\s]+)\}', match.group(2))
+            if not label:
+                continue
+            key = label.group(1)
+            next_rule = rules[i+1].start() if i+1 < len(rules) else len(source)
+            next_result = _RESULT_ENV.search(source, match.end())
+            stop = min(next_rule, next_result.start() if next_result else len(source))
+            segment = source[match.end():stop]
+            barrier = _STRUCTURE_BREAK.search(segment)
+            if barrier:
+                segment = segment[:barrier.start()]
+            justification = _FORMAL_ENV.search(segment)
+            if justification:
+                deps, issues = _collect_proof_dependencies(justification.group(1), label_lookup)
+                # No self-reference to a rule as its own justification.
+                deps = [dep for dep in deps if dep != key]
+                rule_nodes[key] = {'id': key, 'requires': deps, 'issues': issues}
+            else:
+                # Definition/rule may be justified in prose with an explicit
+                # proposition citation, but missing details remain flagged.
+                refs, _ = _collect_proof_dependencies(segment, label_lookup)
+                rule_nodes[key] = {'id': key, 'requires': [x for x in refs if x != key],
+                                   'issues': ['Rule justification not indexed']}
+    # Registered rules might lack a labeled \begin{derivedrule} in a partial
+    # snapshot; preserve the gap rather than quietly deeming them primitive.
+    for key in registered_rules:
+        parent = ':'.join(key.split(':')[:2])
+        rule_nodes.setdefault(parent, {'id': parent, 'requires': [],
+                                       'issues': ['Rule justification not indexed']})
+    for path, source in documents:
+        matches = list(_RESULT_ENV.finditer(source))
+        for i, match in enumerate(matches):
+            kind, heading, statement = match.groups()
+            label = _RESULT_LABEL.search(statement)
             if not label:
                 continue
             key = label.group(1)
             if key not in targets:
                 continue
-            number, file = targets[key]
-            title = re.sub(r'\\(?:textbf|emph)\s*\{([^{}]*)\}', r'\1', heading or '')
-            title = re.sub(r'\\[A-Za-z]+|[{}]', '', title).strip() or kind.title()
-            entry = dict(id=key, kind=kind, title=title, number=number,
-                         url=f'{file}#{key}', requires=[])
-            # A leading-number axiom is also addressable by the A_N label.
+            number, filename = targets[key]
+            title = _display_heading(kind, heading)
+            entry = {'id': key, 'kind': kind, 'title': title, 'number': number,
+                     'url': f'{filename}#{key}', 'requires': [], 'issues': []}
             if kind == 'axiom':
-                index[key] = entry
-                number_string = str(number)
-                ax_number = re.fullmatch(r'\d+', number_string)
-                if ax_number and number_string not in axioms:
-                    axioms[number_string] = entry
+                results[key] = entry
+                n = _number_for_axiom(number, title)
+                if n:
+                    axioms[n] = entry
                 continue
-            end = statements[n+1].start() if n+1 < len(statements) else len(source)
-            trailing = source[match.end():end]
-            barrier = _STRUCTURE_BREAK.search(trailing)
-            if barrier:
-                trailing = trailing[:barrier.start()]
-            proof = _PROOF_ENV.search(trailing)
-            if proof:
-                entry['requires'] = [dep for dep in _result_citations(proof.group(1))
-                                     if dep != key]
-            index[key] = entry
-    # Unreferenced numbered axioms are still added by the live proof scanner.
-    # Map ordinary A_N labels to axiom entries only when their numbering agrees.
-    return dict(results=index, axioms=axioms)
+            next_match = matches[i+1].start() if i+1 < len(matches) else len(source)
+            content, coverage = _authored_proof(source, match.end(), next_match, key)
+            if coverage != 'missing':
+                deps, issues = _collect_proof_dependencies(content, label_lookup)
+                entry['requires'] = [dep for dep in deps if dep != key]
+                entry['issues'] = issues
+                if coverage == 'prose':
+                    entry['issues'].append('No formal derivation indexed')
+                elif coverage == 'abbreviated':
+                    entry['issues'].append('Abbreviated derivation may hide dependencies')
+            else:
+                entry['issues'] = ['No authored proof indexed']
+            if key in results:
+                error(f'Duplicate mathematical result in dependency index: {key}')
+            results[key] = entry
+    return {'results': results, 'axioms': axioms, 'rules': rule_nodes,
+            'ruleLabels': {key: sorted(ids) for key, ids in rule_labels.items()},
+            'schema': 2}
 
 
 def main():
@@ -1116,7 +1299,7 @@ def main():
                 entry['mode'] == other['mode'] == 'elim'):
                 error("Multiple unrelated registered rules have the same inference label")
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    dependencies = dependency_index(tex_paths, targets)
+    dependencies = dependency_index(tex_paths, targets, registry)
     OUT.write_text(
         json.dumps({"version": 7, "rules": registry, "propositions": propositions,
                     "dependencies": dependencies}, indent=2, ensure_ascii=False) + "\n",
