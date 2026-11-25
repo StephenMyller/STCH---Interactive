@@ -893,6 +893,86 @@ def get_proposition_proofs(path: Path, content: str, targets):
                             variants=variants)
     return entries
 
+
+# Result dependencies are an index of *authored citations*, independent of
+# whether an Explorer proof is visually expanded. This is not a proof checker.
+_RESULT_ENV = re.compile(
+    r'\\begin\s*\{(axiom|proposition|theorem|lemma|corollary)\}'
+    r'(?:\[([^\]]*)\])?(.*?)\\end\s*\{\1\}', re.S)
+_RESULT_LABEL = re.compile(r'\\label\s*\{([^{}]+)\}')
+_PROOF_ENV = re.compile(r'\\begin\s*\{proof\}(?:\[[^\]]*\])?(.*?)\\end\s*\{proof\}', re.S)
+_STRUCTURE_BREAK = re.compile(r'\\(?:section|subsection|subsubsection|nbgpara|nbgparar)\b')
+_AXIOM_LABEL = re.compile(r'^A_?\{?(\d+)\}?$')
+
+
+def _result_citations(body: str) -> list[str]:
+    """Return explicit references (not implicit mathematical dependencies)."""
+    ids = set()
+    # References in a proof's prose and its authored trees may both be genuine.
+    for ref in REF.findall(body):
+        if ref.startswith(('prop:', 'th:', 'thm:', 'lem:', 'lemma:', 'cor:', 'ax:', 'axiom:')):
+            ids.add(ref)
+    for tree in TREE.findall(body):
+        for cmd in commands(tree):
+            if cmd['op'] not in ('RightLabel', 'RL'):
+                continue
+            name = label_key(cmd['arg'])
+            name = re.sub(r'\\mathrm\s*\{A\}|\\mathrm\s+A', 'A', name)
+            ax = _AXIOM_LABEL.fullmatch(name)
+            if ax:
+                ids.add('axiom:number:' + ax.group(1))
+    return sorted(ids)
+
+
+def dependency_index(tex_paths: list[Path], targets: dict):
+    """An optional, conservative citation graph for the dependency sidebar.
+
+    Store only references actually written in the theorem's proof. When a
+    theorem has no explicit citations or lacks an accessible formal proof,
+    no dependencies are invented. An axiom's A-number can be linked to its
+    labeled source when unambiguous in the generated reference index.
+    """
+    index = {}
+    axioms = {}
+    for path in tex_paths:
+        source = path.read_text(encoding='utf-8')
+        statements = list(_RESULT_ENV.finditer(source))
+        for n, match in enumerate(statements):
+            kind, heading, content = match.groups()
+            label = _RESULT_LABEL.search(content)
+            if not label:
+                continue
+            key = label.group(1)
+            if key not in targets:
+                continue
+            number, file = targets[key]
+            title = re.sub(r'\\(?:textbf|emph)\s*\{([^{}]*)\}', r'\1', heading or '')
+            title = re.sub(r'\\[A-Za-z]+|[{}]', '', title).strip() or kind.title()
+            entry = dict(id=key, kind=kind, title=title, number=number,
+                         url=f'{file}#{key}', requires=[])
+            # A leading-number axiom is also addressable by the A_N label.
+            if kind == 'axiom':
+                index[key] = entry
+                number_string = str(number)
+                ax_number = re.fullmatch(r'\d+', number_string)
+                if ax_number and number_string not in axioms:
+                    axioms[number_string] = entry
+                continue
+            end = statements[n+1].start() if n+1 < len(statements) else len(source)
+            trailing = source[match.end():end]
+            barrier = _STRUCTURE_BREAK.search(trailing)
+            if barrier:
+                trailing = trailing[:barrier.start()]
+            proof = _PROOF_ENV.search(trailing)
+            if proof:
+                entry['requires'] = [dep for dep in _result_citations(proof.group(1))
+                                     if dep != key]
+            index[key] = entry
+    # Unreferenced numbered axioms are still added by the live proof scanner.
+    # Map ordinary A_N labels to axiom entries only when their numbering agrees.
+    return dict(results=index, axioms=axioms)
+
+
 def main():
     schemata = {}
     expansions = {}
@@ -1036,8 +1116,10 @@ def main():
                 entry['mode'] == other['mode'] == 'elim'):
                 error("Multiple unrelated registered rules have the same inference label")
     OUT.parent.mkdir(parents=True, exist_ok=True)
+    dependencies = dependency_index(tex_paths, targets)
     OUT.write_text(
-        json.dumps({"version": 7, "rules": registry, "propositions": propositions}, indent=2, ensure_ascii=False) + "\n",
+        json.dumps({"version": 7, "rules": registry, "propositions": propositions,
+                    "dependencies": dependencies}, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
     print(f"Proof registry: generated {len(registry)} rule(s) "
