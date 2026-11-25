@@ -143,6 +143,7 @@ The Identity Law states that a class is identical to a class term exactly when i
 Each fundamental law provides two implications. We can therefore extract four derived rules that allow us to reason directly with class terms in Gentzen derivations. In the membership rules, let \(T=\{\xi\mid\varphi\}\).
 
 \begin{derivedrule}[Class-Builder Membership Introduction]
+\label{rule:class-builder-membership-intro}
 \begin{prooftree}
     \AxiomC{\(\Set(\zeta)\)}
     \AxiomC{\(\varphi[\zeta/\xi]\)}
@@ -151,6 +152,7 @@ Each fundamental law provides two implications. We can therefore extract four de
 \end{prooftree}
 \end{derivedrule}
 
+% proof-explorer-expansion: rule:class-builder-membership-intro; kind=builder; mode=membership-i
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{\(\Set(\zeta)\)}
@@ -171,6 +173,7 @@ Each fundamental law provides two implications. We can therefore extract four de
 \end{formalderivation}
 
 \begin{derivedrule}[Class-Builder Membership Elimination]
+\label{rule:class-builder-membership-elim}
 \begin{prooftree}
     \AxiomC{\(\zeta\in\{\xi\mid\varphi\}\)}
     \RightLabel{\(\mathrm{CB}{\in}\text{-E}\)}
@@ -178,6 +181,7 @@ Each fundamental law provides two implications. We can therefore extract four de
 \end{prooftree}
 \end{derivedrule}
 
+% proof-explorer-expansion: rule:class-builder-membership-elim; kind=builder; mode=membership-e
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
