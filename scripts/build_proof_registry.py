@@ -11,7 +11,7 @@ For a discharge rule, use:
 The defining tree must contain a single conventional dotted schematic subproof:
   AxiomC{} / RightLabel{n} / UnaryInfC{assumption} / noLine /
   UnaryInfC{vdots} / noLine / UnaryInfC{premise}.
-The engine checks the selected discharge assumption and conservatively arejects
+The engine checks the selected discharge assumption and conservatively rejects
 applications if the eigenvariable occurs in other assumption leaves.
 
 Annotation immediately before a formalderivation:
@@ -693,7 +693,8 @@ def proof_prop_variants(tree: str, location: str):
                 raw = label_key(node['label'])
                 match = re.search(r',([1-9]\d*(?:,[1-9]\d*)*)$', raw)
                 if match and (any(rule in raw for rule in
-                                  (r'\to-I', r'\neg-I', r'\Unique-I', 'CR,'))):
+                                  (r'\to-I', r'\neg-I', r'\Unique-I',
+                                   r'\subseteq-I', 'CR,'))):
                     for tag in match.group(1).split(','):
                         discharge_sites[tag] = discharge_sites.get(tag, 0) + 1
                         remaining.discard(tag)
