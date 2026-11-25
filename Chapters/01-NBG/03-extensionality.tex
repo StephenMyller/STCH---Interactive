@@ -24,7 +24,7 @@ In Gentzen derivations, we use \(\mathrm{Ext}\) to abbreviate the inference lice
     \UnaryInfC{\(A=B\)}
 \end{prooftree}
 
-This inference simply involves two applications of $\forall$-I. So, strictly speaking, we could treat it as a ``derived rule" based on the axiom. However, there is no harm in treating the rule itself as primitive.
+Formally, this rule follows from the axiom by two applications of \(\forall\)-E, followed by \(\to\)-E. We use \(\mathrm{Ext}\) as a convenient abbreviation for that reasoning, not as an additional independent principle.
 
 \nbgpara{2}{}
 The axiom's contribution can be better appreciated by considering how it could be different. The name \emph{Extensionality} comes from the word \emph{extension}: the extension of a class consists of its members. An \emph{intensional} description, by contrast, concerns the property or condition by which those members are picked out.
@@ -52,7 +52,7 @@ Since \(x\) was arbitrary, the two classes have exactly the same members. By the
 \end{proof}
 
 % proof-explorer-proposition: prop:subclasshood-antisymmetric; vars=A,B; fresh=a
-\begin{formalderivation}[-2cm]
+\begin{formalderivation}[-2cm][subclasshood-antisymmetric]
 \begin{prooftree}
     \AxiomC{\(A\subseteq B\)}
 %
@@ -85,6 +85,57 @@ Since \(x\) was arbitrary, the two classes have exactly the same members. By the
 \end{prooftree}
 \end{formalderivation}
 
+
+\begin{explorerderivation}{subclasshood-antisymmetric}
+\begin{prooftree}
+    % First direction: A subseteq B
+    \AxiomC{}
+    \RightLabel{3}
+    \UnaryInfC{\(A\subseteq B\land B\subseteq A\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(A\subseteq B\)}
+%
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{\(a\in A\)}
+%
+    \RightLabel{\(\subseteq\)-E}
+    \BinaryInfC{\(a\in B\)}
+    \RightLabel{\(\to\)-I, 1}
+    \UnaryInfC{\(a\in A\to a\in B\)}
+%
+    % Second direction: B subseteq A
+    \AxiomC{}
+    \RightLabel{3}
+    \UnaryInfC{\(A\subseteq B\land B\subseteq A\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(B\subseteq A\)}
+%
+    \AxiomC{}
+    \RightLabel{2}
+    \UnaryInfC{\(a\in B\)}
+%
+    \RightLabel{\(\subseteq\)-E}
+    \BinaryInfC{\(a\in A\)}
+    \RightLabel{\(\to\)-I, 2}
+    \UnaryInfC{\(a\in B\to a\in A\)}
+%
+    % Establish agreement on all members
+    \RightLabel{\(\leftrightarrow\)-I}
+    \BinaryInfC{\(a\in A\leftrightarrow a\in B\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall x(x\in A\leftrightarrow x\in B)\)}
+    \RightLabel{\(\mathrm{Ext}\)}
+    \UnaryInfC{\(A=B\)}
+%
+    % Discharge both occurrences of the mutual-inclusion assumption
+    \RightLabel{\(\to\)-I, 3}
+    \UnaryInfC{\((A\subseteq B\land B\subseteq A)\to A=B\)}
+    \RightLabel{\(\forall\)-I*}
+    \UnaryInfC{\(\forall x\forall y((x\subseteq y\land y\subseteq x)\to x=y)\)}
+\end{prooftree}
+\end{explorerderivation}
+
 Antisymmetry completes a familiar mathematical pattern. A relation is called a \emph{partial order} if it is reflexive, transitive, and antisymmetric. Reflexivity says that every object stands in the relation to itself; transitivity says that the relation can be passed along a chain; and antisymmetry says that two objects standing in the relation to one another must be identical.
 
 These three properties now hold for subclasshood. Thus, \(\subseteq\) is a partial order on classes.
@@ -110,7 +161,7 @@ By Proposition~\ref{prop:identity-implies-mutual-subclasshood}, if \(A=B\), then
 \end{proof}
 
 % proof-explorer-proposition: prop:extensional-equality; vars=A,B
-\begin{formalderivation}
+\begin{formalderivation}[0rem][extensional-equality]
 \begin{prooftree}
     \AxiomC{}
     \RightLabel{1}
@@ -131,6 +182,34 @@ By Proposition~\ref{prop:identity-implies-mutual-subclasshood}, if \(A=B\), then
     \BinaryInfC{\(A=B\leftrightarrow(A\subseteq B\land B\subseteq A)\)}
 \end{prooftree}
 \end{formalderivation}
+
+
+\begin{explorerderivation}{extensional-equality}
+\begin{prooftree}
+    % Identity implies mutual subclasshood
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{\(A=B\)}
+    \RightLabel{P\ref{prop:identity-implies-mutual-subclasshood}}
+    \UnaryInfC{\(A\subseteq B\land B\subseteq A\)}
+    \RightLabel{\(\to\)-I, 1}
+    \UnaryInfC{\(A=B\to(A\subseteq B\land B\subseteq A)\)}
+%
+    % Mutual subclasshood implies identity
+    \AxiomC{}
+    \RightLabel{2}
+    \UnaryInfC{\(A\subseteq B\land B\subseteq A\)}
+    \RightLabel{P\ref{prop:subclasshood-antisymmetric}}
+    \UnaryInfC{\(A=B\)}
+    \RightLabel{\(\to\)-I, 2}
+    \UnaryInfC{\((A\subseteq B\land B\subseteq A)\to A=B\)}
+%
+    \RightLabel{\(\leftrightarrow\)-I}
+    \BinaryInfC{\(A=B\leftrightarrow(A\subseteq B\land B\subseteq A)\)}
+    \RightLabel{\(\forall\)-I*}
+    \UnaryInfC{\(\forall x\forall y(x=y\leftrightarrow(x\subseteq y\land y\subseteq x))\)}
+\end{prooftree}
+\end{explorerderivation}
 
 \nbgpara{5}{}
 This criterion gives us a fundamental proof strategy, called \emph{proof by double inclusion} or \emph{proof by mutual inclusion}: to establish \(A=B\), prove \(A\subseteq B\) and \(B\subseteq A\) separately. We record the strategy as a derived rule.
@@ -238,7 +317,188 @@ Unlike the derived subclass rules introduced earlier, Mutual Inclusion (\(\mathr
 Unlike Mutual Inclusion, neither of these rules depends on Extensionality. Non-Inclusion Introduction follows from the definition of subclasshood, while Non-Identity Introduction follows from the logical rules for identity.
 
 
-\nbgpara{7}{} Suppose we specify a class by giving a condition
+
+\nbgpara{7}{}
+Before applying Extensionality to classes described by membership conditions, we need one further piece of notation. All our variables range over classes, including proper classes, and the ordinary quantifiers \(\forall\) and \(\exists\) therefore range over all classes. But when describing the membership of a class, we are ultimately concerned with sets: by the definition of sethood, anything belonging to a class is a set. It is consequently convenient to be able to quantify over sets alone. We introduce two \emph{restricted quantifiers} for this purpose.
+
+\begin{definition}[Restricted Universal Quantification]
+\label{def:restricted-universal-quantification}
+Let \(\varphi\) be an extended formula and let \(\xi\) be a variable.
+\[
+\forall_S\xi\,\varphi \quad
+\defequiv \quad
+\forall\xi\bigl(\Set(\xi)\to\varphi\bigr).
+\]
+\end{definition}
+
+The expression \(\forall_S\xi\,\varphi\) means that every set satisfies \(\varphi\). Its definition says that, for every class \(\xi\), if \(\xi\) is a set, then \(\varphi\) holds. No requirement is imposed on proper classes.
+
+Similarly, we introduce a restricted existential quantifier.
+
+\begin{definition}[Restricted Existential Quantification]
+\label{def:restricted-existential-quantification}
+Let \(\varphi\) be an extended formula and let \(\xi\) be a variable.
+\[
+\exists_S\xi\,\varphi
+\quad \defequiv \quad
+\exists\xi\bigl(\Set(\xi)\land\varphi\bigr).
+\]
+\end{definition}
+
+Thus, \(\exists_S\xi\,\varphi\) means that at least one set satisfies \(\varphi\). Unlike its universal counterpart, the definition uses a conjunction: there must exist an object that is both a set and satisfies the given condition.
+
+Neither restricted quantifier introduces anything fundamentally new into our language. Both are abbreviations constructed from our existing logical symbols and the previously introduced notion of sethood. We are still working in a one-sorted language whose variables range over all classes.
+
+\nbgpara{8}{}
+The definitions of restricted quantification license four derived rules, corresponding to the introduction and elimination rules for ordinary quantification. They allow us to reason directly with the restricted notation while retaining the ordinary quantifier rules as their justification.
+
+\begin{derivedrule}[Restricted Universal Introduction]\label{rule:restricted-forall-i}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(n\)}
+    \UnaryInfC{\(\Set(\zeta)\)}
+    \noLine
+    \UnaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\forall_S\)-I, \(n\)}
+    \UnaryInfC{\(\forall_S\xi\,\varphi\)}
+\end{prooftree} \bookvspace{0.3cm}
+The rule discharges assumption \(n\). The variable \(\zeta\) must be free for \(\xi\) in \(\varphi\), must not occur free in \(\varphi\), and must not occur free in any remaining undischarged assumption on which the premise depends.
+\end{derivedrule}
+
+% Restricted Universal Introduction:
+% proof-explorer-expansion: rule:restricted-forall-i; kind=restricted; mode=forall-i
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(n\)}
+    \UnaryInfC{\(\Set(\zeta)\)}
+    \noLine
+    \UnaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\to\)-I, \(n\)}
+    \UnaryInfC{\(\Set(\zeta)\to\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{\(\forall\xi(\Set(\xi)\to\varphi)\)}
+    \RightLabel{D\ref{def:restricted-universal-quantification}}
+    \dashedLine
+    \UnaryInfC{\(\forall_S\xi\,\varphi\)}
+\end{prooftree}
+\end{formalderivation}
+
+\begin{derivedrule}[Restricted Universal Elimination]\label{rule:restricted-forall-e}
+\begin{prooftree}
+    \AxiomC{\(\forall_S\xi\,\varphi\)}
+    \AxiomC{\(\Set(\zeta)\)}
+    \RightLabel{\(\forall_S\)-E}
+    \BinaryInfC{\(\varphi[\zeta/\xi]\)}
+\end{prooftree} \bookvspace{0.3cm}
+The rule requires that \(\zeta\) be free for \(\xi\) in \(\varphi\).
+\end{derivedrule}
+
+% Restricted Universal Elimination:
+% proof-explorer-expansion: rule:restricted-forall-e; kind=restricted; mode=forall-e
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{\(\forall_S\xi\,\varphi\)}
+    \RightLabel{D\ref{def:restricted-universal-quantification}}
+    \dashedLine
+    \UnaryInfC{\(\forall\xi(\Set(\xi)\to\varphi)\)}
+    \RightLabel{\(\forall\)-E}
+    \UnaryInfC{\(\Set(\zeta)\to\varphi[\zeta/\xi]\)}
+%
+    \AxiomC{\(\Set(\zeta)\)}
+%
+    \RightLabel{\(\to\)-E}
+    \BinaryInfC{\(\varphi[\zeta/\xi]\)}
+\end{prooftree}
+\end{formalderivation}
+
+\begin{derivedrule}[Restricted Existential Introduction]\label{rule:restricted-exists-i}
+\begin{prooftree}
+    \AxiomC{\(\Set(\zeta)\)}
+    \AxiomC{\(\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\exists_S\)-I}
+    \BinaryInfC{\(\exists_S\xi\,\varphi\)}
+\end{prooftree} \bookvspace{0.3cm}
+The rule requires that \(\zeta\) be free for \(\xi\) in \(\varphi\).
+\end{derivedrule}
+
+% Restricted Existential Introduction:
+% proof-explorer-expansion: rule:restricted-exists-i; kind=restricted; mode=exists-i
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{\(\Set(\zeta)\)}
+    \AxiomC{\(\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\land\)-I}
+    \BinaryInfC{\(\Set(\zeta)\land\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\exists\)-I}
+    \UnaryInfC{\(\exists\xi(\Set(\xi)\land\varphi)\)}
+    \RightLabel{D\ref{def:restricted-existential-quantification}}
+    \dashedLine
+    \UnaryInfC{\(\exists_S\xi\,\varphi\)}
+\end{prooftree}
+\end{formalderivation}
+
+\begin{derivedrule}[Restricted Existential Elimination]\label{rule:restricted-exists-e}
+\begin{prooftree}
+    \AxiomC{\(\exists_S\xi\,\varphi\)}
+%
+    \AxiomC{}
+    \RightLabel{\(n\)}
+    \UnaryInfC{\(\Set(\zeta)\)}
+%
+    \AxiomC{}
+    \RightLabel{\(m\)}
+    \UnaryInfC{\(\varphi[\zeta/\xi]\)}
+%
+    \noLine
+    \BinaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(\psi\)}
+%
+    \RightLabel{\(\exists_S\)-E, \(n,m\)}
+    \BinaryInfC{\(\psi\)}
+\end{prooftree} \bookvspace{0.3cm}
+The rule discharges assumptions \(n\) and \(m\) within the minor premise subderivation. The variable \(\zeta\) must be free for \(\xi\) in \(\varphi\), must not occur free in \(\varphi\) or \(\psi\), and must not occur free in any remaining undischarged assumption on which either premise depends.
+\end{derivedrule}
+
+% Restricted Existential Elimination:
+% proof-explorer-expansion: rule:restricted-exists-e; kind=restricted; mode=exists-e
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{\(\exists_S\xi\,\varphi\)}
+    \RightLabel{D\ref{def:restricted-existential-quantification}}
+    \dashedLine
+    \UnaryInfC{\(\exists\xi(\Set(\xi)\land\varphi)\)}
+%
+    \AxiomC{}
+    \RightLabel{\(k\)}
+    \UnaryInfC{\(\Set(\zeta)\land\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(\Set(\zeta)\)}
+%
+    \AxiomC{}
+    \RightLabel{\(k\)}
+    \UnaryInfC{\(\Set(\zeta)\land\varphi[\zeta/\xi]\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(\varphi[\zeta/\xi]\)}
+%
+    \noLine
+    \BinaryInfC{\(\vdots\)}
+    \noLine
+    \UnaryInfC{\(\psi\)}
+%
+    \RightLabel{\(\exists\)-E, \(k\)}
+    \BinaryInfC{\(\psi\)}
+\end{prooftree}
+\end{formalderivation}
+
+All four rules are justified by the definitions of the restricted quantifiers and the ordinary rules of natural deduction. They therefore introduce no additional logical principles or set-theoretic axioms. The first rule we shall need below is \(\forall_S\)-E: it allows us to use a set-restricted statement once we have established that the relevant object is a set.
+
+\nbgpara{9}{} Suppose we specify a class by giving a condition
 \(\varphi(x)\) that characterizes exactly which sets belong to it.
 Could two different classes satisfy the same specification?
 
@@ -447,6 +707,6 @@ all objects, not merely all sets:
 
 This illustrates a general method for proving uniqueness: assume that two candidates satisfy a specification, then show that they must be identical.
 
-\nbgpara{8}{} There is a crucial limitation to this result. We have proved that \textit{at most one} class can satisfy a given membership condition, not that any such class exists. Our argument would still be valid if no class satisfied the condition at all.
+\nbgpara{10}{} There is a crucial limitation to this result. We have proved that \textit{at most one} class can satisfy a given membership condition, not that any such class exists. Our argument would still be valid if no class satisfied the condition at all.
 
 This distinction will matter when we eventually introduce notation for classes specified by membership conditions. Before speaking of \emph{the} class satisfying a condition, we must establish its existence; Extensionality already guarantees its uniqueness. We therefore turn next to the question of which classes exist.

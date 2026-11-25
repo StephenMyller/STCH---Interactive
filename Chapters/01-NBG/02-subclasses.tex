@@ -142,7 +142,7 @@ A \not\subset B \quad \defequiv \quad
     Let $A$ be an arbitrary class. By the reflexivity of identity, we have $A=A$, i.e., it is not the case that $A \neq A$. Thus, the second conjunct of Definition \ref{def:proper-subclass} is not fulfilled, and hence $A \not\subset A$.
 \end{proof}
 
-\begin{formalderivation}
+\begin{formalderivation}[-1cm]
 \begin{prooftree}
     \AxiomC{}
     \RightLabel{\(=\)-I}
@@ -381,28 +381,7 @@ Since $A$, $B$, and $C$ were arbitrary, this establishes the proposition.
         \to A\subseteq C\)
     }
 %
-    % Universal generalization over C
-    \RightLabel{\(\forall\)-I}
-    \UnaryInfC{
-        \(\forall z
-        \bigl(
-            (A\subseteq B\land B\subseteq z)
-            \to A\subseteq z
-        \bigr)\)
-    }
-%
-    % Universal generalization over B
-    \RightLabel{\(\forall\)-I}
-    \UnaryInfC{
-        \(\forall y\forall z
-        \bigl(
-            (A\subseteq y\land y\subseteq z)
-            \to A\subseteq z
-        \bigr)\)
-    }
-%
-    % Universal generalization over A
-    \RightLabel{\(\forall\)-I}
+    \RightLabel{\(\forall\)-I*}
     \UnaryInfC{
         \(\forall x\forall y\forall z
         \bigl(
@@ -519,17 +498,7 @@ Let \(A\) and \(B\) be arbitrary classes, and suppose that \(A=B\). Since identi
         \(A=B\to(A\subseteq B\land B\subseteq A)\)
     }
 %
-    % Universal generalization
-    \RightLabel{\(\forall\)-I}
-    \UnaryInfC{
-        \(\forall y
-        \bigl(
-            A=y\to
-            (A\subseteq y\land y\subseteq A)
-        \bigr)\)
-    }
-%
-    \RightLabel{\(\forall\)-I}
+    \RightLabel{\(\forall\)-I*}
     \UnaryInfC{
         \(\forall x\forall y
         \bigl(
