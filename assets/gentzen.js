@@ -1550,8 +1550,27 @@ document.addEventListener('DOMContentLoaded', () => {
     return s;
   }
 
+  // The restricted-rule expansions are reconstructed for each concrete
+  // quantifier instance, but their definitional justification is authored in
+  // the registry template. Reuse its already-resolved reference (including
+  // the link and number) rather than displaying an anonymous "Def.".
+  function restrictedDefinitionLabel(rule) {
+    const source = rule?.template || '';
+    const labels = /\\(?:RightLabel|RL)\b/g;
+    let match;
+    while ((match = labels.exec(source))) {
+      const arg = braced(source, labels.lastIndex);
+      if (!arg) break;
+      labels.lastIndex = arg.end;
+      const value = arg.content.trim();
+      if (/^D\s*\\(?:href|ref)\b/.test(value)) return value;
+    }
+    throw new Error(`Missing numbered definition citation for ${rule?.id || 'restricted rule'}`);
+  }
+
   function restrictedTemplate(hit) {
     const {q, witness, instance} = hit.restricted;
+    const definitionLabel = restrictedDefinitionLabel(hit.rule);
     const matrix = `(${stripMatrixParens(q.body)})`;
     const instanceMatrix = `(${stripMatrixParens(instance)})`;
     const universal = `\\(\\forall ${q.binder}(\\Set(${q.binder})\\to ${matrix})\\)`;
@@ -1563,17 +1582,17 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'forall-i':
         return `@@PE_PREMISE_0@@\n\\RightLabel{\\(\\to\\)-I, ${hit.restricted.tag}}\n` +
           `\\UnaryInfC{${instanceImp}}\n\\RightLabel{\\(\\forall\\)-I}\n` +
-          `\\UnaryInfC{${universal}}\n\\RightLabel{Def.}\n\\dashedLine\n\\UnaryInfC{${final}}`;
+          `\\UnaryInfC{${universal}}\n\\RightLabel{${definitionLabel}}\n\\dashedLine\n\\UnaryInfC{${final}}`;
       case 'forall-e':
-        return `@@PE_PREMISE_0@@\n\\RightLabel{Def.}\n\\dashedLine\n\\UnaryInfC{${universal}}\n` +
+        return `@@PE_PREMISE_0@@\n\\RightLabel{${definitionLabel}}\n\\dashedLine\n\\UnaryInfC{${universal}}\n` +
           `\\RightLabel{\\(\\forall\\)-E}\n\\UnaryInfC{${instanceImp}}\n` +
           `@@PE_PREMISE_1@@\n\\RightLabel{\\(\\to\\)-E}\n\\BinaryInfC{${final}}`;
       case 'exists-i':
         return `@@PE_PREMISE_0@@\n@@PE_PREMISE_1@@\n\\RightLabel{\\(\\land\\)-I}\n` +
           `\\BinaryInfC{${instanceConj}}\n\\RightLabel{\\(\\exists\\)-I}\n` +
-          `\\UnaryInfC{${existential}}\n\\RightLabel{Def.}\n\\dashedLine\n\\UnaryInfC{${final}}`;
+          `\\UnaryInfC{${existential}}\n\\RightLabel{${definitionLabel}}\n\\dashedLine\n\\UnaryInfC{${final}}`;
       case 'exists-e':
-        return `@@PE_PREMISE_0@@\n\\RightLabel{Def.}\n\\dashedLine\n\\UnaryInfC{${existential}}\n` +
+        return `@@PE_PREMISE_0@@\n\\RightLabel{${definitionLabel}}\n\\dashedLine\n\\UnaryInfC{${existential}}\n` +
           `@@PE_PREMISE_1@@\n\\RightLabel{\\(\\exists\\)-E, @@PE_LOCAL_k@@}\n\\BinaryInfC{${final}}`;
       default: throw new Error('Unsupported restricted quantifier rule');
     }
