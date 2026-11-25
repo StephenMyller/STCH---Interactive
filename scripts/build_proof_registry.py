@@ -444,8 +444,8 @@ def freshen_local_template_labels(template: str, labels: list[str], location: st
             edits.append((cmd["start"], cmd["end"],
                           old.replace("{" + arg + "}", "{" + updated + "}", 1)))
     for tag in local:
-        if assumptions[tag] != 1 or discharges[tag] != 1:
-            error(f"{location}: local assumption {tag} must appear exactly once "
+        if assumptions[tag] < 1 or discharges[tag] != 1:
+            error(f"{location}: local assumption {tag} must appear at least once "
                   f"as an assumption and once as a discharge "
                   f"(found {assumptions[tag]} and {discharges[tag]})")
     for start, end, replacement in sorted(edits, reverse=True):
@@ -549,7 +549,7 @@ def local_discharge_numbers(template: str):
             for tag in discharge_numbers(cmd['arg']):
                 discharges[tag] = discharges.get(tag, 0) + 1
     return sorted([tag for tag, count in uses.items()
-                   if count == 1 and discharges.get(tag) == 1], key=int)
+                   if count >= 1 and discharges.get(tag) == 1], key=int)
 
 
 def edit_segments(text: str, changes: list[tuple[int, int, str]]):
@@ -667,6 +667,10 @@ def proof_prop_variants(tree: str, location: str):
                                 template=part, locals=locals_, kind='direction'))
         if len({(canon(v['premises'][0]), canon(v['conclusion'])) for v in results}) != 2:
             error(f"{location}: duplicate directional patterns")
+        if any(r'\vdots' in (node['formula'] or '') for node in all_nodes(root)):
+            error(f"{location}: complete biconditional proof contains an omitted subderivation")
+        results.append(dict(premises=[''], conclusion=root['formula'],
+                            template=tree, locals=[], kind='theorem'))
         return results
 
     # A direct proof with one or two open premise formula types.
@@ -694,12 +698,12 @@ def proof_prop_variants(tree: str, location: str):
 
             remaining = set().union(*(remaining_dependencies(child)
                                        for child in node['children']))
-            if node['label'] and node['op'] == 'UnaryInfC':
+            if node['label'] and node['op'] in ('UnaryInfC', 'BinaryInfC'):
                 raw = label_key(node['label'])
                 match = re.search(r',([1-9]\d*(?:,[1-9]\d*)*)$', raw)
                 if match and (any(rule in raw for rule in
                                   (r'\to-I', r'\neg-I', r'\Unique-I',
-                                   r'\subseteq-I', 'CR,'))):
+                                   r'\subseteq-I', r'\exists-E', 'CR,'))):
                     for tag in match.group(1).split(','):
                         discharge_sites[tag] = discharge_sites.get(tag, 0) + 1
                         remaining.discard(tag)
