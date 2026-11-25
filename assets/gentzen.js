@@ -531,6 +531,20 @@ document.addEventListener('DOMContentLoaded', () => {
     .pe-dependency-note { font-size: .8rem; opacity: .75; margin: .8rem 0; line-height: 1.45; }
     .pe-dependency-empty { font-size: .9rem; opacity: .8; }
     /* An axiom-first summary above a navigable result-dependency hierarchy. */
+    .pe-dependency-heading { display: flex; gap: .45rem; align-items: center;
+      position: relative; }
+    .pe-dependency-help > summary { display: flex; justify-content: center;
+      align-items: center; border: 1px solid #8888; border-radius: 50%;
+      width: 1.35rem; height: 1.35rem; cursor: pointer; font-size: .72rem;
+      list-style: none; user-select: none; }
+    .pe-dependency-help > summary::-webkit-details-marker { display: none; }
+    .pe-dependency-help > p { box-sizing: border-box; position: absolute;
+      right: 0; top: 1.5rem; z-index: 4; width: min(300px, 95%);
+      border: 1px solid #8888; border-radius: .35rem; padding: .7rem;
+      font-size: .82rem; line-height: 1.45;
+      background: #f8f9fa; color: #171717; box-shadow: 0 5px 14px #0003; }
+    html[data-book-theme="dark"] .pe-dependency-help > p {
+      background: #282d35; color: #f4f4f4; }
     .pe-foundations { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem;
       margin: .6rem 0 .5rem; }
     .pe-foundation-axiom { border: 1px solid #8888; border-radius: .35rem;
@@ -2447,6 +2461,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const axiomLookup = dependencies?.axioms || {};
     const dependencyRules = dependencies?.rules || {};
     const dependencyRuleLabels = dependencies?.ruleLabels || {};
+    // Axiom labels and their short rule names resolve to exactly the same
+    // result. Their textual names live in the generated registry.
+    const axiomAliases = new Map(Object.entries(axiomLookup)
+      .filter(([, entry]) => entry?.shortName)
+      .map(([number, entry]) => [entry.shortName, number]));
     const depCategoryOrder = id => id.startsWith('axiom:number:') ||
       dependencyIndex[id]?.kind === 'axiom' ? 0 : id.startsWith('rule:') ? 2 : 1;
     function dependencySort(ids) {
@@ -2485,7 +2504,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!base || /^[1-9]\d*$/.test(base) || /^[a-z]$/.test(base)) continue;
         const axiom = /^A_?\{?(\d+)\}?$/.exec(base);
         if (axiom) { direct.add('axiom:number:' + axiom[1]); continue; }
-        if (base === 'Ext') { direct.add('axiom:number:1'); continue; }
+        if (axiomAliases.has(base)) {
+          direct.add('axiom:number:' + axiomAliases.get(base)); continue;
+        }
         const transparent = dependencyRuleLabels[base];
         if (transparent?.length) { transparent.forEach(id => direct.add(id)); continue; }
         if (base === 'Def.' || base === 'Def' || base === 'Definition' || base.startsWith('D')) continue;
@@ -2506,8 +2527,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const number = id.slice('axiom:number:'.length);
         const axiom = axiomLookup[number];
         return {id, kind: 'axiom', number: 'A' + number,
-          title: axiom?.title || ('Axiom A' + number), url: axiom?.url || null,
-          requires: [], issues: axiom ? [] : ['No axiom entry for A' + number]};
+          reference: axiom?.reference || 'A' + number,
+          title: axiom?.title || '', url: axiom?.url || null,
+          requires: [], issues: axiom ? [] : ['Unknown axiom reference A' + number]};
       }
       if (id.startsWith('rule:')) {
         const record = dependencyRules[id];
@@ -2518,7 +2540,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (record?.kind === 'axiom') {
         const knownNumber = Object.entries(axiomLookup)
           .find(([, entry]) => entry.id === id)?.[0];
-        return {...record, number: knownNumber ? 'A' + knownNumber : record.number};
+        return {...record, number: knownNumber ? 'A' + knownNumber : record.number,
+          reference: knownNumber ? 'A' + knownNumber : (record.reference || record.number),
+          requires: [], issues: []};
       }
       return record || {id, kind: 'missing', title: id, requires: [],
         issues: ['Unindexed mathematical result: ' + id]};
@@ -2549,6 +2573,25 @@ document.addEventListener('DOMContentLoaded', () => {
         problems: [...problems].sort()};
     }
     const dependencyTrace = traceDependencies();
+
+    const subscripts = '₀₁₂₃₄₅₆₇₈₉';
+    function dependencyReference(node) {
+      let raw = String(node.reference || node.number || '').trim();
+      if (!raw) return '';
+      if (node.kind === 'axiom') {
+        const match = /^A_?\{?(\d+)\}?$/.exec(raw);
+        return match ? 'A' + [...match[1]].map(digit => subscripts[Number(digit)]).join('') : raw;
+      }
+      const prefix = {proposition:'P', theorem:'T', lemma:'L',
+        corollary:'C', metatheorem:'M'}[node.kind] || '';
+      return prefix && /^\d/.test(raw) ? prefix + raw : raw;
+    }
+    function dependencyDisplayName(node) {
+      const reference = dependencyReference(node);
+      const title = String(node.title || '').trim();
+      return reference && title && reference !== title ? reference + ' — ' + title :
+        reference || title || node.id;
+    }
 
     function dependencyLink(node, text) {
       if (!node.url) return document.createTextNode(text);
@@ -2590,9 +2633,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return fragment;
       }
       const li = document.createElement('li');
-      const label = node.kind === 'axiom'
-        ? `${node.number} — ${node.title}`
-        : (node.title || node.id);
+      const label = dependencyDisplayName(node);
       const children = visibleDependencies(node.requires || []);
       if (ancestors.has(id)) {
         li.textContent = label + ' (cycle)';
@@ -2622,16 +2663,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderDependencies() {
       sidebar.replaceChildren();
-      const title = document.createElement('h2'); title.textContent = 'Axiomatic foundations';
-      sidebar.append(title);
+      const header = document.createElement('div');
+      header.className = 'pe-dependency-heading';
+      const title = document.createElement('h2'); title.textContent = 'Axiomatic Foundations';
+      const help = document.createElement('details');
+      help.className = 'pe-dependency-help';
+      const helpToggle = document.createElement('summary');
+      helpToggle.textContent = '?'; helpToggle.title = 'About dependency tracking';
+      helpToggle.setAttribute('aria-label', 'About dependency tracking');
+      const explanation = document.createElement('p');
+      explanation.textContent = 'Axioms used by this authored proof, including through earlier results. ' +
+        'Definitions and logical rules are omitted. These are the axioms used by the chosen proof, ' +
+        'not necessarily the fewest axioms from which the theorem can be proved.';
+      help.append(helpToggle, explanation);
+      header.append(title, help); sidebar.append(header);
       const summary = document.createElement('div');
       summary.className = 'pe-foundations';
       if (dependencyTrace.foundations.length) {
         for (const axiom of dependencyTrace.foundations) {
           const chip = document.createElement('span');
           chip.className = 'pe-foundation-axiom';
-          chip.append(dependencyLink(axiom, axiom.number));
-          chip.title = axiom.title;
+          chip.append(dependencyLink(axiom, dependencyDisplayName(axiom)));
+          chip.title = axiom.title || dependencyReference(axiom);
           summary.append(chip);
         }
       } else {
@@ -2641,17 +2694,15 @@ document.addEventListener('DOMContentLoaded', () => {
         summary.append(empty);
       }
       sidebar.append(summary);
-      const coverage = document.createElement('p');
-      coverage.className = 'pe-dependency-coverage';
       if (dependencyTrace.problems.length) {
+        const coverage = document.createElement('p');
+        coverage.className = 'pe-dependency-coverage';
         coverage.textContent = 'Partially traced — ' + dependencyTrace.problems.length +
           ' unresolved ' + (dependencyTrace.problems.length === 1 ? 'path' : 'paths');
-      } else {
-        coverage.textContent = 'All indexed paths traced';
+        sidebar.append(coverage);
       }
-      sidebar.append(coverage);
       const hierarchyTitle = document.createElement('h3');
-      hierarchyTitle.textContent = 'Dependency hierarchy';
+      hierarchyTitle.textContent = 'Dependency Hierarchy';
       sidebar.append(hierarchyTitle);
       const list = document.createElement('ul'); list.className = 'pe-dependency-tree';
       visibleDependencies(dependencyRoots).forEach(id => list.append(renderDependencyBranch(id)));
@@ -2662,14 +2713,11 @@ document.addEventListener('DOMContentLoaded', () => {
         empty.textContent = 'No cited axioms or prior results found in this proof.';
         sidebar.append(empty);
       }
-      const note = document.createElement('p'); note.className = 'pe-dependency-note';
-      note.textContent = 'Axioms used by this authored derivation, including through earlier results. Definitions and logical rules are hidden. An indexed path is not a proof of minimal axiomatic dependence.';
-      sidebar.append(note);
       if (dependencyTrace.problems.length) {
         const details = document.createElement('details');
         details.className = 'pe-dependency-problems';
         const summary = document.createElement('summary');
-        summary.textContent = 'Unresolved paths (' + dependencyTrace.problems.length + ')';
+        summary.textContent = 'Unresolved Paths (' + dependencyTrace.problems.length + ')';
         details.append(summary);
         const list = document.createElement('ul');
         for (const problem of dependencyTrace.problems) {
