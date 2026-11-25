@@ -450,15 +450,22 @@ document.addEventListener('DOMContentLoaded', () => {
       width: 100%; min-width: max-content;
     }
     .proof-explorer-stage .pe-rule-row {
-      display: flex; align-items: center; gap: .3em;
+      display: flex; position: relative; align-items: center; gap: .3em;
       width: 100%; min-height: .35em;
     }
+    /* The flex spacer reserves the original layout width; only its painted
+       segment is trimmed. No premise, conclusion, or subtree is reflowed. */
     .proof-explorer-stage .pe-bar {
       height: 0; min-width: 1.25em; flex: 1 1 auto;
-      border-top: 1px solid currentColor;
     }
-    .proof-explorer-stage .pe-bar.pe-dashed { border-top-style: dashed; }
-    .proof-explorer-stage .pe-bar.pe-none { border-top-color: transparent; }
+    .proof-explorer-stage .pe-bar::after {
+      content: ''; position: absolute; pointer-events: none;
+      left: var(--pe-line-left, 0px);
+      width: var(--pe-line-width, 0px);
+      top: 50%; height: 0; border-top: 1px solid currentColor;
+    }
+    .proof-explorer-stage .pe-bar.pe-dashed::after { border-top-style: dashed; }
+    .proof-explorer-stage .pe-bar.pe-none::after { border-top-color: transparent; }
     .proof-explorer-stage .pe-label {
       display: inline-flex; flex: 0 0 auto; min-height: 1em;
       align-items: center; line-height: 1;
@@ -2261,13 +2268,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const step=document.createElement('span');step.className='pe-step';
         const row=document.createElement('span');row.className='pe-rule-row';
         if (node.leftLabel) {
-          const l=document.createElement('span');l.className='pe-label';
+          const l=document.createElement('span');l.className='pe-label pe-left-label';
           l.append(await proofMath(node.leftLabel));row.append(l);
         }
         const bar=document.createElement('span');bar.className='pe-bar pe-'+node.line;
         row.append(bar);
         if (node.label) {
-          const l=document.createElement('span');l.className='pe-label';
+          const l=document.createElement('span');l.className='pe-label pe-right-label';
           l.append(await proofMath(node.label));row.append(l);
         }
         step.append(row,conclusion);container.append(step);
@@ -2278,6 +2285,71 @@ document.addEventListener('DOMContentLoaded', () => {
       const outer=document.createElement('span');outer.className='pe-tree';
       outer.append(await proofBranch(parseLayoutTree(markedSource)));
       return outer;
+    }
+
+    // Paint lines over the actual immediately-adjacent premises and conclusion,
+    // not over the entire recursive subtree.  Crucially, the ORIGINAL flex
+    // spacer is still present: trimming a bar does not move any formula, label
+    // reservation, or neighboring branch, and overlap avoidance is preserved.
+    function trimInferenceLines(tree) {
+      for (const node of tree.querySelectorAll('.pe-node:not(.pe-leaf)')) {
+        const premises = [...node.children].find(el => el.classList.contains('pe-premises'));
+        const step = [...node.children].find(el => el.classList.contains('pe-step'));
+        if (!premises || !step) continue;
+        const row = step.querySelector(':scope > .pe-rule-row');
+        const conclusion = step.querySelector(':scope > .pe-conclusion');
+        const bar = row?.querySelector(':scope > .pe-bar');
+        if (!row || !conclusion || !bar) continue;
+
+        const rowRect = row.getBoundingClientRect();
+        if (!rowRect.width || !row.offsetWidth) continue;
+        const scale = rowRect.width / row.offsetWidth;
+        const toX = x => (x - rowRect.left) / scale;
+        const fontSize = parseFloat(getComputedStyle(row).fontSize) || 16;
+        const padding = fontSize * .43;
+        const gap = fontSize * .3;
+        const minimum = fontSize * 1.25;
+
+        const anchors = [conclusion];
+        for (const child of premises.children) {
+          const childStep = [...child.children].find(el => el.classList.contains('pe-step'));
+          const childConclusion = childStep
+            ? childStep.querySelector(':scope > .pe-conclusion')
+            : [...child.children].find(el => el.classList.contains('pe-conclusion'));
+          if (childConclusion) anchors.push(childConclusion);
+        }
+        const rectangles = anchors.map(el => el.getBoundingClientRect())
+          .filter(rect => rect.width > 1 && rect.height > 0);
+        if (!rectangles.length) continue;
+        const naturalLeft = Math.min(...rectangles.map(rect => toX(rect.left))) - padding;
+        const naturalRight = Math.max(...rectangles.map(rect => toX(rect.right))) + padding;
+
+        const leftLabel = row.querySelector(':scope > .pe-left-label');
+        const rightLabel = row.querySelector(':scope > .pe-right-label');
+        const leftWidth = leftLabel ? leftLabel.getBoundingClientRect().width / scale : 0;
+        const rightWidth = rightLabel ? rightLabel.getBoundingClientRect().width / scale : 0;
+        const lower = leftLabel ? leftWidth + gap : 0;
+        const upper = row.offsetWidth - (rightLabel ? rightWidth + gap : 0);
+        const room = upper - lower;
+        if (room <= 0) continue;
+        const required = Math.min(minimum, room);
+        const left = Math.max(lower, Math.min(naturalLeft, upper - required));
+        const right = Math.min(upper, Math.max(naturalRight, left + required));
+
+        bar.style.setProperty('--pe-line-left', `${left}px`);
+        bar.style.setProperty('--pe-line-width', `${right-left}px`);
+
+        // Shift only the visual labels; their original boxes still reserve
+        // space in the flex layout. The proof premises never change position.
+        if (leftLabel) {
+          const originalLeft = toX(leftLabel.getBoundingClientRect().left);
+          leftLabel.style.transform = `translateX(${left - gap - leftWidth - originalLeft}px)`;
+        }
+        if (rightLabel) {
+          const originalLeft = toX(rightLabel.getBoundingClientRect().left);
+          rightLabel.style.transform = `translateX(${right + gap - originalLeft}px)`;
+        }
+      }
     }
 
     async function render() {
@@ -2293,6 +2365,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const oldBox = output.getBoundingClientRect();
       output.replaceWith(replacement);
       output = replacement;
+      if (replacement.classList.contains('pe-tree')) trimInferenceLines(replacement);
       const newBox = replacement.getBoundingClientRect();
       if (oldBox && newBox && stage.proofExplorerPanBy) {
         stage.proofExplorerPanBy(
