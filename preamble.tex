@@ -1,9 +1,8 @@
+% ============================================================
+% 1. Packages and compatibility
+% ============================================================
 
-
-% =================================
-% Core mathematics
-% =================================
-
+% Lwarp must precede the packages whose HTML output it adapts.
 \usepackage[utf8]{inputenc}
 
 \usepackage[mathjax,HomeHTMLFilename=index]{lwarp}
@@ -14,54 +13,10 @@
     \renewcommand{\encodingdefault}{OT1}%
 }
 
-% Sidebar derivation, optionally linked to a full explorer proof.
-\NewDocumentEnvironment{formalderivation}{ O{0rem} O{} }
-{%
-    \begin{BlockClass}[--gentzen-offset: #1; --explorer-id: #2;]{formalderivation}%
-}
-{%
-    \end{BlockClass}%
-}
-
-% Full derivation, included only in the HTML.
-\NewDocumentEnvironment{explorerderivation}{m +b}
-{%
-    \ifbool{warpingHTML}{%
-        \begin{BlockClass}[--explorer-id: #1;]{explorerderivation}%
-        #2%
-        \end{BlockClass}%
-    }{}%
-}
-{}
-\newenvironment{derivationnote}
-    {\begin{BlockClass}{derivationnote}}
-    {\end{BlockClass}}
-
-
-% Illustrations, optionally identified for inline links.
-\newenvironment{sideillustration}[1][]
-  {%
-    \begin{BlockClass}{sideillustration}%
-    \ifstrempty{#1}{}{\hypertarget{side:#1}{}}%
-  }
-  {%
-    \end{BlockClass}%
-  }
-
-\newcommand{\sideLink}[2]
-  {\hyperlink{side:#1}{#2}}
-    
-\newcommand{\bookvspace}[1]{%
-  \vspace{#1}%
-  \warpHTMLonly{%
-    \begin{BlockClass}[height: #1;]{bookvspace}%
-    \end{BlockClass}%
-  }%
-}
-
-
+% Mathematics and theorem environments.
 \usepackage{amsmath, amssymb, amsthm}
 \usepackage{thmtools}
+\usepackage{mathtools}
 
 % TeX Live 2026 compatibility fix
 \makeatletter
@@ -73,25 +28,57 @@
 }
 \makeatother
 
-\allowdisplaybreaks
-\usepackage{mathtools}
-
-% ============================================================
-% Page layout and general formatting
-% ============================================================
-
+% Page layout and typography.
 \usepackage[margin=1.25in]{geometry}
 \usepackage{parskip}
 \usepackage{setspace}
 \usepackage{titlesec}
 \usepackage{changepage}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{bm}
+\usepackage{nicefrac}
+\usepackage{verbatim}
+\usepackage{etoolbox}
+\usepackage{needspace}
+
+% Diagrams and Gentzen proof trees.
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc}
+
+\usepackage{bussproofs}
+
+% Hyperlinks and PDF bookmarks.
+\usepackage{hyperref}
+\usepackage{bookmark}
+
+% ============================================================
+% 2. Page layout, section formatting, and navigation
+% ============================================================
 
 \onehalfspacing
 \pagenumbering{arabic}
 \everymath{\displaystyle}
+\allowdisplaybreaks
 
-\setcounter{tocdepth}{5}
+\definecolor{bostonuniversityred}{rgb}{0.8, 0.0, 0.0}
 
+\titleformat*{\subsubsection}{\large\bfseries}
+\titleformat*{\paragraph}{\color{NavyBlue}\bfseries}
+
+\titleformat{\section}
+  {\normalfont\LARGE\bfseries}
+  {\thesection}
+  {1em}
+  {}
+
+% Contents, HTML page splitting, and sidebar depth.
+\setcounter{tocdepth}{3}
+\setcounter{FileDepth}{2}
+\setcounter{SideTOCDepth}{3}
+
+\hypersetup{
+  hidelinks
+}
 
 % Labels for the navigation links.
 \renewcommand{\linkpreviousname}{Previous section}
@@ -114,21 +101,11 @@
   \end{BlockClass}%
 }
 
-
 % ============================================================
-% Colors and small typographical utilities
+% 3. Textbook prose and illustrations
 % ============================================================
 
-\usepackage[dvipsnames]{xcolor}
-\usepackage{bm}
-\usepackage{nicefrac}
-\usepackage{verbatim}
-\usepackage{etoolbox}
-
-
-\usepackage{needspace}
-
-
+% Numbered paragraphs and remarks.
 \newlength{\nbgsectiongap}
 \setlength{\nbgsectiongap}{1cm}
 
@@ -155,15 +132,45 @@
     \ignorespaces
 }
 
-
-
-\definecolor{bostonuniversityred}{rgb}{0.8, 0.0, 0.0}
-
 % Long dash.
 \newcommand{\srule}{\text{---}}
 
-% Operator names.
+% Optional HTML paragraph spacing and line height.
+\NewDocumentEnvironment{proseSpacing}{O{1.2em} O{1.6}}
+  {%
+    \begin{BlockClass}[--prose-gap: #1; --prose-leading: #2;]{prose-spacing}%
+  }
+  {%
+    \end{BlockClass}%
+  }
 
+% Vertical space in both PDF and HTML.
+\newcommand{\bookvspace}[1]{%
+  \vspace{#1}%
+  \warpHTMLonly{%
+    \begin{BlockClass}[height: #1;]{bookvspace}%
+    \end{BlockClass}%
+  }%
+}
+
+% Illustrations, optionally identified for inline links.
+\newenvironment{sideillustration}[1][]
+  {%
+    \begin{BlockClass}{sideillustration}%
+    \ifstrempty{#1}{}{\hypertarget{side:#1}{}}%
+  }
+  {%
+    \end{BlockClass}%
+  }
+
+\newcommand{\sideLink}[2]
+  {\hyperlink{side:#1}{#2}}
+
+% ============================================================
+% 4. Mathematical notation and references
+% ============================================================
+
+% Logical and set-theoretic operators.
 \newcommand{\Set}{\operatorname{Set}}
 \newcommand{\PC}{\operatorname{PC}}
 \newcommand{\Cond}{\operatorname{Cond}}
@@ -175,35 +182,6 @@
 
 % Special classes and theorems
 \newcommand{\Nat}{\mathbb{N}}
-
-% Clickable references to the five Peano theorems.
-% Usage: \Peano{3} prints "Peano 3".
-\newcommand{\Peano}[1]{%
-    \hyperref[th:peano#1]{Peano~#1}%
-}
-
-\begin{warpMathJax}
-\CustomizeMathJax{\newcommand{\Set}{\operatorname{Set}}}
-\CustomizeMathJax{\newcommand{\PC}{\operatorname{PC}}}
-\CustomizeMathJax{\newcommand{\Dep}{\operatorname{Dep}}}
-\CustomizeMathJax{\newcommand{\Real}{\operatorname{Real}}}
-\CustomizeMathJax{\newcommand{\Cond}{\operatorname{Cond}}}
-\CustomizeMathJax{\newcommand{\Trans}{\operatorname{Trans}}}
-\CustomizeMathJax{\newcommand{\defequiv}{\mathrel{\equiv_{\mathrm{df}}}}}
-\CustomizeMathJax{\newcommand{\Ind}{\operatorname{Ind}}}
-\CustomizeMathJax{\newcommand{\Unique}{\mathop{\exists^{\leq 1}}}}
-
-
-\CustomizeMathJax{%
-    \renewcommand{\RightLabel}[1]{%
-        \RL{\scriptsize #1}%
-    }%
-}
-
-\end{warpMathJax}
-
-
-
 
 % Relations, functions, and basic universes
 \DeclareMathOperator{\Dom}{Dom}
@@ -217,43 +195,15 @@
 
 \newcommand{\defequiv}{\mathrel{\equiv_{\mathrm{df}}}}
 
-% ============================================================
-% Section formatting
-% ============================================================
-
-\titleformat*{\subsubsection}{\large\bfseries}
-\titleformat*{\paragraph}{\color{NavyBlue}\bfseries}
-
-\titleformat{\section}
-  {\normalfont\LARGE\bfseries}
-  {\thesection}
-  {1em}
-  {}
-
-
-
-\setcounter{tocdepth}{3}
-\setcounter{FileDepth}{2}
-\setcounter{SideTOCDepth}{3}
-
-
-\NewDocumentEnvironment{proseSpacing}{O{1.2em} O{1.6}}
-  {%
-    \begin{BlockClass}[--prose-gap: #1; --prose-leading: #2;]{prose-spacing}%
-  }
-  {%
-    \end{BlockClass}%
-  }
-
+% Clickable references to the five Peano theorems.
+% Usage: \Peano{3} prints "Peano 3".
+\newcommand{\Peano}[1]{%
+    \hyperref[th:peano#1]{Peano~#1}%
+}
 
 % ============================================================
-% Diagrams and proof trees
+% 5. Gentzen proof trees and proof displays
 % ============================================================
-
-\usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, calc}
-
-\usepackage{bussproofs}
 
 % Lwarp compatibility: restore explicit glue for inference lines.
 % Inside theorem environments, Lwarp may suppress \hfill,
@@ -268,9 +218,11 @@
             {Check the bussproofs package implementation}}%
 }{}
 
+% Smaller right-hand inference labels in PDF.
 \let\oldRightLabel\RightLabel
 \renewcommand{\RightLabel}[1]{\oldRightLabel{\scriptsize #1}}
 
+% Vertical space above and below the entire proof display.
 \newcommand{\pvspace}[1]{%
     \def\proofSkipAmount{\vskip #1}%
 }
@@ -279,23 +231,61 @@
     \def\proofSkipAmount{\vskip .8ex plus .8ex minus .4ex}%
 }
 
-% ============================================================
-% Hyperlinks
-% ============================================================
-
-\usepackage{hyperref}
-\usepackage{bookmark}
-
-\hypersetup{
-  hidelinks
+% Sidebar derivation, optionally linked to a full explorer proof.
+\NewDocumentEnvironment{formalderivation}{ O{0rem} O{} }
+{%
+    \begin{BlockClass}[--gentzen-offset: #1; --explorer-id: #2;]{formalderivation}%
+}
+{%
+    \end{BlockClass}%
 }
 
+% Full derivation, included only in the HTML.
+\NewDocumentEnvironment{explorerderivation}{m +b}
+{%
+    \ifbool{warpingHTML}{%
+        \begin{BlockClass}[--explorer-id: #1;]{explorerderivation}%
+        #2%
+        \end{BlockClass}%
+    }{}%
+}
+{}
 
+% Explanatory notes accompanying sidebar derivations.
+\newenvironment{derivationnote}
+    {\begin{BlockClass}{derivationnote}}
+    {\end{BlockClass}}
 
 % ============================================================
-% Shared theorem-style settings
+% 6. MathJax notation and proof formatting
 % ============================================================
 
+% HTML counterparts of the custom mathematical commands.
+\begin{warpMathJax}
+\CustomizeMathJax{\newcommand{\Set}{\operatorname{Set}}}
+\CustomizeMathJax{\newcommand{\PC}{\operatorname{PC}}}
+\CustomizeMathJax{\newcommand{\Dep}{\operatorname{Dep}}}
+\CustomizeMathJax{\newcommand{\Real}{\operatorname{Real}}}
+\CustomizeMathJax{\newcommand{\Cond}{\operatorname{Cond}}}
+\CustomizeMathJax{\newcommand{\Trans}{\operatorname{Trans}}}
+\CustomizeMathJax{\newcommand{\defequiv}{\mathrel{\equiv_{\mathrm{df}}}}}
+\CustomizeMathJax{\newcommand{\Ind}{\operatorname{Ind}}}
+\CustomizeMathJax{\newcommand{\Unique}{\mathop{\exists^{\leq 1}}}}
+
+% Smaller right-hand inference labels in MathJax.
+\CustomizeMathJax{%
+    \renewcommand{\RightLabel}[1]{%
+        \RL{\scriptsize #1}%
+    }%
+}
+
+\end{warpMathJax}
+
+% ============================================================
+% 7. Shared theorem styles and numbered statements
+% ============================================================
+
+% Shared insets and vertical spacing.
 \newlength{\theoreminset}
 \setlength{\theoreminset}{1.5em}
 
@@ -305,13 +295,7 @@
 \newlength{\theorembelowspace}
 \setlength{\theorembelowspace}{0.2cm}
 
-% ============================================================
-% Theorem-like environments
-%
-% Shared numbering, reset at each section:
-% Definition 1.1, Theorem 1.2, Lemma 1.3, etc.
-% ============================================================
-
+% Shared numbering, reset at each subsection.
 \declaretheoremstyle[
   spaceabove=\theoremabovespace,
   spacebelow=\theorembelowspace,
@@ -321,7 +305,6 @@
   headformat={\NAME\ \NUMBER.\NOTE},
   postheadspace=\newline
 ]{defstyle}
-
 
 % Additional theorem styles for HTML color coding.
 % All share the exact typography and spacing of defstyle.
@@ -342,7 +325,6 @@
 \DeclareNBGStatementStyle{metastyle}
 \DeclareNBGStatementStyle{principlestyle}
 \DeclareNBGStatementStyle{neutralstyle}
-
 
 \declaretheorem[
   style=defstyle,
@@ -411,10 +393,10 @@
   sibling=theorem
 ]{derivedrule}
 
-
 % ============================================================
-% Axioms
-%
+% 8. Axioms
+% ============================================================
+
 % Numbered independently as A_1, A_2, ..., A_8.
 % Example heading: A_1   Axiom of Extensionality
 % ============================================================
@@ -438,8 +420,9 @@
 \renewcommand{\theaxiom}{A\textsubscript{\arabic{axiom}}}
 
 % ============================================================
-% Special one-off Definition 0 environment
-%
+% 9. Special one-off Definition 0
+% ============================================================
+
 % This does not affect the ordinary theorem/definition counter.
 % ============================================================
 
