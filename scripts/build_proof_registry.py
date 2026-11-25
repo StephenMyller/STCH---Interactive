@@ -305,7 +305,7 @@ def annotation(raw: str, location: str):
         options[option] = value
     kind = options.get("kind", "ordinary")
     mode = options.get("mode")
-    if kind not in ("restricted", "unique") and not options.get("vars"):
+    if kind not in ("restricted", "unique", "builder") and not options.get("vars"):
         error(f"{location}: specify schematic vars (e.g. vars=A,B,C)")
     if any(k not in ("vars", "fresh", "kind", "discharge", "eigen", "locals", "mode") for k in options):
         error(f"{location}: unknown annotation field")
@@ -314,7 +314,7 @@ def annotation(raw: str, location: str):
     names = vars_ + fresh
     if len(names) != len(set(names)) or any(not VARNAME.fullmatch(name) for name in names):
         error(f"{location}: variables must be distinct single symbols, optionally subscripted")
-    if kind not in ("ordinary", "subproof", "restricted", "unique"):
+    if kind not in ("ordinary", "subproof", "restricted", "unique", "builder"):
         error(f"{location}: unsupported expansion kind {kind!r}")
     tag = options.get("discharge")
     eigen = options.get("eigen")
@@ -327,6 +327,11 @@ def annotation(raw: str, location: str):
             error(f"{location}: restricted rule needs mode=forall-i/forall-e/exists-i/exists-e")
         if tag or eigen or vars_ or fresh or options.get("locals"):
             error(f"{location}: restricted annotations require only kind=restricted and mode=...")
+    elif kind == "builder":
+        if mode not in ("membership-i", "membership-e"):
+            error(f"{location}: class-builder rule needs mode=membership-i/membership-e")
+        if tag or eigen or vars_ or fresh or options.get("locals"):
+            error(f"{location}: builder annotations require only kind=builder and mode=...")
     elif kind == "unique":
         if mode not in ("intro", "elim", "atmost-intro"):
             error(f"{location}: unique-quantifier rule requires mode=intro/elim/atmost-intro")
@@ -732,6 +737,59 @@ def proof_prop_variants(tree: str, location: str):
     part = freshen_local_template_labels(part, locals_, location)
     return [dict(premises=[premise], conclusion=root['formula'],
                  template=part, locals=locals_, kind='direct')]
+
+
+def builder_schema(tree: str, mode: str, location: str):
+    """A narrow, variable-argument schema for the two membership rules.
+
+    Their defining formula is a formula-valued metavariable. Matching it
+    requires the client-side class-builder parser, not the ordinary unifier.
+    """
+    root, _ = parse_tree(tree, location)
+    arity = 2 if mode == "membership-i" else 1
+    if len(root["children"]) != arity or any(node["children"] for node in root["children"]):
+        error(f"{location}: builder {mode} must have {arity} direct premise(s)")
+    label = label_key(root["label"])
+    expected = 'I' if mode == 'membership-i' else 'E'
+    if (r'\mathrm{CB}' not in label or r'\in' not in label or
+            (r'\text{-' + expected + '}' not in label)):
+        error(f"{location}: incorrect CB membership label {root['label']!r}")
+    # The authored schema must use the general builder syntax explicitly;
+    # otherwise this special matcher could be attached to an unrelated rule.
+    all_formulas = [root['formula']] + [node['formula'] for node in root['children']]
+    if not any(r'\{' in formula and r'\mid' in formula for formula in all_formulas):
+        error(f"{location}: class-builder schema must contain a general class term")
+    if mode == 'membership-i' and not any(r'\Set' in formula for formula in all_formulas):
+        error(f"{location}: membership-I must require a sethood premise")
+    return [node["formula"] for node in root["children"]], root["formula"], root["label"]
+
+
+def builder_justification(tree: str, mode: str, location: str):
+    """Register the *authored* proof and extract its two numbered citations.
+
+    The T/Cond_T abbreviations in its last line differ from the literal
+    class-builder expression in the rule schema. Runtime instantiation
+    replaces those metalinguistic abbreviations with their concrete terms.
+    """
+    root, _ = parse_tree(tree, location)
+    if mode == 'membership-i' and not (r'\in T' in root['formula'] or r'\in\{' in root['formula']):
+        error(f"{location}: membership-I justification must conclude membership in T")
+    if mode == 'membership-e' and not any(
+        r'\in T' in cmd['arg'] for cmd in commands(tree)
+        if cmd['op'] in ('AxiomC', 'UnaryInfC', 'BinaryInfC') and cmd['arg']
+    ):
+        error(f"{location}: membership-E justification must use membership in T")
+    labels = [cmd['arg'] for cmd in commands(tree) if cmd['op'] in ('RightLabel', 'RL')]
+    required = (r'\land', r'\leftrightarrow')
+    if any(not any(fragment in (label or '') for label in labels) for fragment in required):
+        error(f"{location}: justification needs conjunction and biconditional inference")
+    def citation(prefix):
+        matches = [label for label in labels if re.search(
+            rf'^\s*{prefix}\s*\\ref\s*\{{[^{{}}]+\}}', label or '')]
+        if len(matches) != 1:
+            error(f"{location}: builder proof requires exactly one {prefix}\\ref citation")
+        return matches[0].strip()
+    return citation('D'), citation('P')
 
 
 def restricted_schema(tree: str, mode: str, location: str):
@@ -1324,7 +1382,10 @@ def main():
                     error(f"Duplicate rule identifier {key}")
                 schemata[key] = unique_schema(rule_trees, annotated_options[key]["mode"], key)
                 continue
-            if kind == "restricted":
+            if kind == "builder":
+                mode = annotated_options[key]["mode"]
+                premises, conclusion, inf_label = builder_schema(rule_trees[0], mode, key)
+            elif kind == "restricted":
                 mode = annotated_options[key]["mode"]
                 premises, conclusion, inf_label = restricted_schema(rule_trees[0], mode, key)
             elif kind == "subproof":
@@ -1373,6 +1434,19 @@ def main():
         if key not in schemata:
             error(f"{expansion['location']}: no derivedrule with \\label{{{key}}}")
         schema = schemata[key]
+        if expansion["kind"] == "builder":
+            definition, law = builder_justification(
+                expansion["tree"], expansion["mode"], expansion["location"]
+            )
+            registry[key] = dict(
+                id=key, label=schema['inferenceLabel'], vars=[], fresh=[],
+                premises=schema['premises'], conclusion=schema['conclusion'],
+                template=resolve_label(expansion['tree'], targets, expansion['location']),
+                kind='builder', mode=expansion['mode'], locals=[],
+                definitionLabel=resolve_label(definition, targets, expansion['location']),
+                lawLabel=resolve_label(law, targets, expansion['location'])
+            )
+            continue
         if expansion["kind"] == "unique":
             templates = unique_justification(expansion["trees"], schema, expansion["location"])
             for variant, template in zip(schema, templates):
