@@ -2425,60 +2425,94 @@ document.addEventListener('DOMContentLoaded', () => {
       return outer;
     }
 
-    // Paint lines over the actual immediately-adjacent premises and conclusion,
-    // not over the entire recursive subtree.  Crucially, the ORIGINAL flex
-    // spacer is still present: trimming a bar does not move any formula, label
-    // reservation, or neighboring branch, and overlap avoidance is preserved.
+    // The proof's *layout box* must reserve enough space for a right-hand
+    // inference label to sit outside the immediately adjacent formulas.
+    // First reserve only the missing side clearance, bottom-up. The premises
+    // stay in their normal nested layout; we do not translate formulas or
+    // reparent branches. Then trim the painted lines independently.
+    function inferenceLayoutAnchors(node) {
+      const premises = [...node.children].find(el => el.classList.contains('pe-premises'));
+      const step = [...node.children].find(el => el.classList.contains('pe-step'));
+      if (!premises || !step) return null;
+      const row = step.querySelector(':scope > .pe-rule-row');
+      const conclusion = step.querySelector(':scope > .pe-conclusion');
+      const bar = row?.querySelector(':scope > .pe-bar');
+      if (!row || !conclusion || !bar) return null;
+      const anchors = [conclusion];
+      for (const child of premises.children) {
+        const childStep = [...child.children].find(el => el.classList.contains('pe-step'));
+        const childConclusion = childStep
+          ? childStep.querySelector(':scope > .pe-conclusion')
+          : [...child.children].find(el => el.classList.contains('pe-conclusion'));
+        if (childConclusion) anchors.push(childConclusion);
+      }
+      return {row, step, bar, anchors};
+    }
+
+    function inferenceLineMetrics(layout) {
+      const {row, anchors} = layout;
+      const rowRect = row.getBoundingClientRect();
+      if (!rowRect.width || !row.offsetWidth) return null;
+      const scale = rowRect.width / row.offsetWidth;
+      const toX = x => (x - rowRect.left) / scale;
+      const fontSize = parseFloat(getComputedStyle(row).fontSize) || 16;
+      // The first margin is visible inference line beyond the formulas;
+      // the second is the gap from its endpoint to the printed rule label.
+      const padding = fontSize * .60;
+      const gap = fontSize * .35;
+      const minimum = fontSize * 1.25;
+      const rectangles = anchors.map(el => el.getBoundingClientRect())
+        .filter(rect => rect.width > 1 && rect.height > 0);
+      if (!rectangles.length) return null;
+      const naturalLeft = Math.min(...rectangles.map(rect => toX(rect.left))) - padding;
+      const naturalRight = Math.max(...rectangles.map(rect => toX(rect.right))) + padding;
+      const leftLabel = row.querySelector(':scope > .pe-left-label');
+      const rightLabel = row.querySelector(':scope > .pe-right-label');
+      const leftWidth = leftLabel ? leftLabel.getBoundingClientRect().width / scale : 0;
+      const rightWidth = rightLabel ? rightLabel.getBoundingClientRect().width / scale : 0;
+      const parentNode = row.closest('.pe-node');
+      const reservedLeft = parseFloat(parentNode?.style.paddingLeft) || 0;
+      const reservedRight = parseFloat(parentNode?.style.paddingRight) || 0;
+      const lower = (leftLabel ? leftWidth + gap : 0) - reservedLeft;
+      const upper = row.offsetWidth + reservedRight - (rightLabel ? rightWidth + gap : 0);
+      return {row, scale, toX, naturalLeft, naturalRight, minimum,
+              gap, leftLabel, rightLabel, leftWidth, lower, upper};
+    }
+
     function trimInferenceLines(tree) {
-      for (const node of tree.querySelectorAll('.pe-node:not(.pe-leaf)')) {
-        const premises = [...node.children].find(el => el.classList.contains('pe-premises'));
-        const step = [...node.children].find(el => el.classList.contains('pe-step'));
-        if (!premises || !step) continue;
-        const row = step.querySelector(':scope > .pe-rule-row');
-        const conclusion = step.querySelector(':scope > .pe-conclusion');
-        const bar = row?.querySelector(':scope > .pe-bar');
-        if (!row || !conclusion || !bar) continue;
-
-        const rowRect = row.getBoundingClientRect();
-        if (!rowRect.width || !row.offsetWidth) continue;
-        const scale = rowRect.width / row.offsetWidth;
-        const toX = x => (x - rowRect.left) / scale;
-        const fontSize = parseFloat(getComputedStyle(row).fontSize) || 16;
-        const padding = fontSize * .43;
-        const gap = fontSize * .3;
-        const minimum = fontSize * 1.25;
-
-        const anchors = [conclusion];
-        for (const child of premises.children) {
-          const childStep = [...child.children].find(el => el.classList.contains('pe-step'));
-          const childConclusion = childStep
-            ? childStep.querySelector(':scope > .pe-conclusion')
-            : [...child.children].find(el => el.classList.contains('pe-conclusion'));
-          if (childConclusion) anchors.push(childConclusion);
-        }
-        const rectangles = anchors.map(el => el.getBoundingClientRect())
-          .filter(rect => rect.width > 1 && rect.height > 0);
-        if (!rectangles.length) continue;
-        const naturalLeft = Math.min(...rectangles.map(rect => toX(rect.left))) - padding;
-        const naturalRight = Math.max(...rectangles.map(rect => toX(rect.right))) + padding;
-
-        const leftLabel = row.querySelector(':scope > .pe-left-label');
-        const rightLabel = row.querySelector(':scope > .pe-right-label');
-        const leftWidth = leftLabel ? leftLabel.getBoundingClientRect().width / scale : 0;
-        const rightWidth = rightLabel ? rightLabel.getBoundingClientRect().width / scale : 0;
-        const lower = leftLabel ? leftWidth + gap : 0;
-        const upper = row.offsetWidth - (rightLabel ? rightWidth + gap : 0);
+      const nodes = [...tree.querySelectorAll('.pe-node:not(.pe-leaf)')];
+      // Reserve the smallest needed right/left overhang as side padding on the
+      // whole subtree. That keeps the internal premise positions unchanged
+      // while sibling branches still account for the extra occupied width.
+      // Reading nodes in reverse makes child widths stable before parents.
+      for (const node of nodes.reverse()) {
+        const layout = inferenceLayoutAnchors(node);
+        if (!layout) continue;
+        const measured = inferenceLineMetrics(layout);
+        if (!measured) continue;
+        const {naturalLeft, naturalRight, lower, upper} = measured;
+        const shortfallRight = Math.max(0, naturalRight - upper);
+        const shortfallLeft = Math.max(0, lower - naturalLeft);
+        if (shortfallRight > .5) node.style.paddingRight = `${Math.ceil(shortfallRight + 2)}px`;
+        if (shortfallLeft > .5) node.style.paddingLeft = `${Math.ceil(shortfallLeft + 2)}px`;
+      }
+      // The reserved layout is now stable; move only the visible line ends
+      // and labels, never the premises or conclusions.
+      for (const node of nodes) {
+        const layout = inferenceLayoutAnchors(node);
+        if (!layout) continue;
+        const measured = inferenceLineMetrics(layout);
+        if (!measured) continue;
+        const {row, scale, toX, naturalLeft, naturalRight, minimum,
+               gap, leftLabel, rightLabel, leftWidth, lower, upper} = measured;
         const room = upper - lower;
         if (room <= 0) continue;
         const required = Math.min(minimum, room);
         const left = Math.max(lower, Math.min(naturalLeft, upper - required));
         const right = Math.min(upper, Math.max(naturalRight, left + required));
 
-        bar.style.setProperty('--pe-line-left', `${left}px`);
-        bar.style.setProperty('--pe-line-width', `${right-left}px`);
-
-        // Shift only the visual labels; their original boxes still reserve
-        // space in the flex layout. The proof premises never change position.
+        layout.bar.style.setProperty('--pe-line-left', `${left}px`);
+        layout.bar.style.setProperty('--pe-line-width', `${right - left}px`);
         if (leftLabel) {
           const originalLeft = toX(leftLabel.getBoundingClientRect().left);
           leftLabel.style.transform = `translateX(${left - gap - leftWidth - originalLeft}px)`;
