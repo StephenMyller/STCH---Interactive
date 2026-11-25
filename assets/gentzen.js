@@ -492,8 +492,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     .proof-explorer-stage .pe-tree mjx-container svg { overflow: visible; }
     /* Explorer actions are grouped by purpose; status and provenance are quiet. */
-    .proof-explorer-toolbar { display: flex; flex-direction: column; align-items: stretch;
-      gap: .4rem; padding: .5rem 1rem; }
+    /* Until the registry-dependent controls initialize, keep the original
+       viewer's zoom/return controls in a readable horizontal toolbar. */
+    .proof-explorer-toolbar { display: flex; flex-direction: row; align-items: center;
+      flex-wrap: wrap; gap: .5rem; padding: .5rem 1rem; }
+    .proof-explorer-toolbar:has(> .pe-toolbar-head) {
+      flex-direction: column; align-items: stretch; flex-wrap: nowrap; gap: .4rem;
+    }
+    .pe-explorer-warning { font-size: .85rem; opacity: .85; flex: 1 1 100%;
+      padding: .25rem 0; }
     .pe-toolbar-head, .pe-toolbar-actions, .pe-toolbar-status {
       display: flex; gap: .7rem; align-items: center; flex-wrap: wrap;
     }
@@ -2360,11 +2367,10 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
 
-  function initialize(stage, item, rules, propositions, dependencies = {}) {
+  function initialize(stage, item, rules, propositions, dependencies = {}, registryIssue = '') {
     const texEngine = window.MathJax;
     if (typeof texEngine?.tex2svgPromise !== 'function') {
-      console.warn('Proof Explorer: MathJax SVG renderer unavailable.');
-      return;
+      throw new Error('MathJax SVG renderer unavailable');
     }
     const toolbar = document.querySelector('.proof-explorer-toolbar');
     if (!toolbar) return;
@@ -2489,6 +2495,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return {direct: dependencySort(direct), issues: [...issues]};
     }
     const authoredDependencies = extractDependencies(initialSource);
+    // A missing registry must be visible as an unresolved dependency path,
+    // never misreported as a proof using no axioms.
+    if (registryIssue) authoredDependencies.issues.push(registryIssue);
     const immediateDependencies = authoredDependencies.direct;
     const dependencyRoots = dependencySort(immediateDependencies);
 
@@ -2968,10 +2977,10 @@ document.addEventListener('DOMContentLoaded', () => {
         replacement.animate([{opacity: .15}, {opacity: 1}],
           {duration: 200, easing: 'ease-out'});
       }
-      hint.textContent = prepared.hits.length
+      hint.textContent = registryIssue || (prepared.hits.length
         ? `Click ⊕ beside a derived rule or proposition to expand (${prepared.hits.length} available).`
         : history.length ? 'No further registered expansions in this tree.'
-          : 'No registered expandable rules in this tree.';
+          : 'No registered expandable rules in this tree.');
       undo.disabled = history.length === 0;
       expandAll.disabled = prepared.hits.length === 0;
       contractAll.disabled = source === initialSource;
@@ -3097,7 +3106,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function start(rules, propositions, dependencies) {
+  function showStartupWarning(message) {
+    const toolbar = document.querySelector('.proof-explorer-toolbar');
+    if (!toolbar) return;
+    const target = toolbar.querySelector('.pe-toolbar-status') || toolbar;
+    let warning = target.querySelector('.pe-explorer-warning');
+    if (!warning) {
+      warning = document.createElement('span');
+      warning.className = 'pe-explorer-warning';
+      warning.setAttribute('role', 'status');
+      target.append(warning);
+    }
+    warning.textContent = message;
+  }
+
+  function start(rules, propositions, dependencies, registryIssue = '') {
     const stage = document.querySelector('.proof-explorer-stage');
     if (!stage) return false;
     const snippet = stage.querySelector(':scope > .formalderivation');
@@ -3106,33 +3129,56 @@ document.addEventListener('DOMContentLoaded', () => {
       .some(el => el.style.getPropertyValue('--explorer-id').trim() === key)) return false;
     const item = locateExplorerMath(stage);
     if (!item) return false;
-    initialize(stage, item, rules, propositions, dependencies);
+    try {
+      initialize(stage, item, rules, propositions, dependencies, registryIssue);
+    } catch (error) {
+      // A diagnostic must remain visible in the viewer even if a future
+      // registry or rendering change prevents constructing the new sidebar.
+      console.error('Proof Explorer: could not initialize enhanced viewer:', error);
+      showStartupWarning('Proof Explorer enhancement failed: ' + error.message +
+        '. Zoom and textbook navigation remain available.');
+      return true;
+    }
     return true;
   }
 
   async function waitForExplorer() {
     const url = new URL('assets/proof-rules.json', location.href);
-    let data;
+    // The basic proof viewer must never depend on the JSON registry. If the
+    // registry is absent, stale or malformed, initialize the enhanced toolbar
+    // with no expansion rules and an explicit incomplete-dependency warning.
+    let data = {rules: {}, propositions: {}, dependencies: {}};
+    let registryIssue = '';
     try {
       const response = await fetch(url, {cache: 'no-store'});
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      data = await response.json();
-      if (data.version !== 7 || !data.rules || !data.propositions) {
-        throw new Error('Unknown proof registry format (expected version 7)');
+      const candidate = await response.json();
+      if (candidate.version !== 7 || !candidate.rules || !candidate.propositions) {
+        throw new Error('Incompatible proof registry (expected version 7)');
       }
+      data = candidate;
     } catch (error) {
       console.warn('Proof Explorer: rule registry unavailable:', error);
-      return;
+      registryIssue = 'Proof registry unavailable (' + error.message +
+        '). Expansions are disabled and the dependency index is incomplete.';
     }
     const rules = Object.values(data.rules);
     const propositions = data.propositions;
     const dependencies = data.dependencies || {};
-    if (start(rules, propositions, dependencies)) return;
+    if (start(rules, propositions, dependencies, registryIssue)) return;
+    // The full explorerderivation may be moved into the stage after MathJax
+    // settles. Observe that transition without requiring proof JSON to load.
     const observer = new MutationObserver(() => {
-      if (start(rules, propositions, dependencies)) observer.disconnect();
+      if (start(rules, propositions, dependencies, registryIssue)) observer.disconnect();
     });
     observer.observe(document.body, {childList: true, subtree: true});
-    setTimeout(() => observer.disconnect(), 12000);
+    setTimeout(() => {
+      observer.disconnect();
+      if (!document.querySelector('.pe-toolbar-head')) {
+        showStartupWarning('Proof Explorer could not locate the authored MathJax derivation. ' +
+          'Zoom and textbook navigation remain available.');
+      }
+    }, 12000);
   }
 
   if (document.readyState === 'loading') {
