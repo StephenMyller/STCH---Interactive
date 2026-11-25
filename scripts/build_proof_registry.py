@@ -854,6 +854,14 @@ def unique_justification(trees: list[str], schemata: list[dict], location: str):
     return output
 
 def get_proposition_proofs(path: Path, content: str, targets):
+    """Register the authored complete theorem AND any full premise-to-result
+    application proof displayed in its sidebar.
+
+    The first is the proof of the proposition's quantified statement; the
+    second justifies the way a later tree may invoke that same result as an
+    inference, e.g. P1.3.9 from A=B to mutual subclasshood. They are two
+    presentations of one mathematical result, not independent results.
+    """
     entries = {}
     props = list(PROPOSITION.finditer(content))
     for match in PROP_ANNOTATION.finditer(content):
@@ -865,25 +873,76 @@ def get_proposition_proofs(path: Path, content: str, targets):
         lbl = re.search(r"\\label\s*\{(prop:[^{}\s]+)\}", prior.group(1))
         if not lbl or lbl.group(1) != key:
             error(f"{loc}: proposition annotation is not following {key}")
+
         after = content[match.end():]
-        env = re.match(r"\s*\\begin\s*\{formalderivation\}(?:\[[^\]]*\]){0,2}", after)
-        if env:
-            environment = 'formalderivation'
+        immediate = re.match(r"\s*\\begin\s*\{(formalderivation|explorerderivation)\}", after)
+        if not immediate:
+            error(f"{loc}: proposition annotation must immediately precede "
+                  "formalderivation or explorerderivation")
+
+        # Associate only derivations belonging to THIS proposition. The
+        # narrative for the next numbered paragraph/result must not enter.
+        # It is common to author a sidebar formalderivation before placing
+        # the registration annotation on the complete explorerderivation.
+        before = content[prior.end():match.start()]
+        earlier_formals = list(_FORMAL_ENV.finditer(before))
+        formal = earlier_formals[-1] if earlier_formals else None
+        following = after
+        boundary = _STRUCTURE_BREAK.search(following)
+        if boundary:
+            following = following[:boundary.start()]
+        next_result = _RESULT_ENV.search(following)
+        if next_result:
+            following = following[:next_result.start()]
+        next_rule = _PROOF_RULE_HEADERS.search(following)
+        if next_rule:
+            following = following[:next_rule.start()]
+        formals_after = list(_FORMAL_ENV.finditer(following))
+        if formals_after:
+            formal = formals_after[0]  # annotation immediately before sidebar
+
+        aliases = {key, key.partition(':')[2]}
+        explorer = next((item for item in _EXPLORER_ENV.finditer(following)
+                         if item.group(1) in aliases), None)
+        if explorer:
+            complete_trees = TREE.findall(explorer.group(2))
+            if len(complete_trees) != 1:
+                error(f"{loc}: complete proposition proof must contain one prooftree")
+            variants = proof_prop_variants(complete_trees[0], loc)
+        elif immediate.group(1) == 'explorerderivation':
+            error(f"{loc}: explorerderivation does not match proposition {key}")
         else:
-            # For a theorem with a separately authored complete tree, the
-            # annotation belongs immediately above explorerderivation.
-            env = re.match(r"\s*\\begin\s*\{explorerderivation\}\s*\{[^{}]+\}", after)
-            if not env:
-                error(f"{loc}: proposition annotation must immediately precede "
-                      "formalderivation or explorerderivation")
-            environment = 'explorerderivation'
-        end = re.search(r"\\end\s*\{" + environment + r"\}", after[env.end():])
-        if not end:
-            error(f"{loc}: unclosed {environment}")
-        trees = TREE.findall(after[env.end():env.end() + end.start()])
-        if len(trees) != 1:
-            error(f"{loc}: proposition proof must contain one prooftree")
-        variants = proof_prop_variants(trees[0], loc)
+            if not formals_after:
+                error(f"{loc}: missing annotated formalderivation")
+            trees = TREE.findall(formals_after[0].group(1))
+            if len(trees) != 1:
+                error(f"{loc}: proposition proof must contain one prooftree")
+            variants = proof_prop_variants(trees[0], loc)
+
+        # A theorem with a complete \\forall-quantified conclusion is
+        # frequently invoked directly as an inference with a premise. An
+        # existing sidebar proof of that *inference* supplies its exact,
+        # readable and already authored Gentzen justification. Register it
+        # alongside the theorem, provided it is itself fully explicit.
+        # Never import a dotted/abbreviated sidebar proof into the Explorer.
+        if explorer and formal:
+            sidebar = TREE.findall(formal.group(1))
+            if len(sidebar) == 1 and not re.search(r'\\(?:vdots|cdots|ldots)\b', sidebar[0]):
+                try:
+                    supplemental = proof_prop_variants(sidebar[0], loc + ' (sidebar application)')
+                except ValueError:
+                    supplemental = []  # Sidebar may intentionally abbreviate reasoning.
+                patterns = {(tuple(canon(p) for p in entry['premises']),
+                             canon(entry['conclusion'])) for entry in variants}
+                for candidate in supplemental:
+                    if candidate['kind'] not in ('direct', 'direction'):
+                        continue
+                    pattern = (tuple(canon(p) for p in candidate['premises']),
+                               canon(candidate['conclusion']))
+                    if pattern not in patterns:
+                        variants.append(candidate)
+                        patterns.add(pattern)
+
         for variant in variants:
             variant['template'] = resolve_label(variant['template'], targets, loc)
         if key in entries:
@@ -984,6 +1043,10 @@ def _collect_proof_dependencies(text: str, rule_labels: dict):
                 if base.startswith('D') or base in ('Def.', 'Def', 'Definition'):
                     continue
                 if _PURE_INFERENCE.fullmatch(base):
+                    continue
+                # Repeated ordinary quantifier introduction is just a finite
+                # abbreviation for logical inference, not a new theorem/rule.
+                if re.fullmatch(r'\\(?:forall|exists)-(?:I|E)\*', base):
                     continue
                 # Some abbreviated first-order rules are pure logical steps.
                 if re.fullmatch(r'\\(?:forall|exists|land|lor|leftrightarrow|to|neg)(?:-[IE]\\*?)?', base):
