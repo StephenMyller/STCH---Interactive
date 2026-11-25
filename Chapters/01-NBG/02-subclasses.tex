@@ -134,7 +134,7 @@ A \not\subset B \quad \defequiv \quad
 
 \nbgpara{9}{} \quad By contrast, \(A \subseteq A\), but it is not the case that \(A \subset A\). A class cannot be a proper subclass of itself, because proper subclasshood requires inequality. 
 
-\begin{proposition}[Proper Subclasshood Is Irreflexive]
+\begin{proposition}[Proper Subclasshood Is Irreflexive]\label{prop:proper-subclasshood-irreflexive}
     \[\forall x(x \not\subset x)\]
 \end{proposition}
 
@@ -315,7 +315,6 @@ Our argument required only that $A\subseteq B$ and $B\subseteq C$. It therefore 
 Since $A$, $B$, and $C$ were arbitrary, this establishes the proposition.
 \end{proof}
 
-% proof-explorer-expansion: rule:subset-trans; vars=A,B,C; fresh=a; locals=3
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
@@ -340,6 +339,79 @@ Since $A$, $B$, and $C$ were arbitrary, this establishes the proposition.
     \UnaryInfC{\(A\subseteq C\)}
 \end{prooftree}
 \end{formalderivation}
+
+% proof-explorer-proposition: prop:subclasshood-transitive; vars=A,B,C; fresh=a
+\begin{explorerderivation}{prop:subclasshood-transitive}
+\begin{prooftree}
+    % First conjunct of the assumption
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(A\subseteq B\land B\subseteq C\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(A\subseteq B\)}
+%
+    % Arbitrary member of A
+    \AxiomC{}
+    \RightLabel{\(2\)}
+    \UnaryInfC{\(a\in A\)}
+%
+    % Membership in B
+    \RightLabel{\(\subseteq\)-E}
+    \BinaryInfC{\(a\in B\)}
+%
+    % Second conjunct of the same assumption
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(A\subseteq B\land B\subseteq C\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(B\subseteq C\)}
+%
+    % Membership in C
+    \RightLabel{\(\subseteq\)-E}
+    \BinaryInfC{\(a\in C\)}
+%
+    % Discharge assumption 2
+    \RightLabel{\(\subseteq\)-I, \(2\)}
+    \UnaryInfC{\(A\subseteq C\)}
+%
+    % Discharge both occurrences of assumption 1
+    \RightLabel{\(\to\)-I, \(1\)}
+    \UnaryInfC{
+        \((A\subseteq B\land B\subseteq C)
+        \to A\subseteq C\)
+    }
+%
+    % Universal generalization over C
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{
+        \(\forall z
+        \bigl(
+            (A\subseteq B\land B\subseteq z)
+            \to A\subseteq z
+        \bigr)\)
+    }
+%
+    % Universal generalization over B
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{
+        \(\forall y\forall z
+        \bigl(
+            (A\subseteq y\land y\subseteq z)
+            \to A\subseteq z
+        \bigr)\)
+    }
+%
+    % Universal generalization over A
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{
+        \(\forall x\forall y\forall z
+        \bigl(
+            (x\subseteq y\land y\subseteq z)
+            \to x\subseteq z
+        \bigr)\)
+    }
+\end{prooftree}
+\end{explorerderivation}
 
 The formal derivation shows how the two derived rules work together. We begin with the assumption that $a\in A$, use $\subseteq$-E twice to carry membership from $A$ through $B$ to $C$, and finally apply $\subseteq$-I to establish that $A\subseteq C$. The two subclass assumptions remain in force throughout this argument, while the assumption $a\in A$ is discharged.
 
@@ -376,7 +448,7 @@ x=y\to(x\subseteq y\land y\subseteq x)
 Let \(A\) and \(B\) be arbitrary classes, and suppose that \(A=B\). Since identical objects share all their properties, every member of \(A\) must also be a member of \(B\). Hence, \(A\subseteq B\). By the same reasoning, every member of \(B\) must also be a member of \(A\), so \(B\subseteq A\). Thus, \(A\subseteq B\) and \(B\subseteq A\), as required.
 \end{proof}
 
-% proof-explorer-proposition: prop:identity-implies-mutual-subclasshood; vars=A,B; fresh=a
+
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{\(A=B\)}
@@ -405,5 +477,67 @@ Let \(A\) and \(B\) be arbitrary classes, and suppose that \(A=B\). Since identi
     \BinaryInfC{\(A\subseteq B\land B\subseteq A\)}
 \end{prooftree}
 \end{formalderivation}
+
+% proof-explorer-proposition: prop:identity-implies-mutual-subclasshood; vars=A,B; fresh=a
+\begin{explorerderivation}{prop:identity-implies-mutual-subclasshood}
+\begin{prooftree}
+    % First direction: A subseteq B
+    \AxiomC{}
+    \RightLabel{\(3\)}
+    \UnaryInfC{\(A=B\)}
+%
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{\(a\in A\)}
+%
+    \RightLabel{\(=\)-E}
+    \BinaryInfC{\(a\in B\)}
+    \RightLabel{\(\subseteq\)-I, \(1\)}
+    \UnaryInfC{\(A\subseteq B\)}
+%
+    % Second direction: B subseteq A
+    \AxiomC{}
+    \RightLabel{\(3\)}
+    \UnaryInfC{\(A=B\)}
+%
+    \AxiomC{}
+    \RightLabel{\(2\)}
+    \UnaryInfC{\(a\in B\)}
+%
+    \RightLabel{\(=\)-E}
+    \BinaryInfC{\(a\in A\)}
+    \RightLabel{\(\subseteq\)-I, \(2\)}
+    \UnaryInfC{\(B\subseteq A\)}
+%
+    % Conjunction introduction
+    \RightLabel{\(\land\)-I}
+    \BinaryInfC{\(A\subseteq B\land B\subseteq A\)}
+%
+    % Discharge both occurrences of assumption 3
+    \RightLabel{\(\to\)-I, \(3\)}
+    \UnaryInfC{
+        \(A=B\to(A\subseteq B\land B\subseteq A)\)
+    }
+%
+    % Universal generalization
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{
+        \(\forall y
+        \bigl(
+            A=y\to
+            (A\subseteq y\land y\subseteq A)
+        \bigr)\)
+    }
+%
+    \RightLabel{\(\forall\)-I}
+    \UnaryInfC{
+        \(\forall x\forall y
+        \bigl(
+            x=y\to
+            (x\subseteq y\land y\subseteq x)
+        \bigr)\)
+    }
+\end{prooftree}
+\end{explorerderivation}
 
 But what about the converse? If every member of \(A\) belongs to \(B\), and every member of \(B\) belongs to \(A\), must the two classes be identical? Our definition of subclasshood does not settle this question, nor do the underlying laws of logic. The answer requires our first set-theoretic axiom: the Axiom of Extensionality.
