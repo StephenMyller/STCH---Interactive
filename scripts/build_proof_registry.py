@@ -11,7 +11,7 @@ For a discharge rule, use:
 The defining tree must contain a single conventional dotted schematic subproof:
   AxiomC{} / RightLabel{n} / UnaryInfC{assumption} / noLine /
   UnaryInfC{vdots} / noLine / UnaryInfC{premise}.
-The engine checks the selected discharge assumption and conservatively rejects
+The engine checks the selected discharge assumption and conservatively arejects
 applications if the eigenvariable occurs in other assumption leaves.
 
 Annotation immediately before a formalderivation:
@@ -914,7 +914,16 @@ _PROOF_RULE_HEADERS = re.compile(r'\\begin\s*\{derivedrule\}')
 # Axiom A1, rather than as a separately registered derivedrule. Recognize it
 # as an axiom invocation; do not create a separate Ext node.
 # Add future unregistered axiom-rule spellings here, only when justified.
-_AXIOM_RULE_ALIASES = {'Ext': '1'}
+# Centralized axiom display metadata. An axiom can be invoked via a concise
+# Gentzen rule (Ext, CF), via its numbered label (A_1, A_2), or via a
+# proposition-style reference. These are the same mathematical dependency.
+# Other axiom names are extracted from authored axiom headings when present.
+_AXIOM_CATALOG = {
+    '1': {'title': 'Extensionality', 'shortName': 'Ext'},
+    '2': {'title': 'Class Formation', 'shortName': 'CF'},
+}
+_AXIOM_RULE_ALIASES = {data['shortName']: number
+                       for number, data in _AXIOM_CATALOG.items()}
 _PURE_INFERENCE = re.compile(
     r'^(?:\\(?:forall|exists|land|lor|leftrightarrow|to|neg|bot|top|equiv|'
     r'forall_S|exists_S|forall\\_S|exists\\_S)(?:-I|-[IE]|-I\\*|-[IE]\\*)?'
@@ -1009,6 +1018,23 @@ def _display_heading(kind: str, heading: str):
     text = re.sub(r'\\(?:textbf|emph|textit)\s*\{([^{}]*)\}', r'\1', heading or '')
     text = re.sub(r'\\[A-Za-z]+|[{}$]', '', text).strip()
     return text or kind.title()
+
+
+def _result_reference(kind: str, number: str) -> str:
+    """Stable, concise visible reference, not a mathematical dependency ID."""
+    value = str(number or '').strip()
+    if not value:
+        return ''
+    if kind == 'axiom':
+        found = re.fullmatch(r'A_?\{?(\d+)\}?', value)
+        return 'A' + found.group(1) if found else value
+    prefix = {'proposition': 'P', 'theorem': 'T', 'lemma': 'L',
+              'corollary': 'C', 'metatheorem': 'M'}.get(kind, '')
+    if not prefix or value.startswith(prefix):
+        return value
+    if re.match(r'^\d', value):
+        return prefix + value
+    return value
 
 
 def _authored_proof(source: str, after: int, bound: int, result_id: str):
@@ -1129,7 +1155,8 @@ def dependency_index(tex_paths: list[Path], targets: dict, registered_rules: dic
             number, filename = targets[key]
             title = _display_heading(kind, heading)
             entry = {'id': key, 'kind': kind, 'title': title, 'number': number,
-                     'url': f'{filename}#{key}', 'requires': [], 'issues': []}
+                     'url': f'{filename}#{key}', 'reference': _result_reference(kind, number),
+                     'requires': [], 'issues': []}
             if kind == 'axiom':
                 results[key] = entry
                 n = _number_for_axiom(number, title)
@@ -1151,9 +1178,49 @@ def dependency_index(tex_paths: list[Path], targets: dict, registered_rules: dic
             if key in results:
                 error(f'Duplicate mathematical result in dependency index: {key}')
             results[key] = entry
+    # All numbered axiom invocations are terminal dependency paths. The
+    # absence of an authored axiom environment is NOT an unresolved proof:
+    # it only means that the entry's source location is unavailable.
+    # Give A1/A2 their established names even if defined by macros or in
+    # source files not recognized by _RESULT_ENV.
+    for number, axiom in list(axioms.items()):
+        catalog = _AXIOM_CATALOG.get(number)
+        axiom['reference'] = 'A' + number
+        if catalog:
+            axiom['title'] = catalog['title']
+            axiom['shortName'] = catalog['shortName']
+        if axiom['id'] in results:
+            results[axiom['id']].update(axiom)
+    # In some LaTeX projects axioms are declared by commands rather than
+    # environments. The resolved HTML reference index still identifies their
+    # stable labels, axiom numbers and actual pages. Use those references,
+    # without assuming the underlying axiom source environment or guessing
+    # URLs. A referenced axiom is a terminal node even without a parsed proof.
+    for label, (display_number, filename) in targets.items():
+        if not label.startswith(('ax:', 'axiom:')):
+            continue
+        number = _number_for_axiom(display_number, '')
+        if not number:
+            continue
+        catalog = _AXIOM_CATALOG.get(number, {})
+        existing = results.get(label, {})
+        entry = {'id': label, 'kind': 'axiom', 'number': 'A' + number,
+                 'reference': 'A' + number,
+                 'title': catalog.get('title', existing.get('title', '')),
+                 'shortName': catalog.get('shortName', existing.get('shortName', '')),
+                 'url': f'{filename}#{label}', 'requires': [], 'issues': []}
+        results[label] = entry
+        axioms.setdefault(number, entry)
+    for number, catalog in _AXIOM_CATALOG.items():
+        if number not in axioms:
+            axioms[number] = {'id': 'axiom:number:' + number, 'kind': 'axiom',
+                              'number': 'A' + number, 'reference': 'A' + number,
+                              'shortName': catalog['shortName'],
+                              'title': catalog['title'], 'url': None,
+                              'requires': [], 'issues': []}
     return {'results': results, 'axioms': axioms, 'rules': rule_nodes,
             'ruleLabels': {key: sorted(ids) for key, ids in rule_labels.items()},
-            'schema': 2}
+            'schema': 3}
 
 
 def main():
