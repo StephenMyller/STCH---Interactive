@@ -41,7 +41,7 @@ The restriction to sets in a membership specification can also be expressed with
 
 \begin{metatheorem}[Restricted and Unrestricted Membership Specifications]
 \label{meta:restricted-unrestricted-class-formulation}
-Let \(\varphi\) be an extended formula, and let \(\xi\) and \(\eta\) be distinct variables such that \(\eta\) does not occur free in \(\varphi\). Then
+Let \(\varphi\) be an extended formula, and let \(\xi\) and \(\eta\) be distinct variables such that \(\eta\) does not occur free in \(\varphi\). All substitutions below are capture-avoiding. Then
 \[
 \vdash
 \forall_S\xi
@@ -59,7 +59,7 @@ Let \(\varphi\) be an extended formula, and let \(\xi\) and \(\eta\) be distinct
 \end{metatheorem}
 
 \begin{proof}
-Choose a variable \(\zeta\) not occurring in \(\varphi\) and distinct from \(\xi\) and \(\eta\).
+Choose a variable \(\zeta\) fresh for the displayed formulas and distinct from \(\xi\) and \(\eta\).
 
 Suppose first that
 \[

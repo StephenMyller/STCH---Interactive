@@ -56,6 +56,7 @@ notation comes at no cost in deductive strength.
 \boolfalse{CombineHigherDepths}
 
 \subsubsection{Class-Term Syntax and Contextual Elimination}
+\label{sec:class-term-syntax-and-elimination}
 
 \nbgpara{1}{General Class Terms}
 
@@ -476,6 +477,7 @@ of the Class-Term Extension Metatheorem that follows.
 
 
 \subsubsection{The Class-Term Extension Metatheorem}
+\label{sec:class-term-extension-metatheorem}
 
 \nbgpara{1}{Membership Specifications}
 
@@ -729,8 +731,10 @@ S\in T
 When \(T\) is a variable, \(\Cond_T^{+}(h)\) is simply \(h\in T\), so the
 same equivalence holds.
 
-Since \(\Real^+_S(a)\to\Set(a)\), the restricted and unrestricted
-membership specifications are equivalent:
+Since \(\Cond_S^+(a)\to\Set(a)\), the sethood restriction
+can be removed from the realization specification without changing
+its meaning. Thus the restricted and unrestricted realization
+conditions are equivalent:
 \[
 \vdash
 \Real_S(h)\leftrightarrow\Real^+_S(h).
@@ -750,7 +754,7 @@ We therefore prescribe
 S\in T
 \quad\rightsquigarrow\quad
 \exists_S h\left(
-\forall_S a\bigl(a\in h\leftrightarrow \Real^+_S(a)\bigr)
+\forall_S a\bigl(a\in h\leftrightarrow \Cond_S^+(a)\bigr)
 \land \Cond_T^{+}(h)
 \right).
 \]
@@ -766,7 +770,7 @@ which is a class term, and let \(a\) be fresh for both. We establish
 \vdash
 S=T
 \leftrightarrow
-\forall_S a\bigl(\Real^+_S(a)\leftrightarrow \Cond_T^{+}(a)\bigr).
+\forall_S a\bigl(\Cond_S^{+}(a)\leftrightarrow \Cond_T^{+}(a)\bigr).
 \tag{E}
 \]
 Suppose first that one argument is a variable, say \(S=\zeta\),
@@ -782,7 +786,7 @@ unrestricted membership specification is equivalent to
 \forall_S a\bigl(a\in\zeta\leftrightarrow \Cond_T^{+}(a)\bigr).
 \]
 This is the right-hand side of \((\mathrm{E})\), because
-\(\Real^+_\zeta(a)\) is \(a\in\zeta\). The case with the class term on
+\(\Cond_\zeta^+(a)\) is \(a\in\zeta\). The case with the class term on
 the left follows by symmetry of identity, using the corresponding
 contextual expansion.
 
@@ -797,7 +801,7 @@ S=T
 \exists h\bigl(\Real_S(h)\land\Real_T(h)\bigr).
 \]
 If the existential formula holds, its two realization conditions
-imply agreement of \(\Real^+_S(a)\) and \(\Cond_T^{+}(a)\) for every set
+imply agreement of \(\Cond_S^+(a)\) and \(\Cond_T^{+}(a)\) for every set
 \(a\), giving the right-hand side of \((\mathrm{E})\).
 Conversely, suppose that restricted agreement holds. By existence
 of realizations, choose \(h\) satisfying \(\Real_S(h)\).
@@ -817,7 +821,7 @@ We accordingly prescribe
 \[
 S=T
 \quad\rightsquigarrow\quad
-\forall_S a\bigl(\Real^+_S(a)\leftrightarrow \Cond_T^{+}(a)\bigr).
+\forall_S a\bigl(\Cond_S^{+}(a)\leftrightarrow \Cond_T^{+}(a)\bigr).
 \]
 Once again the reduct has only restricted quantifiers and contains
 no class terms at the maximal rank of the original atomic formula.
@@ -905,6 +909,7 @@ question will be treated separately below.
 
 
 \subsubsection{Fundamental Class-Builder Laws}
+\label{sec:fundamental-class-builder-laws}
 
 \nbgpara{1}{Membership and Identity}
 
@@ -1032,7 +1037,7 @@ Metatheorem~\ref{meta:class-term-extension},
 T=U
 \leftrightarrow
 \forall_S\alpha
-\bigl(\Cond_T^{+}(\alpha)\leftrightarrow \Real^+_U(\alpha)\bigr).
+\bigl(\Cond_T^{+}(\alpha)\leftrightarrow \Cond_U^{+}(\alpha)\bigr).
 \]
 By the definitions of the membership specifications, the right-hand
 side is
@@ -1096,38 +1101,46 @@ and the realization condition introduced in E.1.
 
 \begin{metatheorem}[Derived Class-Builder Rules]
 \label{meta:derived-class-builder-rules}
-Let \(T\) be an admitted class term and \(\zeta\) a variable.
-Whenever the indicated conditions are defined, the following rules
-are admissible:
+Let \(T=\{\xi\mid\varphi\}\) be an admitted general class term
+and \(\zeta\) a variable. Whenever the indicated substitution is
+defined, the following rules are admissible:
 \[
-\frac{\zeta\in T}
-{\operatorname{Cond}_T(\zeta)}
-\quad\mathrm{CB}{\in}\text{-E}
-\qquad
-\frac{\operatorname{Cond}_T(\zeta)}
+\frac{\Set(\zeta)\qquad\varphi[\zeta/\xi]}
 {\zeta\in T}
-\quad\mathrm{CB}{\in}\text{-I}.
+\quad\mathrm{CB}{\in}\text{-I}
+\qquad
+\frac{\zeta\in T}
+{\varphi[\zeta/\xi]}
+\quad\mathrm{CB}{\in}\text{-E}.
 \]
 \[
-\frac{\zeta=T}
-{\Real_T(\zeta)}
-\quad\mathrm{CB}{=}\text{-E}
-\qquad
 \frac{\Real_T(\zeta)}
 {\zeta=T}
-\quad\mathrm{CB}{=}\text{-I}.
+\quad\mathrm{CB}{=}\text{-I}
+\qquad
+\frac{\zeta=T}
+{\Real_T(\zeta)}
+\quad\mathrm{CB}{=}\text{-E}.
 \]
 The class-builder variable and any auxiliary bound variables are
-renamed as necessary to avoid capture.
+renamed as necessary to avoid capture. The membership rules have
+been stated in the two-premise introduction and one-conclusion
+elimination forms used in the main text.
 \end{metatheorem}
 
 \begin{proof}
 The Membership Law gives
 \(\vdash\zeta\in T\leftrightarrow
-\operatorname{Cond}_T(\zeta)\), and the Identity Law gives
-\(\vdash\zeta=T\leftrightarrow\Real_T(\zeta)\).
-Each rule follows by Biconditional Elimination and the established
-rule-extraction principle. Hence none introduces new deductive power.
+\operatorname{Cond}_T(\zeta)\), where
+\(\operatorname{Cond}_T(\zeta)\) abbreviates
+\(\Set(\zeta)\land\varphi[\zeta/\xi]\).
+Conjunction Introduction and Elimination, together with
+Biconditional Elimination, therefore justify both membership
+rules. The Identity Law gives
+\(\vdash\zeta=T\leftrightarrow\Real_T(\zeta)\)
+and justifies both identity rules by Biconditional Elimination.
+The established rule-extraction principle makes all four rules
+admissible; none introduces new deductive power.
 \end{proof}
 
 The four rules are deliberately stated with a variable argument,
@@ -2052,7 +2065,7 @@ independently of the present conservativity claim.
 For an admitted extended term \(T\), write
 \[
 R_T(\eta)\defequiv
-\bigl(\operatorname{Rep}_T(\eta)\bigr)^\circ,
+\bigl(\Real_T^+(\eta)\bigr)^\circ,
 \]
 where \(\eta\) is fresh. This is a primitive formula.
 The construction of Part II, interpreted through
