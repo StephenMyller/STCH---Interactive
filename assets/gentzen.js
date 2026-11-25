@@ -434,6 +434,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     .proof-explorer-stage mjx-container { color: inherit; }
     .proof-explorer-stage mjx-container svg a { color: inherit !important; }
+    /* Every premise reserves its complete recursive width, including rule labels.
+       Inference labels are in normal flow and cannot overlap neighboring branches. */
+    .proof-explorer-stage .pe-tree, .proof-explorer-stage .pe-node {
+      display: inline-flex; flex-direction: column; align-items: center;
+      width: max-content; max-width: none; flex: 0 0 auto; white-space: nowrap;
+    }
+    .proof-explorer-stage .pe-tree { padding: 1rem; font-size: 1.1rem; }
+    .proof-explorer-stage .pe-premises {
+      display: flex; align-items: flex-end; justify-content: center;
+      gap: 1.75em; width: max-content;
+    }
+    .proof-explorer-stage .pe-step {
+      display: flex; flex-direction: column; align-items: center;
+      width: 100%; min-width: max-content;
+    }
+    .proof-explorer-stage .pe-rule-row {
+      display: flex; align-items: center; gap: .3em;
+      width: 100%; min-height: .35em;
+    }
+    .proof-explorer-stage .pe-bar {
+      height: 0; min-width: 1.25em; flex: 1 1 auto;
+      border-top: 1px solid currentColor;
+    }
+    .proof-explorer-stage .pe-bar.pe-dashed { border-top-style: dashed; }
+    .proof-explorer-stage .pe-bar.pe-none { border-top-color: transparent; }
+    .proof-explorer-stage .pe-label {
+      display: inline-flex; flex: 0 0 auto; min-height: 1em;
+      align-items: center; line-height: 1;
+    }
+    .proof-explorer-stage .pe-conclusion {
+      display: flex; justify-content: center; align-items: center;
+      min-width: max-content; min-height: 1.1em;
+    }
+    .proof-explorer-stage .pe-leaf > .pe-conclusion:empty {
+      min-width: 0; min-height: 0;
+    }
+    .proof-explorer-stage .pe-tree mjx-container {
+      display: inline-block !important; margin: 0 !important;
+      overflow: visible !important;
+    }
+    .proof-explorer-stage .pe-tree mjx-container svg { overflow: visible; }
     html.proof-explorer-mode body { overflow: hidden !important; }
   `;
   document.head.append(style);
@@ -502,6 +543,22 @@ document.addEventListener('DOMContentLoaded', () => {
       stage.proofExplorerPanBy = (dx, dy) => {
       x += dx;
       y += dy;
+      paint();
+    };
+    // Expansion can alter the content width dramatically.  If the proof fits
+    // at the current zoom, center it in the unused viewport space.  Otherwise
+    // keep the user's current pan/zoom rather than unexpectedly zooming out.
+    stage.proofExplorerCenterIfFits = () => {
+      const proof = stage.querySelector('.pe-tree');
+      if (!proof) return;
+      const view = viewport.getBoundingClientRect();
+      const bounds = proof.getBoundingClientRect();
+      if (bounds.width < view.width - 40) {
+        x += (view.left + view.width / 2) - (bounds.left + bounds.right) / 2;
+      }
+      if (bounds.height < view.height - 40) {
+        y += (view.top + view.height / 2) - (bounds.top + bounds.bottom) / 2;
+      }
       paint();
     };
     const fit = () => {
@@ -2143,23 +2200,107 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // Lay out the entire inference subtree, not only the width of its last
+    // formula.  MathJax bussproofs can overlap branches with deep descendants.
+    const fragmentCache = new Map();
+    function parseLayoutTree(tex) {
+      const nodes = []; let label = '', leftLabel = '', line = 'solid';
+      const arity = {UnaryInfC:1,BinaryInfC:2,TrinaryInfC:3,QuaternaryInfC:4,QuinaryInfC:5};
+      const commands = /\\(AxiomC|UnaryInfC|BinaryInfC|TrinaryInfC|QuaternaryInfC|QuinaryInfC|RightLabel|RL|LeftLabel|LL|noLine|dashedLine|solidLine|singleLine|alwaysNoLine|alwaysDashedLine|alwaysSolidLine|alwaysSingleLine)\b/g;
+      let m;
+      while ((m = commands.exec(tex))) {
+        const name = m[1];
+        if (name==='noLine'||name==='alwaysNoLine') {line='none';continue;}
+        if (/^(always)?DashedLine$/.test(name) || name==='dashedLine') {line='dashed';continue;}
+        if (/^(always)?SolidLine$/.test(name) || name==='solidLine' || name==='singleLine' || name==='alwaysSingleLine') {line='solid';continue;}
+        const arg = braced(tex,commands.lastIndex);
+        if (!arg) throw new Error('Malformed proof-tree argument: '+name);
+        commands.lastIndex=arg.end;
+        if (name==='RightLabel'||name==='RL') {label=arg.content;continue;}
+        if (name==='LeftLabel'||name==='LL') {leftLabel=arg.content;continue;}
+        if (name==='AxiomC') {
+          nodes.push({formula:arg.content,children:[],leaf:true});label=leftLabel='';continue;
+        }
+        const n=arity[name];
+        if (!n||nodes.length<n) throw new Error('Disconnected or malformed proof tree');
+        nodes.push({formula:arg.content,children:nodes.splice(-n,n),leaf:false,
+                    label,leftLabel,line});label=leftLabel='';line='solid';
+      }
+      if (nodes.length!==1) throw new Error('Malformed proof tree: '+nodes.length+' roots');
+      return nodes[0];
+    }
+    function fragmentTex(raw) {
+      return raw.trim().replace(/\\\(|\\\)|\\\[|\\\]/g,'').replace(/\$/g,'');
+    }
+    async function proofMath(raw) {
+      const tex=fragmentTex(raw);
+      if (!tex) return document.createElement('span');
+      let ready=fragmentCache.get(tex);
+      if (!ready) {
+        ready=texEngine.tex2svgPromise(tex,{display:false}).then(el=>{
+          if (!el.querySelector('svg')||el.querySelector('merror,[data-mml-node="merror"]'))
+            throw new Error('Proof math failed: '+tex);
+          return el;
+        });
+        fragmentCache.set(tex,ready);
+      }
+      return (await ready).cloneNode(true);
+    }
+    async function proofBranch(node) {
+      const container=document.createElement('span');
+      container.className='pe-node'+(node.leaf?' pe-leaf':'');
+      if (node.children.length) {
+        const premises=document.createElement('span');premises.className='pe-premises';
+        for (const child of node.children) premises.append(await proofBranch(child));
+        container.append(premises);
+      }
+      const conclusion=document.createElement('span');conclusion.className='pe-conclusion';
+      if (node.formula.trim()) conclusion.append(await proofMath(node.formula));
+      if (node.leaf) container.append(conclusion);
+      else {
+        const step=document.createElement('span');step.className='pe-step';
+        const row=document.createElement('span');row.className='pe-rule-row';
+        if (node.leftLabel) {
+          const l=document.createElement('span');l.className='pe-label';
+          l.append(await proofMath(node.leftLabel));row.append(l);
+        }
+        const bar=document.createElement('span');bar.className='pe-bar pe-'+node.line;
+        row.append(bar);
+        if (node.label) {
+          const l=document.createElement('span');l.className='pe-label';
+          l.append(await proofMath(node.label));row.append(l);
+        }
+        step.append(row,conclusion);container.append(step);
+      }
+      return container;
+    }
+    async function drawProof(markedSource) {
+      const outer=document.createElement('span');outer.className='pe-tree';
+      outer.append(await proofBranch(parseLayoutTree(markedSource)));
+      return outer;
+    }
+
     async function render() {
       const prepared = markExpandableRules(source, rules, propositions);
-      const replacement = await texEngine.tex2svgPromise(prepared.tex, {display: true});
-      if (!replacement?.querySelector('svg') ||
-          replacement.querySelector('merror, [data-mml-node="merror"]')) {
-        throw new Error('MathJax failed to render the proof');
+      let replacement;
+      try {
+        replacement = await drawProof(prepared.tex);
+      } catch (layoutError) {
+        // Retain the earlier renderer for an unsupported proof-tree command.
+        console.warn('Proof Explorer: full-subtree layout unavailable; using MathJax', layoutError);
+        replacement = await texEngine.tex2svgPromise(prepared.tex, {display: true});
       }
-      const oldBox = output.querySelector('svg')?.getBoundingClientRect();
+      const oldBox = output.getBoundingClientRect();
       output.replaceWith(replacement);
       output = replacement;
-      const newBox = replacement.querySelector('svg')?.getBoundingClientRect();
+      const newBox = replacement.getBoundingClientRect();
       if (oldBox && newBox && stage.proofExplorerPanBy) {
         stage.proofExplorerPanBy(
           (oldBox.left + oldBox.right - newBox.left - newBox.right) / 2,
           oldBox.bottom - newBox.bottom
         );
       }
+      stage.proofExplorerCenterIfFits?.();
       if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
           typeof replacement.animate === 'function') {
         replacement.animate([{opacity: .15}, {opacity: 1}],
