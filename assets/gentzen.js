@@ -462,14 +462,21 @@ document.addEventListener('DOMContentLoaded', () => {
       content: ''; position: absolute; pointer-events: none;
       left: var(--pe-line-left, 0px);
       width: var(--pe-line-width, 0px);
-      top: 50%; height: 0; border-top: 1px solid currentColor;
+      top: 50%; height: 0;
+      border-top: var(--pe-stroke-px, 1.15px) solid currentColor;
     }
     .proof-explorer-stage .pe-bar.pe-dashed::after { border-top-style: dashed; }
     .proof-explorer-stage .pe-bar.pe-none::after { border-top-color: transparent; }
     .proof-explorer-stage .pe-label {
       display: inline-flex; flex: 0 0 auto; min-height: 1em;
       align-items: center; line-height: 1;
+      font-size: .70em; /* match the manuscript's scriptsize labels */
     }
+    .proof-explorer-stage .pe-label a {
+      color: inherit; text-decoration: none; cursor: pointer;
+    }
+    .proof-explorer-stage .pe-label a[href^='#proof-expand-'] { cursor: zoom-in; }
+    .proof-explorer-stage .pe-label a:hover { opacity: .72; }
     .proof-explorer-stage .pe-conclusion {
       display: flex; justify-content: center; align-items: center;
       min-width: max-content; min-height: 1.1em;
@@ -545,6 +552,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let x = 0;
     let y = 0;
     const paint = () => {
+      // Maintain an approximately one-screen-pixel stroke at every zoom.
+      // The tree itself still scales as a unit; only its painted bars compensate.
+      stage.style.setProperty('--pe-stroke-px', `${1.15 / scale}px`);
       stage.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
     };
       stage.proofExplorerPanBy = (dx, dy) => {
@@ -2253,6 +2263,69 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       return (await ready).cloneNode(true);
     }
+    // A bussproofs RightLabel is ordinary mixed-mode text, not one formula.
+    // e.g. "\\(\\to\\)-I, 2" has a mathematical arrow but roman "-I, 2".
+    // The previous custom renderer removed math delimiters and sent the WHOLE
+    // label to MathJax, wrongly italicizing the text and ignoring scriptsize.
+    // Parse only genuine math segments as TeX; preserve text and hyperlink
+    // segments (including the Explorer's separate expandable rule controls).
+    async function proofLabel(raw) {
+      const result = document.createDocumentFragment();
+      const source = raw.trim();
+      let plain = '';
+      const flush = () => {
+        if (plain) { result.append(document.createTextNode(plain)); plain = ''; }
+      };
+      for (let i = 0; i < source.length;) {
+        const mathOpen = source.startsWith('\\(', i) ? ['\\)', 2]
+          : source.startsWith('\\[', i) ? ['\\]', 2]
+          : source[i] === '$' && source[i-1] !== '\\' ? ['$', 1] : null;
+        if (mathOpen) {
+          const [close, openLength] = mathOpen;
+          const end = source.indexOf(close, i + openLength);
+          if (end !== -1) {
+            flush();
+            const content = source.slice(i + openLength, end);
+            result.append(await proofMath(content));
+            i = end + close.length;
+            continue;
+          }
+        }
+        if (source.startsWith('\\href', i) && !/[A-Za-z]/.test(source[i+5] || '')) {
+          const destination = braced(source, i + 5);
+          const linkText = destination && braced(source, destination.end);
+          if (linkText) {
+            flush();
+            const anchor = document.createElement('a');
+            anchor.setAttribute('href', destination.content);
+            anchor.append(await proofLabel(linkText.content));
+            result.append(anchor);
+            i = linkText.end;
+            continue;
+          }
+        }
+        // Explicit font-size commands in a label have the same meaning as
+        // the renderer's scriptsize styling; never print them as plain text.
+        const fontCommand = /^\\(?:scriptsize|tiny|footnotesize|normalsize)\b/.exec(source.slice(i));
+        if (fontCommand) { flush(); i += fontCommand[0].length; continue; }
+        // Un-delimited TeX commands used inside a label are rare, but still
+        // allow them to be typeset instead of exposing backslash text.
+        const bareCommand = /^\\(?:mathrm|mathsf|textbf|mathbf|operatorname)\b/.exec(source.slice(i));
+        if (bareCommand) {
+          const argument = braced(source, i + bareCommand[0].length);
+          if (argument) {
+            flush();
+            result.append(await proofMath(source.slice(i, argument.end)));
+            i = argument.end;
+            continue;
+          }
+        }
+        plain += source[i++];
+      }
+      flush();
+      return result;
+    }
+
     async function proofBranch(node) {
       const container=document.createElement('span');
       container.className='pe-node'+(node.leaf?' pe-leaf':'');
@@ -2269,13 +2342,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const row=document.createElement('span');row.className='pe-rule-row';
         if (node.leftLabel) {
           const l=document.createElement('span');l.className='pe-label pe-left-label';
-          l.append(await proofMath(node.leftLabel));row.append(l);
+          l.append(await proofLabel(node.leftLabel));row.append(l);
         }
         const bar=document.createElement('span');bar.className='pe-bar pe-'+node.line;
         row.append(bar);
         if (node.label) {
           const l=document.createElement('span');l.className='pe-label pe-right-label';
-          l.append(await proofMath(node.label));row.append(l);
+          l.append(await proofLabel(node.label));row.append(l);
         }
         step.append(row,conclusion);container.append(step);
       }
