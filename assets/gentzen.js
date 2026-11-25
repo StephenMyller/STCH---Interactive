@@ -458,15 +458,17 @@ document.addEventListener('DOMContentLoaded', () => {
     .proof-explorer-stage .pe-bar {
       height: 0; min-width: 1.25em; flex: 1 1 auto;
     }
-    .proof-explorer-stage .pe-bar::after {
-      content: ''; position: absolute; pointer-events: none;
-      left: var(--pe-line-left, 0px);
-      width: var(--pe-line-width, 0px);
-      top: 50%; height: 0;
-      border-top: var(--pe-stroke-px, 1.15px) solid currentColor;
+    /* Inference rules are drawn in a viewport-level SVG, NOT as CSS borders
+       inside the transformed proof stage. This prevents subpixel rasterization
+       from making arbitrary rules disappear while zooming or panning. */
+    .proof-explorer-viewport > .pe-inference-lines {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      pointer-events: none; overflow: hidden; z-index: 1;
     }
-    .proof-explorer-stage .pe-bar.pe-dashed::after { border-top-style: dashed; }
-    .proof-explorer-stage .pe-bar.pe-none::after { border-top-color: transparent; }
+    .proof-explorer-viewport > .pe-inference-lines path {
+      fill: none; stroke: currentColor; stroke-opacity: .62;
+      stroke-linecap: butt; shape-rendering: crispEdges;
+    }
     .proof-explorer-stage .pe-label {
       display: inline-flex; flex: 0 0 auto; min-height: 1em;
       align-items: center; line-height: 1;
@@ -535,6 +537,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const stage = document.createElement('div');
     stage.className = 'proof-explorer-stage';
     viewport.append(stage);
+    // A screen-space SVG layer draws the horizontal inference bars after
+    // projecting their positions from the zoomable proof. Its strokes never
+    // inherit the stage's CSS scale, so they remain one screen pixel wide.
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const lineLayer = document.createElementNS(svgNS, 'svg');
+    lineLayer.classList.add('pe-inference-lines');
+    lineLayer.setAttribute('aria-hidden', 'true');
+    const solidLines = document.createElementNS(svgNS, 'path');
+    const dashedLines = document.createElementNS(svgNS, 'path');
+    dashedLines.setAttribute('stroke-dasharray', '4 3');
+    lineLayer.append(solidLines, dashedLines);
+    viewport.append(lineLayer);
     overlay.append(toolbar, viewport);
     document.body.append(overlay);
     document.documentElement.classList.add('proof-explorer-mode');
@@ -551,13 +565,64 @@ document.addEventListener('DOMContentLoaded', () => {
     let scale = 1;
     let x = 0;
     let y = 0;
-    const paint = () => {
-      // Maintain an approximately one-screen-pixel stroke at every zoom.
-      // The tree itself still scales as a unit; only its painted bars compensate.
-      stage.style.setProperty('--pe-stroke-px', `${1.15 / scale}px`);
-      stage.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+    let lineGeometry = [];
+    // Coordinates in lineGeometry are local to the *untransformed* stage.
+    // Converting them to viewport coordinates on every zoom/pan avoids CSS
+    // border rasterization and keeps solid/dashed strokes pixel-crisp.
+    const paintLines = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const physicalWidth = Math.max(1, Math.round(dpr));
+      const lineWidth = physicalWidth / dpr;
+      solidLines.setAttribute('stroke-width', String(lineWidth));
+      dashedLines.setAttribute('stroke-width', String(lineWidth));
+      const odd = physicalWidth % 2 === 1;
+      const alignY = value => (Math.round(value * dpr - (odd ? .5 : 0)) + (odd ? .5 : 0)) / dpr;
+      const solid = [], dashed = [];
+      const width = viewport.clientWidth, height = viewport.clientHeight;
+      for (const line of lineGeometry) {
+        const left = x + line.left * scale;
+        const right = x + line.right * scale;
+        const screenY = y + line.y * scale;
+        if (right < 0 || left > width || screenY < -2 || screenY > height + 2) continue;
+        const yy = alignY(screenY);
+        const xx1 = Math.round(left * dpr) / dpr;
+        // A very short line can round to zero pixels at extreme zoom;
+        // give every nonempty, onscreen inference at least one physical pixel.
+        const xx2 = Math.max(Math.round(right * dpr) / dpr, xx1 + 1 / dpr);
+        (line.dashed ? dashed : solid).push(`M${xx1} ${yy}H${xx2}`);
+      }
+      solidLines.setAttribute('d', solid.join(' '));
+      dashedLines.setAttribute('d', dashed.join(' '));
     };
-      stage.proofExplorerPanBy = (dx, dy) => {
+    const paint = () => {
+      stage.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+      paintLines();
+    };
+    // Called after a proof is redrawn and its visible inference-line lengths
+    // have been trimmed. Only positions are measured; nothing is reflowed.
+    stage.proofExplorerSyncLines = () => {
+      const stageRect = stage.getBoundingClientRect();
+      const displayedScale = stage.offsetWidth ? stageRect.width / stage.offsetWidth : scale;
+      const result = [];
+      if (!Number.isFinite(displayedScale) || displayedScale <= 0) return;
+      for (const bar of stage.querySelectorAll('.pe-tree .pe-bar')) {
+        if (bar.classList.contains('pe-none')) continue;
+        const row = bar.closest('.pe-rule-row');
+        if (!row) continue;
+        const left = Number.parseFloat(bar.style.getPropertyValue('--pe-line-left'));
+        const length = Number.parseFloat(bar.style.getPropertyValue('--pe-line-width'));
+        if (!Number.isFinite(left) || !Number.isFinite(length) || length <= 0) continue;
+        const rowRect = row.getBoundingClientRect();
+        const rowLeft = (rowRect.left - stageRect.left) / displayedScale;
+        const rowY = (rowRect.top + rowRect.height / 2 - stageRect.top) / displayedScale;
+        result.push({ left: rowLeft + left, right: rowLeft + left + length,
+                      y: rowY, dashed: bar.classList.contains('pe-dashed') });
+      }
+      lineGeometry = result;
+      paintLines();
+    };
+    window.addEventListener('resize', paintLines);
+    stage.proofExplorerPanBy = (dx, dy) => {
       x += dx;
       y += dy;
       paint();
@@ -2439,6 +2504,9 @@ document.addEventListener('DOMContentLoaded', () => {
       output.replaceWith(replacement);
       output = replacement;
       if (replacement.classList.contains('pe-tree')) trimInferenceLines(replacement);
+      // Update viewport-level inference strokes from their freshly trimmed geometry.
+      // The SVG stays outside the scaled stage throughout all zoom and pan events.
+      stage.proofExplorerSyncLines?.();
       const newBox = replacement.getBoundingClientRect();
       if (oldBox && newBox && stage.proofExplorerPanBy) {
         stage.proofExplorerPanBy(
