@@ -870,8 +870,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Tokenwise substitution: do not replace symbols inside command names.
   // As in v0.5, schematic metavariables are single (possibly indexed) symbols.
-  const TOKEN = /\\[A-Za-z@]+|\\.|[A-Za-z](?:_\{?[0-9]+\}?)?|[0-9]+|\s+|[^\s]/g;
+  // Restricted quantifiers are indivisible control tokens. In particular,
+  // the S in \\forall_S and \\exists_S is NOT a substitutable variable.
+  // Accept the literal source spelling and Lwarp's escaped-underscore form.
+  const TOKEN = /\\(?:forall|exists)(?:_S|\s*\\_S)|\\[A-Za-z@]+|\\.|[A-Za-z](?:_\{?[0-9]+\}?)?|[0-9]+|\s+|[^\s]/g;
   const SIMPLE_VAR = /^[A-Za-z](?:_\{?[0-9]+\}?)?$/;
+  // Quantifier binders may also use control-word display names, e.g. \\xi.
+  const BINDER_VAR = /^(?:[A-Za-z]|\\[A-Za-z]+)(?:_\{?[0-9]+\}?)?$/;
   function mathTokens(source) {
     const s = canonicalMathSource(source.trim()
       .replace(/^\\\(\s*/, '').replace(/\s*\\\)$/, '')
@@ -915,7 +920,40 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
 
+  // Extract quantifier binders from FORMULAS, rather than scanning arbitrary
+  // TeX strings. Fail closed if a replacement could become captured by a
+  // binder already present in the schematic formula. This is deliberately
+  // conservative: unsupported alpha-conversion must not change a theorem.
+  function quantifiedVariables(formula) {
+    const tokens = mathTokens(formula);
+    const binders = new Set();
+    for (let i = 0; i < tokens.length; ++i) {
+      if (!['\\forall', '\\exists', '\\forall_S', '\\exists_S', '\\Unique'].includes(tokens[i])) continue;
+      let j = i + 1;
+      if (tokens[i] === '\\exists' && tokens[j] === '!') j++;
+      if (BINDER_VAR.test(tokens[j] || '')) binders.add(tokens[j]);
+    }
+    return binders;
+  }
+
   function substituteFormula(formula, substitutions) {
+    const binders = quantifiedVariables(formula);
+    const variables = new Set(mathTokens(formula).filter(token => BINDER_VAR.test(token)));
+    // Renaming a binder is legal only when no *other* variable in the
+    // formula would acquire that binder's new name. This also handles
+    // simultaneous replacements (A -> B, B -> C) without false alarms.
+    for (const binder of binders) {
+      const after = Object.prototype.hasOwnProperty.call(substitutions, binder)
+        ? substitutions[binder] : binder;
+      for (const variable of variables) {
+        if (variable === binder) continue;
+        const mapped = Object.prototype.hasOwnProperty.call(substitutions, variable)
+          ? substitutions[variable] : variable;
+        if (mapped === after) {
+          throw new Error(`Unsafe proof substitution: ${variable} would be captured by bound ${after}`);
+        }
+      }
+    }
     return formula.replace(TOKEN, token =>
       Object.prototype.hasOwnProperty.call(substitutions, token)
         ? substitutions[token] : token
@@ -1243,7 +1281,11 @@ document.addEventListener('DOMContentLoaded', () => {
     while ((match = quant.exec(body))) {
       if (match[1] === binder || match[1] === witness) return null;
     }
-    return substituteFormula(body, {[binder]: witness});
+    try {
+      return substituteFormula(body, {[binder]: witness});
+    } catch {
+      return null;
+    }
   }
 
   function restrictedLabel(rule, actual) {
@@ -1448,7 +1490,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let result = '';
     let previous = '';
     for (const token of tokens) {
-      if (/^\\[A-Za-z@]+$/.test(previous) && /^[A-Za-z@]/.test(token)) result += ' ';
+      // Both \\forall and \\forall_S must be separated from the following
+      // binder letter. Without this, joining makes \\forall_Sx (or \\inA).
+      if (/^\\[A-Za-z@]+(?:_\{?[A-Za-z0-9]+\}?)?$/.test(previous) &&
+          /^[A-Za-z@]/.test(token)) result += ' ';
       result += token;
       previous = token;
     }
@@ -1924,24 +1969,42 @@ document.addEventListener('DOMContentLoaded', () => {
     return {tex: result, hits};
   }
 
-  function freshSubstitutions(source, hit) {
-    const substitutions = Object.assign(Object.create(null), hit.bindings);
-    // Look for variables in mathematical formulas, not in rule labels,
-    // URLs or words such as "Subset-Trans" (those are not occupied variables).
-    const used = new Set();
-    const formulas = /\\(AxiomC|UnaryInfC|BinaryInfC|TrinaryInfC|QuaternaryInfC|QuinaryInfC)\b/g;
+  // Read only mathematical formula arguments: inference labels and prose
+  // must not affect variable selection. Return ALL variable names, including
+  // bound names; those can capture an inserted free variable too.
+  function formulaVariablesInProof(tex) {
+    const variables = new Set();
+    const formulas = /\\(?:AxiomC|UnaryInfC|BinaryInfC|TrinaryInfC|QuaternaryInfC|QuinaryInfC)\b/g;
     let command;
-    while ((command = formulas.exec(source))) {
-      const arg = braced(source, formulas.lastIndex);
-      if (!arg) continue;
+    while ((command = formulas.exec(tex))) {
+      const arg = braced(tex, formulas.lastIndex);
+      if (!arg) throw new Error('Malformed proof formula while selecting fresh variables');
       formulas.lastIndex = arg.end;
       for (const token of mathTokens(arg.content)) {
-        if (SIMPLE_VAR.test(token)) used.add(token);
+        if (SIMPLE_VAR.test(token)) variables.add(token);
       }
     }
+    return variables;
+  }
+
+  function freshSubstitutions(source, hit) {
+    const substitutions = Object.assign(Object.create(null), hit.bindings);
+    const fresh = hit.rule.fresh || [];
+    const template = hit.variant?.template || hit.rule.template || '';
+    const used = formulaVariablesInProof(source);
+    // Names already occurring in the template, including its quantified
+    // binders, are unavailable unless they are exactly the local variables
+    // that this expansion itself renames. This prevents \\forall B(B\\in C)
+    // from turning into \\forall B(B\\in B) when C is freshened.
+    const locals = new Set(fresh);
+    for (const variable of formulaVariablesInProof(template)) {
+      if (!locals.has(variable)) used.add(variable);
+    }
+    for (const value of Object.values(substitutions)) used.add(value);
+
     const lower = ['a', 'b', 'c', 'x', 'y', 'z'];
     const upper = ['A', 'B', 'C', 'X', 'Y', 'Z'];
-    for (const local of hit.rule.fresh) {
+    for (const local of fresh) {
       const isUpper = /^[A-Z]/.test(local);
       const options = isUpper ? upper : lower;
       let candidate = options.find(variable => !used.has(variable));
