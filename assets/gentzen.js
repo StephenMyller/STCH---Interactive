@@ -1400,6 +1400,141 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // A deliberately small parser for *general class-builder membership*.
+  // It understands the binder and nesting of {x | phi}; it does not parse all
+  // of NBG or assert predicative admissibility. Unsupported substitutions
+  // fail closed and remain unexpandable, never silently change a formula.
+  const BUILDER_IGNORED = new Set(['\\,', '\\;', '\\:', '\\!', '\\quad', '\\qquad']);
+  const BUILDER_SIZES = /^\\(?:left|right|middle|big|Big|bigg|Bigg)(?:[lrm])?$/;
+  function builderTokens(formula) {
+    return mathTokens(formula).filter(t => !BUILDER_IGNORED.has(t) && !BUILDER_SIZES.test(t))
+      .map(t => t === '\\lbrace' ? '\\{' : t === '\\rbrace' ? '\\}' : t);
+  }
+  function builderJoin(tokens) {
+    let text = '', preceding = '';
+    for (const token of tokens) {
+      // A TeX control word must not absorb the next bare symbol.
+      if ((/^\\[A-Za-z@]+(?:_S)?$/.test(preceding) && /^[A-Za-z]/.test(token)) ||
+          (BINDER_VAR.test(preceding) && BINDER_VAR.test(token))) text += ' ';
+      text += token;
+      preceding = token;
+    }
+    return text;
+  }
+  function builderEncloses(tokens, opener, closer) {
+    if (tokens[0] !== opener || tokens[tokens.length - 1] !== closer) return false;
+    let depth = 0;
+    for (let i = 0; i < tokens.length; ++i) {
+      if (tokens[i] === opener) depth++;
+      else if (tokens[i] === closer && --depth === 0 && i !== tokens.length - 1) return false;
+    }
+    return depth === 0;
+  }
+  function builderStripGrouping(tokens) {
+    while (builderEncloses(tokens, '(', ')') || builderEncloses(tokens, '{', '}')) {
+      tokens = tokens.slice(1, -1);
+    }
+    return tokens;
+  }
+  function builderFormulaKey(formula) {
+    return builderStripGrouping(builderTokens(formula)).join('');
+  }
+  function parseGeneralBuilder(tokens) {
+    if (!builderEncloses(tokens, '\\{', '\\}')) return null;
+    let depth = 0, mid = -1;
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      if (token === '\\{') depth++;
+      else if (token === '\\}') depth--;
+      else if (depth === 1 && (token === '\\mid' || token === '|')) {
+        if (mid !== -1) return null;
+        mid = i;
+      }
+    }
+    if (mid !== 2 || !BINDER_VAR.test(tokens[1]) || mid === tokens.length - 2) return null;
+    return {binder: tokens[1], body: tokens.slice(mid + 1, -1), term: builderJoin(tokens)};
+  }
+  function parseBuilderMembership(formula) {
+    const tokens = builderStripGrouping(builderTokens(formula));
+    let depth = 0, inIndex = -1;
+    for (let i = 0; i < tokens.length; ++i) {
+      const t = tokens[i];
+      if (['(', '[', '{', '\\{'].includes(t)) depth++;
+      else if ([')', ']', '}', '\\}'].includes(t)) depth--;
+      else if (depth === 0 && t === '\\in') {
+        if (inIndex !== -1) return null;
+        inIndex = i;
+      }
+      if (depth < 0) return null;
+    }
+    if (depth !== 0 || inIndex !== 1 || !BINDER_VAR.test(tokens[0])) return null;
+    const builder = parseGeneralBuilder(tokens.slice(inIndex + 1));
+    return builder && {witness: tokens[0], ...builder};
+  }
+  function instantiateBuilderBody(body, binder, witness) {
+    // Quantifiers are binders too. Reject potential shadowing/capture until
+    // the full binder-aware formula parser is implemented. These checks must
+    // not confuse the binder of an *inner class builder* with a quantifier.
+    for (let i = 0; i < body.length; ++i) {
+      if (['\\forall', '\\exists', '\\forall_S', '\\exists_S', '\\Unique'].includes(body[i])) {
+        let j = i + 1;
+        if (body[i] === '\\exists' && body[j] === '!') j++;
+        if (body[j] === binder || body[j] === witness) return null;
+      }
+    }
+    function rewrite(tokens) {
+      const out = [];
+      for (let i = 0; i < tokens.length; ++i) {
+        if (tokens[i] !== '\\{') {
+          out.push(tokens[i] === binder ? witness : tokens[i]);
+          continue;
+        }
+        // Locate the matching end of this nested builder.
+        let depth = 0, end = -1;
+        for (let j = i; j < tokens.length; ++j) {
+          if (tokens[j] === '\\{') depth++;
+          if (tokens[j] === '\\}' && --depth === 0) {end = j; break;}
+        }
+        if (end < 0) return null;
+        const nested = parseGeneralBuilder(tokens.slice(i, end + 1));
+        if (!nested) return null;
+        if (nested.binder === binder) {
+          out.push(...tokens.slice(i, end + 1)); // binder shadows outer binder
+        } else {
+          if (nested.binder === witness && nested.body.includes(binder)) return null;
+          const inner = rewrite(nested.body);
+          if (!inner) return null;
+          out.push('\\{', nested.binder, '\\mid', ...inner, '\\}');
+        }
+        i = end;
+      }
+      return out;
+    }
+    const rewritten = rewrite(body);
+    return rewritten && builderJoin(rewritten);
+  }
+  function matchBuilderApplication(rule, branches, conclusion) {
+    const isIntro = rule.mode === 'membership-i';
+    if (!['membership-i', 'membership-e'].includes(rule.mode) ||
+        branches.length !== (isIntro ? 2 : 1)) return null;
+    const parsed = parseBuilderMembership(isIntro ? conclusion : branches[0].formula);
+    if (!parsed) return null;
+    const instance = instantiateBuilderBody(parsed.body, parsed.binder, parsed.witness);
+    if (instance === null) return null;
+    if (isIntro) {
+      const orders = [[0,1], [1,0]];
+      for (const order of orders) {
+        if (builderFormulaKey(branches[order[0]].formula) === builderFormulaKey(`\\Set(${parsed.witness})`) &&
+            builderFormulaKey(branches[order[1]].formula) === builderFormulaKey(instance)) {
+          return {bindings: {}, order, builder: {...parsed, instance}};
+        }
+      }
+      return null;
+    }
+    return builderFormulaKey(conclusion) === builderFormulaKey(instance)
+      ? {bindings: {}, order: [0], builder: {...parsed, instance}} : null;
+  }
+
   function restrictedLabel(rule, actual) {
     const s = normalizeRuleLabel(actual);
     const quantifier = rule.mode.startsWith('forall') ? '\\forall_S' : '\\exists_S';
@@ -1566,6 +1701,37 @@ document.addEventListener('DOMContentLoaded', () => {
       if (/^D\s*\\(?:href|ref)\b/.test(value)) return value;
     }
     throw new Error(`Missing numbered definition citation for ${rule?.id || 'restricted rule'}`);
+  }
+
+  function builderTemplate(hit) {
+    const {witness, term, instance} = hit.builder;
+    const mode = hit.rule.mode;
+    const definition = hit.rule.definitionLabel;
+    const law = hit.rule.lawLabel;
+    if (!definition?.startsWith('D') || !law?.startsWith('P')) {
+      throw new Error('Class-builder rule has missing numbered justification citations');
+    }
+    const condition = `\\Cond_{${term}}(${witness})`;
+    const membership = `${witness}\\in ${term}`;
+    const equivalence = `\\(${membership}\\leftrightarrow ${condition}\\)`;
+    const conjunction = `\\(\\Set(${witness})\\land (${instance})\\)`;
+    const canonical = `\\(${condition}\\)`;
+    if (mode === 'membership-i') {
+      return `@@PE_PREMISE_0@@\n@@PE_PREMISE_1@@\n` +
+        `\\RightLabel{\\(\\land\\)-I}\n\\BinaryInfC{${conjunction}}\n` +
+        `\\RightLabel{${definition}}\n\\dashedLine\n\\UnaryInfC{${canonical}}\n` +
+        `\\AxiomC{}\n\\RightLabel{${law}}\n\\UnaryInfC{${equivalence}}\n` +
+        `\\RightLabel{\\(\\leftrightarrow\\)-E}\n` +
+        `\\BinaryInfC{${hit.originalConclusion}}`;
+    }
+    if (mode === 'membership-e') {
+      return `\\AxiomC{}\n\\RightLabel{${law}}\n\\UnaryInfC{${equivalence}}\n` +
+        `@@PE_PREMISE_0@@\n\\RightLabel{\\(\\leftrightarrow\\)-E}\n` +
+        `\\BinaryInfC{${canonical}}\n\\RightLabel{${definition}}\n\\dashedLine\n` +
+        `\\UnaryInfC{${conjunction}}\n\\RightLabel{\\(\\land\\)-E}\n` +
+        `\\UnaryInfC{${hit.originalConclusion}}`;
+    }
+    throw new Error('Unsupported class-builder expansion mode');
   }
 
   function restrictedTemplate(hit) {
@@ -1969,9 +2135,11 @@ document.addEventListener('DOMContentLoaded', () => {
           if (candidate.premises.length !== arity) continue;
           const candidateLabel = applicationLabel(candidate, label.value);
           if (!candidateLabel) continue;
-          const candidateMatch = candidate.kind === 'restricted'
-            ? matchRestrictedApplication(candidate, branches, arg.content,
-                candidateLabel, source)
+          const candidateMatch = candidate.kind === 'builder'
+            ? matchBuilderApplication(candidate, branches, arg.content)
+            : candidate.kind === 'restricted'
+              ? matchRestrictedApplication(candidate, branches, arg.content,
+                  candidateLabel, source)
             : candidate.kind === 'unique'
               ? candidate.variant === 'atmost-intro'
                 ? (() => {
@@ -1998,6 +2166,7 @@ document.addEventListener('DOMContentLoaded', () => {
             premiseOrder: matched.order,
             dischargeTag: matchedLabel.tag,
             restricted: matched.restricted,
+            builder: matched.builder,
             unique: matched.unique,
             uniquenessIntro: matched.uniquenessIntro,
             forallStar: matched.forallStar,
@@ -2337,6 +2506,19 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (replacement.includes('@@PE_PREMISE_')) {
         throw new Error('Unresolved unique-existence premise placeholder');
+      }
+      return source.slice(0, hit.start) + replacement + source.slice(hit.end);
+    }
+    if (hit.rule.kind === 'builder') {
+      let replacement = builderTemplate(hit);
+      if (hit.premiseOrder.length === 2 && hit.premiseOrder[0] === 1) {
+        replacement = preserveBinaryPremiseOrder(replacement);
+      }
+      for (let i = 0; i < hit.premiseSources.length; i++) {
+        replacement = replacement.replaceAll(`@@PE_PREMISE_${i}@@`, hit.premiseSources[i]);
+      }
+      if (replacement.includes('@@PE_PREMISE_')) {
+        throw new Error('Unresolved class-builder proof premise');
       }
       return source.slice(0, hit.start) + replacement + source.slice(hit.end);
     }
