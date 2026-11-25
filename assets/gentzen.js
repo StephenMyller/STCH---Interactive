@@ -13,6 +13,26 @@ function setupGentzenPanels() {
   )];
   if (items.length === 0) return;
 
+  // Save the original mathematical context BEFORE moving derivations into the
+  // contextual side panel.  Later, the full-window Explorer can retrieve the
+  // result's numbered reference and title from proof-rules.json, even when the
+  // formalderivation does not carry an explicit --explorer-id.
+  const contextIds = /^(?:prop|thm|theorem|th|lem|lemma|cor|corollary|meta|ax|axiom|rule):/;
+  const contextAnchors = [...main.querySelectorAll('[id]')]
+    .filter(node => contextIds.test(node.id));
+  for (const item of items) {
+    if (!item.classList.contains('formalderivation')) continue;
+    for (let i = contextAnchors.length - 1; i >= 0; i--) {
+      const anchor = contextAnchors[i];
+      // A label can be on an ancestor, not just on a preceding sibling.
+      if (anchor.contains(item) ||
+          (anchor.compareDocumentPosition(item) & Node.DOCUMENT_POSITION_FOLLOWING)) {
+        item.dataset.peContextId = anchor.id;
+        break;
+      }
+    }
+  }
+
   const panel = document.createElement('aside');
   panel.className = 'gentzen-panel';
   panel.id = 'gentzen-panel';
@@ -505,6 +525,13 @@ document.addEventListener('DOMContentLoaded', () => {
       display: flex; gap: .7rem; align-items: center; flex-wrap: wrap;
     }
     .pe-toolbar-head { justify-content: space-between; }
+    .pe-toolbar-title-block { display: flex; flex-direction: column; gap: .1rem;
+      min-width: 0; flex: 1 1 auto; }
+    .pe-toolbar-mainline { display: flex; align-items: baseline; flex-wrap: wrap;
+      gap: .4rem; }
+    .pe-toolbar-mainline .proof-explorer-title { margin-right: 0; }
+    .pe-current-result { font-size: .98rem; font-weight: 600; line-height: 1.3;
+      overflow-wrap: anywhere; }
     .pe-toolbar-actions { justify-content: space-between; }
     .pe-toolbar-action-group { display: inline-flex; gap: .35rem; align-items: center; }
     .pe-toolbar-status { min-height: 1.1em; font-size: .85rem; opacity: .75; }
@@ -876,6 +903,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const full = matches[0];
+    // The source-context marker lives on the sidebar version, because that
+    // is what the reader opened.  Keep it when swapping in the complete tree.
+    if (snippet.dataset.peContextId && !full.dataset.peContextId) {
+      full.dataset.peContextId = snippet.dataset.peContextId;
+    }
     snippet.replaceWith(full); // Move rather than clone; preserve MathJax SVG data.
     full.hidden = false;
 
@@ -2428,9 +2460,52 @@ document.addEventListener('DOMContentLoaded', () => {
     depsToggle.setAttribute('aria-expanded', 'false');
     const count = document.createElement('span');
     count.className = 'pe-expanded-count';
+
+    // Display the *authored result*, not the last proposition unfolded inside
+    // its proof.  The source marker survives moving to the sidebar and swapping
+    // to explorerderivation; registry metadata supplies its full, stable name.
+    function currentResultName() {
+      const proof = stage.querySelector(':scope > .explorerderivation, :scope > .formalderivation');
+      const rawId = proof?.style.getPropertyValue('--explorer-id').trim();
+      const contextId = proof?.dataset.peContextId;
+      const index = dependencies?.results || {};
+      const ids = [contextId, rawId].filter(Boolean);
+      if (rawId && !rawId.includes(':')) {
+        ids.push('prop:' + rawId, 'thm:' + rawId, 'lem:' + rawId, 'cor:' + rawId);
+      }
+      for (const id of ids) {
+        const result = index[id];
+        if (!result || result.kind === 'axiom') continue;
+        const reference = String(result.reference || result.number || '').trim();
+        const name = String(result.title || '').trim();
+        if (reference && name && reference !== name) return reference + ' — ' + name;
+        if (name || reference) return name || reference;
+      }
+      // A rule justification is also a legitimate standalone derivation.
+      // Do not misidentify it as a theorem just because another theorem was
+      // cited within the rule's proof.
+      const ruleId = ids.find(id => id.startsWith('rule:'));
+      if (ruleId) {
+        const registered = rules.find(rule => rule.id === ruleId);
+        const name = registered?.label?.replace(/\\\(|\\\)/g, '').trim() ||
+          ruleId.slice('rule:'.length).replace(/-/g, ' ');
+        return 'Derived Rule — ' + name;
+      }
+      return '';
+    }
+
     const head = document.createElement('div'); head.className = 'pe-toolbar-head';
-    const title = document.createElement('span');
-    if (heading) title.append(heading, count);
+    const title = document.createElement('div'); title.className = 'pe-toolbar-title-block';
+    const mainline = document.createElement('div'); mainline.className = 'pe-toolbar-mainline';
+    if (heading) mainline.append(heading, count);
+    title.append(mainline);
+    const resultName = currentResultName();
+    if (resultName) {
+      const subtitle = document.createElement('div');
+      subtitle.className = 'pe-current-result';
+      subtitle.textContent = resultName;
+      title.append(subtitle);
+    }
     head.append(title);
     if (back) head.append(back);
     const actions = document.createElement('div'); actions.className = 'pe-toolbar-actions';
