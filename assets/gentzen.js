@@ -1554,13 +1554,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // whose substitutions or assumption dependencies we cannot establish.
   const FORALL_STAR_TOKEN = /\\[A-Za-z@]+(?:_\{?[A-Za-z0-9]+\}?)?|\\.|[A-Za-z](?:_\{?[A-Za-z0-9]+\}?)?|[0-9]+|\s+|[^\s]/g;
   const FORALL_STAR_SPACE = new Set(['\\,', '\\;', '\\:', '\\!', '\\quad', '\\qquad']);
+  // TeX sizing commands affect delimiters' appearance, not the formula.
+  // In particular, \bigl( ... \bigr) and (...) must match under forall-I*.
+  const FORALL_STAR_DELIMITER_SIZE = /^\\(?:left|right|middle|big|Big|bigg|Bigg)(?:[lrm])?$/;
   const FORALL_STAR_VAR = /^(?:[A-Za-z](?:_\{?[A-Za-z0-9]+\}?)?|\\[A-Za-z]+(?:_\{?[A-Za-z0-9]+\}?)?)$/;
 
   function forallStarTokens(formula) {
     let s = canonicalMathSource(bareMath(formula));
     while (balancedOuterParen(s)) s = s.slice(1, -1).trim();
     return (s.match(FORALL_STAR_TOKEN) || []).filter(
-      token => !/^\s+$/.test(token) && !FORALL_STAR_SPACE.has(token)
+      token => !/^\s+$/.test(token) && !FORALL_STAR_SPACE.has(token) &&
+        !FORALL_STAR_DELIMITER_SIZE.test(token)
     );
   }
 
@@ -1624,7 +1628,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dependencyLists[0] = assumption
           ? [{formula: arg.content, tag: assumption[1]}] : [];
       } else if (arity === 1) {
-        const discharge = pending?.match(/^(?:\\to-I|\\neg-I|CR|\\forall_S-I),([1-9][0-9]*)$/);
+        const discharge = pending?.match(/^(?:\\to-I|\\neg-I|CR|\\forall_S-I|\\subseteq-I),([1-9][0-9]*)$/);
         if (discharge) {
           dependencyLists[0] = dependencyLists[0].filter(leaf => leaf.tag !== discharge[1]);
         }
