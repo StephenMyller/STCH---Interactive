@@ -99,42 +99,162 @@ Notice the difference between the two notions. The formula \(\Cond_T(y)\) specif
 
 \nbgpara{4}{Fundamental Laws}
 
-The preceding definitions allow us to formulate two fundamental laws governing class terms.
+The preceding definitions allow us to formulate the Membership and Identity Laws separately. Their formal justification is given in the technical appendix; the Explorer derivations below expose their use of realizations and contextual elimination.
 
-\begin{proposition}[Fundamental Laws of Class-Builder Notation]
-\label{prop:fundamental-class-builder-laws}
-Let \(T\) be a class term. Then, whenever the corresponding expressions are defined,
-\[
-\zeta\in T
-\leftrightarrow
-\Cond_T(\zeta)
-\]
-and
-\[
-A=T
-\leftrightarrow
-\Real_T(A).
+\begin{proposition}[Class-Builder Membership Law]
+\label{prop:class-builder-membership-law}
+Let \(T\) be an admitted class term and \(\zeta\) a variable. Whenever the indicated expressions are defined,\[
+\zeta\in T\leftrightarrow\Cond_T(\zeta).
 \]
 \end{proposition}
 
 \begin{proof}
-By Proposition~\ref{prop:existence-uniqueness-class-formation}, the condition specifying \(T\) determines exactly one class. The formula \(\Cond_T(\zeta)\) expresses precisely the condition under which \(\zeta\) belongs to that class. This establishes the first equivalence.
-
-For the second, suppose that \(A=T\). Then \(A\) and \(T\) have the same members, so \(A\) satisfies \(\Real_T(A)\).
-
-Conversely, if \(\Real_T(A)\) holds, then \(A\) has exactly the members specified by \(T\). By the uniqueness of class specifications, \(A=T\).
+By the Class-Term Extension Metatheorem (\ref{meta:class-term-extension}), every admitted class term has a realization. Contextual elimination interprets membership in \(T\) using such a realization, whose membership condition is exactly \(\Cond_T(\zeta)\). The two implications follow using the realization condition and the ordinary logical rules.
 \end{proof}
 
-The first equivalence is called the \emph{Membership Law}; the second is called the \emph{Identity Law}.
+\begin{formalderivation}[0rem][prop:class-builder-membership-law]
+\begin{prooftree}
+\AxiomC{}
+\RightLabel{M\ref{meta:membership-law-for-class-terms}}
+\UnaryInfC{\(\zeta\in T\leftrightarrow\Cond_T(\zeta)\)}
+\end{prooftree}
+\end{formalderivation}
+
+% proof-explorer-proposition: prop:class-builder-membership-law; vars=a,T; fresh=h,u
+\begin{explorerderivation}{prop:class-builder-membership-law}
+\begin{prooftree}
+\AxiomC{}
+\RightLabel{\(1\)}
+\UnaryInfC{\(a\in T\)}
+\RightLabel{D\ref{def:contextual-elimination}}
+\dashedLine
+\UnaryInfC{\(\exists h(\Real_T(h)\land a\in h)\)}
+\AxiomC{}
+\RightLabel{\(3\)}
+\UnaryInfC{\(\Real_T(h)\land a\in h\)}
+\RightLabel{\(\land-E\)}
+\UnaryInfC{\(\Real_T(h)\)}
+\RightLabel{D\ref{def:realization-of-class-term}}
+\dashedLine
+\UnaryInfC{\(\forall u(u\in h\leftrightarrow\Cond_T(u))\)}
+\RightLabel{\(\forall-E\)}
+\UnaryInfC{\(a\in h\leftrightarrow\Cond_T(a)\)}
+\AxiomC{}
+\RightLabel{\(3\)}
+\UnaryInfC{\(\Real_T(h)\land a\in h\)}
+\RightLabel{\(\land-E\)}
+\UnaryInfC{\(a\in h\)}
+\RightLabel{\(\leftrightarrow-E\)}
+\BinaryInfC{\(\Cond_T(a)\)}
+\RightLabel{\(\exists-E, 3\)}
+\BinaryInfC{\(\Cond_T(a)\)}
+\RightLabel{\(\to-I, 1\)}
+\UnaryInfC{\(a\in T\to\Cond_T(a)\)}
+\AxiomC{}
+\RightLabel{M\ref{meta:class-term-extension}}
+\UnaryInfC{\(\exists h\Real_T(h)\)}
+\AxiomC{}
+\RightLabel{\(4\)}
+\UnaryInfC{\(\Real_T(h)\)}
+\AxiomC{}
+\RightLabel{\(4\)}
+\UnaryInfC{\(\Real_T(h)\)}
+\RightLabel{D\ref{def:realization-of-class-term}}
+\dashedLine
+\UnaryInfC{\(\forall u(u\in h\leftrightarrow\Cond_T(u))\)}
+\RightLabel{\(\forall-E\)}
+\UnaryInfC{\(a\in h\leftrightarrow\Cond_T(a)\)}
+\AxiomC{}
+\RightLabel{\(2\)}
+\UnaryInfC{\(\Cond_T(a)\)}
+\RightLabel{\(\leftrightarrow-E\)}
+\BinaryInfC{\(a\in h\)}
+\RightLabel{\(\land-I\)}
+\BinaryInfC{\(\Real_T(h)\land a\in h\)}
+\RightLabel{\(\exists-I\)}
+\UnaryInfC{\(\exists h(\Real_T(h)\land a\in h)\)}
+\RightLabel{D\ref{def:contextual-elimination}}
+\dashedLine
+\UnaryInfC{\(a\in T\)}
+\RightLabel{\(\exists-E, 4\)}
+\BinaryInfC{\(a\in T\)}
+\RightLabel{\(\to-I, 2\)}
+\UnaryInfC{\(\Cond_T(a)\to a\in T\)}
+\RightLabel{\(\leftrightarrow-I\)}
+\BinaryInfC{\(a\in T\leftrightarrow\Cond_T(a)\)}
+\end{prooftree}
+\end{explorerderivation}
 
 In particular, the Membership Law for a general class term takes the form
 \[
 \zeta\in\{\xi\mid\varphi\}
 \leftrightarrow
-\bigl(
-\Set(\zeta)\land\varphi[\zeta/\xi]
-\bigr).
+\bigl(\Set(\zeta)\land\varphi[\zeta/\xi]\bigr).
 \]
+
+\begin{proposition}[Class-Builder Identity Law]
+\label{prop:class-builder-identity-law}
+Let \(T\) be an admitted class term and \(A\) a variable. Whenever the indicated expressions are defined,\[
+A=T\leftrightarrow\Real_T(A).
+\]
+\end{proposition}
+
+\begin{proof}
+By contextual elimination, \(A=T\) means that \(A\) is identical to a realization of \(T\). This is equivalent to \(A\) itself satisfying the realization condition, by the ordinary identity rules. The existence and uniqueness of realizations are justified by the Class-Term Extension Metatheorem (\ref{meta:class-term-extension}).
+\end{proof}
+
+\begin{formalderivation}[0rem][prop:class-builder-identity-law]
+\begin{prooftree}
+\AxiomC{}
+\RightLabel{M\ref{meta:identity-law-for-class-terms}}
+\UnaryInfC{\(A=T\leftrightarrow\Real_T(A)\)}
+\end{prooftree}
+\end{formalderivation}
+
+% proof-explorer-proposition: prop:class-builder-identity-law; vars=A,T; fresh=h
+\begin{explorerderivation}{prop:class-builder-identity-law}
+\begin{prooftree}
+\AxiomC{}
+\RightLabel{\(1\)}
+\UnaryInfC{\(A=T\)}
+\RightLabel{D\ref{def:contextual-elimination}}
+\dashedLine
+\UnaryInfC{\(\exists h(\Real_T(h)\land A=h)\)}
+\AxiomC{}
+\RightLabel{\(3\)}
+\UnaryInfC{\(\Real_T(h)\land A=h\)}
+\RightLabel{\(\land-E\)}
+\UnaryInfC{\(\Real_T(h)\)}
+\AxiomC{}
+\RightLabel{\(3\)}
+\UnaryInfC{\(\Real_T(h)\land A=h\)}
+\RightLabel{\(\land-E\)}
+\UnaryInfC{\(A=h\)}
+\RightLabel{\(=-E\)}
+\BinaryInfC{\(\Real_T(A)\)}
+\RightLabel{\(\exists-E, 3\)}
+\BinaryInfC{\(\Real_T(A)\)}
+\RightLabel{\(\to-I, 1\)}
+\UnaryInfC{\(A=T\to\Real_T(A)\)}
+\AxiomC{}
+\RightLabel{\(2\)}
+\UnaryInfC{\(\Real_T(A)\)}
+\AxiomC{}
+\RightLabel{\(=-I\)}
+\UnaryInfC{\(A=A\)}
+\RightLabel{\(\land-I\)}
+\BinaryInfC{\(\Real_T(A)\land A=A\)}
+\RightLabel{\(\exists-I\)}
+\UnaryInfC{\(\exists h(\Real_T(h)\land A=h)\)}
+\RightLabel{D\ref{def:contextual-elimination}}
+\dashedLine
+\UnaryInfC{\(A=T\)}
+\RightLabel{\(\to-I, 2\)}
+\UnaryInfC{\(\Real_T(A)\to A=T\)}
+\RightLabel{\(\leftrightarrow-I\)}
+\BinaryInfC{\(A=T\leftrightarrow\Real_T(A)\)}
+\end{prooftree}
+\end{explorerderivation}
 
 The Identity Law states that a class is identical to a class term exactly when it realizes the membership condition associated with that term.
 
@@ -164,7 +284,7 @@ Each fundamental law provides two implications. We can therefore extract four de
     \UnaryInfC{\(\Cond_T(\zeta)\)}
 %
     \AxiomC{}
-    \RightLabel{P\ref{prop:fundamental-class-builder-laws}}
+    \RightLabel{P\ref{prop:class-builder-membership-law}}
     \UnaryInfC{\(\zeta\in T\leftrightarrow\Cond_T(\zeta)\)}
 %
     \RightLabel{\(\leftrightarrow\)-E}
@@ -185,7 +305,7 @@ Each fundamental law provides two implications. We can therefore extract four de
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
-    \RightLabel{P\ref{prop:fundamental-class-builder-laws}}
+    \RightLabel{P\ref{prop:class-builder-membership-law}}
     \UnaryInfC{\(\zeta\in T\leftrightarrow\Cond_T(\zeta)\)}
 %
     \AxiomC{\(\zeta\in T\)}
@@ -205,6 +325,7 @@ Membership Introduction requires both sethood and the defining condition. Member
 The Identity Law similarly licenses two rules.
 
 \begin{derivedrule}[Class-Builder Identity Introduction]
+\label{rule:class-builder-identity-intro}
 \begin{prooftree}
     \AxiomC{\(\Real_T(A)\)}
     \RightLabel{\(\mathrm{CB}{=}\text{-I}\)}
@@ -215,7 +336,7 @@ The Identity Law similarly licenses two rules.
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
-     \RightLabel{P\ref{prop:fundamental-class-builder-laws}}
+     \RightLabel{P\ref{prop:class-builder-identity-law}}
     \UnaryInfC{
         \(A=T
         \leftrightarrow
@@ -230,6 +351,7 @@ The Identity Law similarly licenses two rules.
 \end{formalderivation}
 
 \begin{derivedrule}[Class-Builder Identity Elimination]
+\label{rule:class-builder-identity-elim}
 \begin{prooftree}
     \AxiomC{\(A=T\)}
     \RightLabel{\(\mathrm{CB}{=}\text{-E}\)}
@@ -240,7 +362,7 @@ The Identity Law similarly licenses two rules.
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
-     \RightLabel{P\ref{prop:fundamental-class-builder-laws}}
+     \RightLabel{P\ref{prop:class-builder-identity-law}}
     \UnaryInfC{
         \(A=T
         \leftrightarrow
@@ -257,6 +379,20 @@ The Identity Law similarly licenses two rules.
 In these rules, \(T\) is a class term, and the relevant membership or realization condition must be defined. As usual, bound variables may be renamed where necessary to avoid conflicts in substitution.
 
 All four rules follow from the fundamental laws by Biconditional Elimination and the ordinary rules for conjunction. They introduce no additional logical or set-theoretic principles.
+
+For a concrete illustration of the two membership rules, consider the following derivation. Both CB steps can be expanded in the Proof Explorer:
+
+\begin{formalderivation}
+\begin{prooftree}
+    \AxiomC{\(\Set(a)\)}
+    \AxiomC{\(a\notin A\)}
+    \RightLabel{\(\mathrm{CB}{\in}\text{-I}\)}
+    \BinaryInfC{\(a\in\{x\mid x\notin A\}\)}
+    \RightLabel{\(\mathrm{CB}{\in}\text{-E}\)}
+    \UnaryInfC{\(a\notin A\)}
+\end{prooftree}
+\end{formalderivation}
+
 
 \nbgpara{6}{Bounded Class-Builder Notation}
 
