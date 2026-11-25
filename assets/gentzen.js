@@ -986,7 +986,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // the S in \\forall_S and \\exists_S is NOT a substitutable variable.
   // Accept the literal source spelling and Lwarp's escaped-underscore form.
   const TOKEN = /\\(?:forall|exists)(?:_S|\s*\\_S)|\\[A-Za-z@]+|\\.|[A-Za-z](?:_\{?[0-9]+\}?)?|[0-9]+|\s+|[^\s]/g;
-  const SIMPLE_VAR = /^[A-Za-z](?:_\{?[0-9]+\}?)?$/;
+  const SIMPLE_VAR = /^(?:[A-Za-z](?:_\{?[0-9]+\}?)?|\\[A-Za-z]+)$/;
   // Quantifier binders may also use control-word display names, e.g. \\xi.
   const BINDER_VAR = /^(?:[A-Za-z]|\\[A-Za-z]+)(?:_\{?[0-9]+\}?)?$/;
   function mathTokens(source) {
@@ -1486,7 +1486,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const out = [];
       for (let i = 0; i < tokens.length; ++i) {
         if (tokens[i] !== '\\{') {
-          out.push(tokens[i] === binder ? witness : tokens[i]);
+          // In the authored bounded-builder rule templates, a bare \\varphi
+          // denotes the defining formula in the builder's binder. An actual
+          // application uses the syntactically explicit \\varphi[witness/binder].
+          // Never rewrite this marker inside a shadowing nested builder.
+          if (tokens[i] === '\\varphi') {
+            out.push('\\varphi', '[', ...builderTokens(witness), '/', ...builderTokens(binder), ']');
+          } else {
+            out.push(tokens[i] === binder ? witness : tokens[i]);
+          }
           continue;
         }
         // Locate the matching end of this nested builder.
@@ -1533,6 +1541,58 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     return builderFormulaKey(conclusion) === builderFormulaKey(instance)
       ? {bindings: {}, order: [0], builder: {...parsed, instance}} : null;
+  }
+
+  // Schematic class-term laws are indexed like ordinary propositions, but
+  // their T argument denotes a whole admitted class term, not one letter.
+  // Recognize only the two declared law shapes. This is not general formula
+  // matching; every occurrence of the term must agree syntactically.
+  function matchClassTermLawInstance(proposition, variant, premise, conclusion) {
+    const kind = proposition.id === 'prop:class-builder-membership-law'
+      ? {op: '\\in', condition: 'Cond', variable: 'a'}
+      : proposition.id === 'prop:class-builder-identity-law'
+        ? {op: '=', condition: 'Real', variable: 'A'} : null;
+    if (!kind) return null;
+    function atomic(termFormula) {
+      const tokens = builderStripGrouping(builderTokens(termFormula));
+      if (tokens.length < 3 || !BINDER_VAR.test(tokens[0]) || tokens[1] !== kind.op) return null;
+      const termTokens = tokens.slice(2);
+      if (!((termTokens.length === 1 && BINDER_VAR.test(termTokens[0])) ||
+            parseGeneralBuilder(termTokens))) return null;
+      return {witness: tokens[0], term: builderJoin(termTokens)};
+    }
+    function condition(data) {
+      return `\\${kind.condition}_{${data.term}}(${data.witness})`;
+    }
+    function sameCondition(actual, data) {
+      const compact = builderFormulaKey(actual);
+      return compact === builderFormulaKey(condition(data)) ||
+        compact === builderFormulaKey(`\\${kind.condition}_${data.term}(${data.witness})`);
+    }
+    let instance;
+    if (variant.kind === 'theorem' && !builderFormulaKey(premise)) {
+      const tokens = builderStripGrouping(builderTokens(conclusion));
+      let depth = 0, split = -1;
+      for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+        if (['(', '[', '{', '\\{'].includes(token)) depth++;
+        else if ([')', ']', '}', '\\}'].includes(token)) depth--;
+        if (depth === 0 && token === '\\leftrightarrow') {
+          if (split !== -1) return null;
+          split = i;
+        }
+        if (depth < 0) return null;
+      }
+      if (split < 0 || depth !== 0) return null;
+      const lhs = atomic(builderJoin(builderStripGrouping(tokens.slice(0,split))));
+      if (!lhs || !sameCondition(builderJoin(builderStripGrouping(tokens.slice(split+1))),lhs)) return null;
+      instance = lhs;
+    } else if (variant.kind === 'direction') {
+      const membershipOnLeft = !variant.premises[0].includes(`\\${kind.condition}`);
+      instance = atomic(membershipOnLeft ? premise : conclusion);
+      if (!instance || !sameCondition(membershipOnLeft ? conclusion : premise,instance)) return null;
+    } else return null;
+    return {bindings: {[kind.variable]: instance.witness, T: instance.term}, order: [0]};
   }
 
   function restrictedLabel(rule, actual) {
@@ -2228,7 +2288,9 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const variant of proposition.variants) {
           const schematic = {vars: proposition.vars,
             premises: variant.premises, conclusion: variant.conclusion};
-          const matched = matchRule(schematic, [branches[0].formula], arg.content);
+          const matched = matchClassTermLawInstance(proposition, variant,
+            branches[0].formula, arg.content) ||
+            matchRule(schematic, [branches[0].formula], arg.content);
           if (!matched) continue;
           hits.push({type: 'proposition', proposition, variant,
             rule: {fresh: proposition.fresh}, bindings: matched.bindings,
@@ -2304,7 +2366,12 @@ document.addEventListener('DOMContentLoaded', () => {
     for (const variable of formulaVariablesInProof(template)) {
       if (!locals.has(variable)) used.add(variable);
     }
-    for (const value of Object.values(substitutions)) used.add(value);
+    for (const value of Object.values(substitutions)) {
+      used.add(value);
+      // A class-term binding may itself contain variables. Fresh auxiliary
+      // variables must not capture any of its free parameters (or binders).
+      for (const token of mathTokens(value)) if (BINDER_VAR.test(token)) used.add(token);
+    }
 
     const lower = ['a', 'b', 'c', 'x', 'y', 'z'];
     const upper = ['A', 'B', 'C', 'X', 'Y', 'Z'];
@@ -2339,8 +2406,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let rewritten = template;
     for (let i = last; i >= 0; i--) {
       const {name, arg} = found[i];
-      const formula = (i === last && name !== 'AxiomC')
+      let formula = (i === last && name !== 'AxiomC')
         ? originalConclusion : substituteFormula(arg.content, substitutions);
+      const term = substitutions.T;
+      if (term && term.startsWith('\\{') && !(i === last && name !== 'AxiomC')) {
+        // Subscripts on the metalinguistic Cond_T and Real_T must be braced
+        // when T is instantiated by an actual class-builder expression.
+        formula = formula.replaceAll('\\Cond_' + term, '\\Cond_{' + term + '}')
+          .replaceAll('\\Real_' + term, '\\Real_{' + term + '}');
+      }
       rewritten = rewritten.slice(0, arg.start + 1) + formula +
         rewritten.slice(arg.end - 1);
     }
