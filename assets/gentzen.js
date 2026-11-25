@@ -523,6 +523,28 @@ document.addEventListener('DOMContentLoaded', () => {
       letter-spacing: .055em; opacity: .65; display: block; margin-bottom: .12rem; }
     .pe-dependency-note { font-size: .8rem; opacity: .75; margin: .8rem 0; line-height: 1.45; }
     .pe-dependency-empty { font-size: .9rem; opacity: .8; }
+    /* An axiom-first summary above a navigable result-dependency hierarchy. */
+    .pe-foundations { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem;
+      margin: .6rem 0 .5rem; }
+    .pe-foundation-axiom { border: 1px solid #8888; border-radius: .35rem;
+      padding: .2rem .5rem; font-size: .88rem; font-weight: 650; }
+    .pe-foundation-axiom a { text-decoration: none !important; }
+    .pe-dependency-coverage { font-size: .78rem; opacity: .75; margin: .4rem 0 1rem; }
+    .pe-dependency-panel h3 { font-size: .9rem; font-weight: 650; margin: 1rem 0 .45rem; }
+    .pe-dependency-tree, .pe-dependency-tree ul, .pe-dependency-problems ul {
+      margin: 0; padding: 0 0 0 1.05rem; list-style: none; }
+    .pe-dependency-tree { padding-left: .25rem; }
+    .pe-dependency-tree li { margin: .45rem 0; line-height: 1.45; }
+    .pe-dependency-tree ul { margin-left: .35rem; border-left: 1px solid #8885; }
+    .pe-dependency-tree summary { cursor: pointer; }
+    .pe-dependency-tree details > summary::marker { color: #888; }
+    .pe-dependency-tree a, .pe-dependency-problems a { color: inherit;
+      text-decoration: underline; text-underline-offset: 2px; }
+    .pe-dependency-axiom { font-weight: 550; }
+    .pe-dependency-warning { font-size: .81rem; opacity: .8; }
+    .pe-dependency-problems { margin: .8rem 0; font-size: .8rem; opacity: .9; }
+    .pe-dependency-problems summary { cursor: pointer; }
+
     html.proof-explorer-mode body { overflow: hidden !important; }
     @media (max-width: 760px) {
       .pe-workspace { flex-direction: column; }
@@ -2412,109 +2434,241 @@ document.addEventListener('DOMContentLoaded', () => {
       overlay.insertBefore(workspace, viewport);
       workspace.append(viewport, sidebar);
     }
+    // The dependency graph is built from authored proofs at publication time.
+    // This view takes a snapshot of the original proof; it never observes
+    // expansion/contract state. Derived rules are transparent graph edges.
     const dependencyIndex = dependencies?.results || {};
     const axiomLookup = dependencies?.axioms || {};
+    const dependencyRules = dependencies?.rules || {};
+    const dependencyRuleLabels = dependencies?.ruleLabels || {};
+    const depCategoryOrder = id => id.startsWith('axiom:number:') ||
+      dependencyIndex[id]?.kind === 'axiom' ? 0 : id.startsWith('rule:') ? 2 : 1;
+    function dependencySort(ids) {
+      return [...new Set(ids)].sort((a, b) =>
+        depCategoryOrder(a) - depCategoryOrder(b) || a.localeCompare(b));
+    }
+    function dependencyBaseLabel(raw) {
+      const withoutMath = normalizeRuleLabel(raw || '');
+      return withoutMath.replace(/\\mathrm\s*\{([^{}]*)\}/g, '$1')
+        .replace(/\\(?:operatorname|text)\s*\{([^{}]*)\}/g, '$1')
+        .replace(/\\mathrm(?=[A-Za-z])/g, '')
+        .split(',')[0];
+    }
+    const DEP_PURE_LOGIC = /^(?:\\(?:forall|exists|land|lor|leftrightarrow|to|neg|bot|top|equiv)(?:_S)?(?:-[IE]\*?)?|=-(?:I|E)|CR|RAA)$/;
     function extractDependencies(tex) {
-      const found = new Map();
-      const commands = /\\(?:RightLabel|RL)\b/g;
+      const direct = new Set();
+      const issues = new Set();
+      const command = /\\(?:RightLabel|RL)\b/g;
       let match;
-      while ((match = commands.exec(tex))) {
-        const arg = braced(tex, commands.lastIndex);
-        if (!arg) continue;
-        commands.lastIndex = arg.end;
-        const label = arg.content;
-        // Only actual inference citations count; adjacent prose and theorem
-        // statements are deliberately not treated as dependencies.
-        const citations = /\\href\s*\{([^{}]+)#((?:prop|th|thm|lem|lemma|cor|axiom|ax):[^{}]+)\}\s*\{([^{}]*)\}/g;
-        let citation;
-        while ((citation = citations.exec(label))) {
-          const id = citation[2];
-          found.set(id, {id, url: `${citation[1]}#${id}`,
-            kind: /^(?:ax|axiom):/.test(id) ? 'axiom' : 'result',
-            name: dependencyIndex[id]?.title || `${id.split(':')[0].toUpperCase()} ${citation[3]}`});
-        }
-        // Some axiom applications have no \ref, e.g. \mathrm{A}_2.
-        const plain = label.replace(/\\(?:\(|\)|\[|\])/g, '')
-          .replace(/\\mathrm\s*\{A\}/g, 'A').replace(/\\mathrm\s+A/g, 'A')
-          .replace(/\s+/g, '');
-        const ax = /^A_?\{?(\d+)\}?$/.exec(plain);
-        if (ax) {
-          const number = ax[1];
-          const record = axiomLookup[number];
-          const id = record?.id || `axiom:number:${number}`;
-          found.set(id, {id, url: record?.url || null, kind: 'axiom',
-            name: record?.title || `Axiom A${number}`});
-        }
+      while ((match = command.exec(tex))) {
+        const arg = braced(tex, command.lastIndex);
+        if (!arg) { issues.add('Could not read a proof inference label'); break; }
+        command.lastIndex = arg.end;
+        const raw = arg.content;
+        // Lwarp's resolved references have the form
+        // \href{Chapter.html#prop:foo}{1.2}; use the stable anchor, not the
+        // displayed number, which may change between editions.
+        const href = /\\href\s*\{[^{}]*?#((?:ax|axiom|prop|th|thm|lem|lemma|cor|meta):[^{}#]+)\}\s*\{[^{}]*\}/g;
+        let link;
+        let cited = false;
+        while ((link = href.exec(raw))) { direct.add(link[1]); cited = true; }
+        const ref = /\\ref\s*\{((?:ax|axiom|prop|th|thm|lem|lemma|cor|meta):[^{}]+)\}/g;
+        while ((link = ref.exec(raw))) { direct.add(link[1]); cited = true; }
+        if (cited) continue;
+        const base = dependencyBaseLabel(raw);
+        if (!base || /^[1-9]\d*$/.test(base) || /^[a-z]$/.test(base)) continue;
+        const axiom = /^A_?\{?(\d+)\}?$/.exec(base);
+        if (axiom) { direct.add('axiom:number:' + axiom[1]); continue; }
+        if (base === 'Ext') { direct.add('axiom:number:1'); continue; }
+        const transparent = dependencyRuleLabels[base];
+        if (transparent?.length) { transparent.forEach(id => direct.add(id)); continue; }
+        if (base === 'Def.' || base === 'Def' || base === 'Definition' || base.startsWith('D')) continue;
+        if (DEP_PURE_LOGIC.test(base)) continue;
+        issues.add('Unindexed inference rule: ' + base);
       }
-      return [...found.values()];
+      return {direct: dependencySort(direct), issues: [...issues]};
     }
-    const immediateDependencies = extractDependencies(initialSource);
-    function recursiveDependencies() {
-      const found = new Map();
-      const active = new Set();
-      const add = dependency => {
-        if (found.has(dependency.id)) return;
-        found.set(dependency.id, dependency);
-        if (active.has(dependency.id)) return;
-        active.add(dependency.id);
-        const node = dependencyIndex[dependency.id];
-        for (const id of node?.requires || []) {
-          const child = dependencyIndex[id];
-          if (!child && !id.startsWith('axiom:number:')) continue;
-          const axNumber = id.startsWith('axiom:number:') ? id.split(':').pop() : null;
-          const ax = axNumber ? axiomLookup[axNumber] : null;
-          add({id, kind: axNumber || child?.kind === 'axiom' ? 'axiom' : 'result',
-            name: child?.title || ax?.title || (axNumber ? `Axiom A${axNumber}` : `${child.kind} ${child.number}`),
-            url: child?.url || ax?.url || null});
+    const authoredDependencies = extractDependencies(initialSource);
+    const immediateDependencies = authoredDependencies.direct;
+    const dependencyRoots = dependencySort(immediateDependencies);
+
+    function dependencyRecord(id) {
+      if (id.startsWith('axiom:number:')) {
+        const number = id.slice('axiom:number:'.length);
+        const axiom = axiomLookup[number];
+        return {id, kind: 'axiom', number: 'A' + number,
+          title: axiom?.title || ('Axiom A' + number), url: axiom?.url || null,
+          requires: [], issues: axiom ? [] : ['No axiom entry for A' + number]};
+      }
+      if (id.startsWith('rule:')) {
+        const record = dependencyRules[id];
+        return record ? {...record, kind: 'rule'} :
+          {id, kind: 'rule', requires: [], issues: ['Unindexed derived rule: ' + id]};
+      }
+      const record = dependencyIndex[id];
+      if (record?.kind === 'axiom') {
+        const knownNumber = Object.entries(axiomLookup)
+          .find(([, entry]) => entry.id === id)?.[0];
+        return {...record, number: knownNumber ? 'A' + knownNumber : record.number};
+      }
+      return record || {id, kind: 'missing', title: id, requires: [],
+        issues: ['Unindexed mathematical result: ' + id]};
+    }
+    function traceDependencies() {
+      const foundations = new Map();
+      const problems = new Set(authoredDependencies.issues);
+      const observed = new Set();
+      function visit(id, stack) {
+        const node = dependencyRecord(id);
+        if (stack.has(id)) { problems.add('Cyclic dependency involving ' + id); return; }
+        if (node.kind === 'axiom') {
+          foundations.set(node.number, node);
+          // The axiom is still a foundational dependency even if its source
+          // cannot be linked: make the missing source visible.
+          for (const issue of node.issues || []) problems.add(issue);
+          return;
         }
-        active.delete(dependency.id);
-      };
-      immediateDependencies.forEach(add);
-      return [...found.values()];
+        for (const issue of node.issues || []) problems.add(issue);
+        if (observed.has(id)) return;
+        observed.add(id);
+        const next = new Set(stack); next.add(id);
+        for (const child of node.requires || []) visit(child, next);
+      }
+      dependencyRoots.forEach(id => visit(id, new Set()));
+      return {foundations: [...foundations.values()].sort((a, b) =>
+          Number(a.number.slice(1)) - Number(b.number.slice(1))),
+        problems: [...problems].sort()};
     }
-    let dependencyView = 'direct';
+    const dependencyTrace = traceDependencies();
+
+    function dependencyLink(node, text) {
+      if (!node.url) return document.createTextNode(text);
+      const link = document.createElement('a');
+      link.href = node.url; link.textContent = text;
+      link.title = 'Open result in textbook';
+      return link;
+    }
+    function hasVisibleDependency(id, stack = new Set()) {
+      if (stack.has(id)) return true; // a cycle is itself a visible warning
+      const node = dependencyRecord(id);
+      if (node.kind !== 'rule' || (node.issues || []).length) return true;
+      const next = new Set(stack); next.add(id);
+      return (node.requires || []).some(child => hasVisibleDependency(child, next));
+    }
+    function visibleDependencies(ids) {
+      return dependencySort(ids).filter(id => hasVisibleDependency(id));
+    }
+    function renderDependencyBranch(id, ancestors = new Set(), depth = 0) {
+      const node = dependencyRecord(id);
+      const fragment = document.createDocumentFragment();
+      if (node.kind === 'rule') {
+        // A rule justifies a step but does not become its own result node.
+        if (ancestors.has(id)) {
+          const message = document.createElement('li');
+          message.className = 'pe-dependency-warning';
+          message.textContent = 'Cyclic rule reference: ' + id;
+          fragment.append(message); return fragment;
+        }
+        const next = new Set(ancestors); next.add(id);
+        for (const child of visibleDependencies(node.requires || [])) {
+          fragment.append(renderDependencyBranch(child, next, depth));
+        }
+        for (const issue of node.issues || []) {
+          const warning = document.createElement('li');
+          warning.className = 'pe-dependency-warning';
+          warning.textContent = issue; fragment.append(warning);
+        }
+        return fragment;
+      }
+      const li = document.createElement('li');
+      const label = node.kind === 'axiom'
+        ? `${node.number} — ${node.title}`
+        : (node.title || node.id);
+      const children = visibleDependencies(node.requires || []);
+      if (ancestors.has(id)) {
+        li.textContent = label + ' (cycle)';
+        li.className = 'pe-dependency-warning';
+      } else if (children.length || (node.issues || []).length) {
+        const details = document.createElement('details');
+        details.open = depth < 2;
+        const summary = document.createElement('summary');
+        summary.append(dependencyLink(node, label));
+        details.append(summary);
+        const sublist = document.createElement('ul');
+        const next = new Set(ancestors); next.add(id);
+        for (const child of children) sublist.append(renderDependencyBranch(child, next, depth + 1));
+        for (const issue of node.issues || []) {
+          const warning = document.createElement('li');
+          warning.className = 'pe-dependency-warning';
+          warning.textContent = issue; sublist.append(warning);
+        }
+        details.append(sublist);
+        li.append(details);
+      } else {
+        li.append(dependencyLink(node, label));
+        li.className = node.kind === 'axiom' ? 'pe-dependency-axiom' : '';
+      }
+      fragment.append(li); return fragment;
+    }
+
     function renderDependencies() {
       sidebar.replaceChildren();
-      const title = document.createElement('h2'); title.textContent = 'Dependencies';
+      const title = document.createElement('h2'); title.textContent = 'Axiomatic foundations';
       sidebar.append(title);
-      const tabs = document.createElement('div'); tabs.className = 'pe-dependency-tabs';
-      for (const mode of ['direct', 'all']) {
-        const tab = document.createElement('button'); tab.type = 'button';
-        tab.textContent = mode === 'direct' ? 'Direct' : 'Recursive';
-        tab.setAttribute('aria-selected', String(mode === dependencyView));
-        tab.addEventListener('click', () => {dependencyView = mode; renderDependencies();});
-        tabs.append(tab);
-      }
-      sidebar.append(tabs);
-      const items = dependencyView === 'direct' ? immediateDependencies : recursiveDependencies();
-      const list = document.createElement('ul'); list.className = 'pe-dependency-list';
-      const order = {axiom: 0, result: 1};
-      items.sort((a, b) => (order[a.kind] || 1) - (order[b.kind] || 1) ||
-        a.name.localeCompare(b.name));
-      for (const item of items) {
-        const li = document.createElement('li');
-        const category = document.createElement('span'); category.className = 'pe-dependency-category';
-        category.textContent = item.kind === 'axiom' ? 'Axiom' : 'Earlier result';
-        li.append(category);
-        if (item.url) {
-          const link = document.createElement('a'); link.href = item.url;
-          link.textContent = item.name; link.title = 'Open result in textbook';
-          li.append(link);
-        } else {
-          li.append(document.createTextNode(item.name));
+      const summary = document.createElement('div');
+      summary.className = 'pe-foundations';
+      if (dependencyTrace.foundations.length) {
+        for (const axiom of dependencyTrace.foundations) {
+          const chip = document.createElement('span');
+          chip.className = 'pe-foundation-axiom';
+          chip.append(dependencyLink(axiom, axiom.number));
+          chip.title = axiom.title;
+          summary.append(chip);
         }
-        list.append(li);
+      } else {
+        const empty = document.createElement('p');
+        empty.className = 'pe-dependency-empty';
+        empty.textContent = 'No axioms identified in the indexed dependency paths.';
+        summary.append(empty);
       }
-      if (!items.length) {
-        const empty = document.createElement('p'); empty.className = 'pe-dependency-empty';
-        empty.textContent = 'No explicit axiom or result citations found in this proof.';
+      sidebar.append(summary);
+      const coverage = document.createElement('p');
+      coverage.className = 'pe-dependency-coverage';
+      if (dependencyTrace.problems.length) {
+        coverage.textContent = 'Partially traced — ' + dependencyTrace.problems.length +
+          ' unresolved ' + (dependencyTrace.problems.length === 1 ? 'path' : 'paths');
+      } else {
+        coverage.textContent = 'All indexed paths traced';
+      }
+      sidebar.append(coverage);
+      const hierarchyTitle = document.createElement('h3');
+      hierarchyTitle.textContent = 'Dependency hierarchy';
+      sidebar.append(hierarchyTitle);
+      const list = document.createElement('ul'); list.className = 'pe-dependency-tree';
+      visibleDependencies(dependencyRoots).forEach(id => list.append(renderDependencyBranch(id)));
+      if (list.children.length) sidebar.append(list);
+      else {
+        const empty = document.createElement('p');
+        empty.className = 'pe-dependency-empty';
+        empty.textContent = 'No cited axioms or prior results found in this proof.';
         sidebar.append(empty);
-      } else sidebar.append(list);
+      }
       const note = document.createElement('p'); note.className = 'pe-dependency-note';
-      note.textContent = dependencyView === 'direct'
-        ? 'Shows citations in the originally authored proof, independently of expansions.'
-        : 'Follows indexed citations in earlier results where available. This is a first-pass citation graph, not a complete logical dependency analysis.';
+      note.textContent = 'Axioms used by this authored derivation, including through earlier results. Definitions and logical rules are hidden. An indexed path is not a proof of minimal axiomatic dependence.';
       sidebar.append(note);
+      if (dependencyTrace.problems.length) {
+        const details = document.createElement('details');
+        details.className = 'pe-dependency-problems';
+        const summary = document.createElement('summary');
+        summary.textContent = 'Unresolved paths (' + dependencyTrace.problems.length + ')';
+        details.append(summary);
+        const list = document.createElement('ul');
+        for (const problem of dependencyTrace.problems) {
+          const li = document.createElement('li'); li.textContent = problem;
+          list.append(li);
+        }
+        details.append(list); sidebar.append(details);
+      }
     }
     renderDependencies();
     depsToggle.addEventListener('click', () => {
