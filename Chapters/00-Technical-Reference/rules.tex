@@ -640,7 +640,7 @@ This convention concerns only the display of derivations and introduces no new i
 
 \nbgpara{17}{Basic Derived Rules}
 
-We establish two elementary derived rules that will be used
+We establish elementary derived rules that will be used
 in later derivations. Each is admissible in the deductive
 system already defined and introduces no additional
 inference principle.
@@ -754,12 +754,12 @@ of the primitive rule. Thus, an application of \(=\)-Sym likewise abbreviates
 an application of the displayed theorem followed by
 \(\to\)-E.
 
- For the sake of economy, throughout our derivations, we allow the two sides
+For the sake of economy, throughout our derivations, we allow the two sides
 of an equality to be exchanged without explicitly
-    invoking the symmetry of identity. Thus, whenever
-    $a=b$ has been established, we may also use $b=a$.
-    Such steps are understood to abbreviate an
-    application of the derived rule $=$-Sym.
+invoking the symmetry of identity. Thus, whenever
+\(a=b\) has been established, we may also use \(b=a\).
+Such steps are understood to abbreviate an
+application of the derived rule \(=\)-Sym.
 
 
 \vspace{0.4cm}
@@ -817,12 +817,85 @@ To justify this rule, we derive
 
 Thus, an application of DS abbreviates
 an application of the displayed theorem
-followed by two applications of $\to$-E.
+followed by two applications of \(\to\)-E.
 The rule is also admissible with the
 disjuncts exchanged.
 
 
+\vspace{0.4cm}
 
-None of these derived rules adds deductive
-power. All may henceforth be used
-as single steps in derivation displays.
+\nbgparar{Conjunction Congruence} \quad
+From a biconditional, we may infer the biconditional obtained
+by conjoining the same formula to both sides:
+
+\begin{prooftree}
+    \AxiomC{\(\varphi\leftrightarrow\psi\)}
+    \RightLabel{\(\land\)-Con}
+    \UnaryInfC{\((\chi\land\varphi)\leftrightarrow(\chi\land\psi)\)}
+\end{prooftree}
+
+If \(\chi\land\varphi\) holds, then \(\chi\) and \(\varphi\) hold.
+The premise yields \(\psi\), so \(\chi\land\psi\) holds.
+The converse follows by exchanging \(\varphi\) and \(\psi\).
+
+To justify the rule formally, we derive
+\[
+\vdash
+(\varphi\leftrightarrow\psi)
+\to
+\bigl((\chi\land\varphi)\leftrightarrow(\chi\land\psi)\bigr).
+\]
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{2}
+    \UnaryInfC{\(\chi\land\varphi\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(\chi\)}
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{\(\varphi\leftrightarrow\psi\)}
+    \AxiomC{}
+    \RightLabel{2}
+    \UnaryInfC{\(\chi\land\varphi\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(\varphi\)}
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(\psi\)}
+    \RightLabel{\(\land\)-I}
+    \BinaryInfC{\(\chi\land\psi\)}
+    \RightLabel{\(\to\)-I, 2}
+    \UnaryInfC{\((\chi\land\varphi)\to(\chi\land\psi)\)}
+    \AxiomC{}
+    \RightLabel{3}
+    \UnaryInfC{\(\chi\land\psi\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(\chi\)}
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{\(\varphi\leftrightarrow\psi\)}
+    \AxiomC{}
+    \RightLabel{3}
+    \UnaryInfC{\(\chi\land\psi\)}
+    \RightLabel{\(\land\)-E}
+    \UnaryInfC{\(\psi\)}
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(\varphi\)}
+    \RightLabel{\(\land\)-I}
+    \BinaryInfC{\(\chi\land\varphi\)}
+    \RightLabel{\(\to\)-I, 3}
+    \UnaryInfC{\((\chi\land\psi)\to(\chi\land\varphi)\)}
+    \RightLabel{\(\leftrightarrow\)-I}
+    \BinaryInfC{\((\chi\land\varphi)\leftrightarrow(\chi\land\psi)\)}
+    \RightLabel{\(\to\)-I, 1}
+    \UnaryInfC{
+        \((\varphi\leftrightarrow\psi)
+        \to
+        ((\chi\land\varphi)\leftrightarrow(\chi\land\psi))\)
+    }
+\end{prooftree}
+
+Thus, an application of \(\land\)-Con abbreviates
+an application of the displayed theorem followed by
+\(\to\)-E. The rule is also admissible with the
+new conjunct placed on the right.
