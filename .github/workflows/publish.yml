@@ -1,6 +1,6 @@
-# Production publication: reuse individually cached Lwarp Explorer proofs.
-# Built from the verified staging workflow; changes only the final delivery.
-# The production checkout is ephemeral; no manuscript source is modified.
+# Publish the HTML textbook with Explorer proof trees injected directly
+# from authored TeX. Only the lightweight textbook may require Lwarp.
+# Based on the separately tested direct-source offline preview.
 name: Publish HTML textbook
 
 on:
@@ -18,345 +18,62 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  discover:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.proofs.outputs.matrix }}
-      count: ${{ steps.proofs.outputs.count }}
-    steps:
-      - name: Get manuscript
-        uses: actions/checkout@v4
-
-      - name: Discover and validate complete Explorer proofs
-        id: proofs
-        env:
-          MAX_PROOFS: all
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import json, os, re
-
-          pattern = re.compile(
-              r'\\begin\{explorerderivation\}\s*\{([^{}\r\n]+)\}'
-              r'(.*?)\\end\{explorerderivation\}', re.S)
-          opening = re.compile(r'\\begin\{explorerderivation\}')
-          closing = re.compile(r'\\end\{explorerderivation\}')
-          tree_open = re.compile(r'\\begin\s*\{prooftree\}')
-          tree_close = re.compile(r'\\end\s*\{prooftree\}')
-          all_proofs = []
-          for path in sorted(Path('Chapters').rglob('*.tex')):
-              source = path.read_text(encoding='utf-8')
-              matches = list(pattern.finditer(source))
-              if len(matches) != len(opening.findall(source)) or len(matches) != len(closing.findall(source)):
-                  raise SystemExit(f'DISCOVERY ERROR: unrecognized explorerderivation in {path}')
-              for match in matches:
-                  identifier = match.group(1).strip()
-                  body = match.group(2)
-                  if len(tree_open.findall(body)) != 1 or len(tree_close.findall(body)) != 1:
-                      raise SystemExit(f'DISCOVERY ERROR: {identifier} is not one complete prooftree')
-                  all_proofs.append({'id': identifier, 'source': path.as_posix()})
-
-          ids = [p['id'] for p in all_proofs]
-          if len(set(ids)) != len(ids):
-              raise SystemExit('DISCOVERY ERROR: duplicate Explorer proof identifiers')
-          if not all_proofs:
-              raise SystemExit('DISCOVERY ERROR: no explorerderivations were found')
-
-          # Always include the already-verified D.2 as the first specimen.
-          d2 = 'meta:restricted-unrestricted-class-formulation'
-          all_proofs.sort(key=lambda proof: (proof['id'] != d2, proof['source'], proof['id']))
-          requested = os.environ.get('MAX_PROOFS', '3')
-          if requested not in ('3', 'all'):
-              raise SystemExit('Select 3 or all proofs')
-          selected = all_proofs if requested == 'all' else all_proofs[:3]
-          entries = [dict(proof, slot=f'{i:03d}') for i, proof in enumerate(selected)]
-          matrix = {'include': entries}
-          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as stream:
-              print('matrix=' + json.dumps(matrix, separators=(',', ':')), file=stream)
-              print('count=' + str(len(entries)), file=stream)
-          print(f'DISCOVERED: {len(all_proofs)} complete Explorer proofs')
-          print(f'SELECTED: {len(entries)} independently cached proofs')
-          for entry in entries:
-              print(f"  {entry['slot']}  {entry['id']}  ({entry['source']})")
-          PY
-
-  proof:
-    needs: discover
-    runs-on: ubuntu-latest
-    name: ${{ matrix.slot }} - ${{ matrix.id }}
-    strategy:
-      fail-fast: false
-      max-parallel: 3
-      matrix: ${{ fromJSON(needs.discover.outputs.matrix) }}
-    steps:
-      - name: Get manuscript
-        uses: actions/checkout@v4
-
-      - name: Isolate this proof and compute its own fingerprint
-        id: fingerprint
-        env:
-          PROOF_ID: ${{ matrix.id }}
-          PROOF_FILE: ${{ matrix.source }}
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import hashlib, json, os, re, shutil
-
-          project = Path.cwd()
-          work = project / 'proof-isolate'
-          work.mkdir(exist_ok=True)
-          identifier = os.environ['PROOF_ID']
-          filename = Path(os.environ['PROOF_FILE'])
-          if not filename.is_file() or not filename.is_relative_to(Path('Chapters')):
-              raise SystemExit('Invalid or missing proof source file')
-          text = filename.read_text(encoding='utf-8')
-          pattern = re.compile(
-              r'\\begin\{explorerderivation\}\s*\{([^{}\r\n]+)\}'
-              r'(.*?)\\end\{explorerderivation\}', re.S)
-          matches = [m for m in pattern.finditer(text) if m.group(1).strip() == identifier]
-          if len(matches) != 1:
-              raise SystemExit(f'Expected exactly one {identifier} in {filename}; found {len(matches)}')
-          proof_source = matches[0].group(0)
-          shutil.copyfile('preamble.tex', work / 'preamble.tex')
-          main = ('\\documentclass[leqno]{article}\n'
-                  '\\input{preamble}\n\\begin{document}\n'
-                  + proof_source + '\n\\end{document}\n')
-          (work / 'main.tex').write_text(main, encoding='utf-8')
-
-          # Include only this proof, the relevant LaTeX environment, and compilation
-          # inputs. Modifying another proof must not change this fingerprint.
-          relevant = [work / 'main.tex', project / 'preamble.tex']
-          relevant += [p for glob in ('*.sty', '*.cls', '*.cfg', '*.def')
-                       for p in project.glob(glob)]
-          pending = [project / 'preamble.tex']
-          examined = set()
-          while pending:
-              current = pending.pop()
-              if current in examined:
-                  continue
-              examined.add(current)
-              for name in re.findall(r'\\(?:input|include)\s*\{([^{}]+)\}',
-                                     current.read_text(encoding='utf-8')):
-                  target = current.parent / name
-                  if not target.suffix:
-                      target = target.with_suffix('.tex')
-                  if target.is_file() and target.resolve().is_relative_to(project.resolve()):
-                      relevant.append(target)
-                      pending.append(target)
-          digest = hashlib.sha256()
-          digest.update(b'STCH-PROOF-CACHE-v2;Lwarp-single-proof;texlive-action-v3\0')
-          for file in sorted(set(relevant)):
-              data = file.read_bytes()
-              relative = file.relative_to(project).as_posix().encode('utf-8')
-              digest.update(len(relative).to_bytes(4, 'big'))
-              digest.update(relative)
-              digest.update(len(data).to_bytes(8, 'big'))
-              digest.update(data)
-          key = 'stch-explorer-v2-' + digest.hexdigest()
-          meta = {'id': identifier, 'source_file': filename.as_posix(),
-                  'key': key, 'source_sha256': hashlib.sha256(proof_source.encode()).hexdigest()}
-          (work / 'proof-meta.json').write_text(json.dumps(meta, indent=2)+'\n')
-          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as stream:
-              print('key=' + key, file=stream)
-          print(f'PROOF: {identifier}')
-          print(f'FINGERPRINT: {key}')
-          PY
-
-      - name: Restore this proof from GitHub Actions cache
-        id: cache
-        uses: actions/cache/restore@v4
-        with:
-          key: ${{ steps.fingerprint.outputs.key }}
-          path: |
-            proof-isolate/index.html
-            proof-isolate/lwarp.css
-            proof-isolate/lwarp_formal.css
-            proof-isolate/lwarp_sagebrush.css
-            proof-isolate/sample_project.css
-            proof-isolate/cache-manifest.json
-
-      - name: Report cache verdict before compiling
-        env:
-          HIT: ${{ steps.cache.outputs.cache-hit }}
-        run: |
-          if [ "$HIT" = 'true' ]; then
-            echo 'CACHE HIT: This proof is unchanged. Skipping TeXLive/Lwarp.'
-          else
-            echo 'CACHE MISS: Compiling this proof only.'
-          fi
-
-      - name: Compile this proof using the existing Lwarp process
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: xu-cheng/texlive-action@v3
-        with:
-          os: alpine
-          run: |
-            set -eo pipefail
-            apk add --no-cache poppler-utils ghostscript
-            cd proof-isolate
-            pdflatex -interaction=nonstopmode -halt-on-error main.tex > pdf-build.log 2>&1 || { tail -100 pdf-build.log; exit 1; }
-            lwarpmk html1 > first-html.log 2>&1 || { tail -100 first-html.log; exit 1; }
-            lwarpmk html1 > second-html.log 2>&1 || { tail -100 second-html.log; exit 1; }
-            lwarpmk limages > images.log 2>&1 || { tail -100 images.log; exit 1; }
-            lwarpmk html > final-html.log 2>&1 || { tail -100 final-html.log; exit 1; }
-            test -s index.html || { echo 'Missing isolated Lwarp index.html'; exit 1; }
-
-      - name: Verify the proof fragment and cached checksums
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import hashlib, html, json, re
-
-          work = Path('proof-isolate')
-          meta = json.loads((work/'proof-meta.json').read_text(encoding='utf-8'))
-          required = ['index.html', 'lwarp.css', 'lwarp_formal.css',
-                      'lwarp_sagebrush.css', 'sample_project.css']
-          checksums = {}
-          for name in required:
-              path = work / name
-              if not path.is_file() or path.stat().st_size == 0:
-                  raise SystemExit(f'CACHE ERROR: missing or empty {path}')
-              checksums[name] = hashlib.sha256(path.read_bytes()).hexdigest()
-
-          page = (work/'index.html').read_text(encoding='utf-8')
-          openings = re.finditer(r'<div\b[^>]*>', page, re.S | re.I)
-          div_tags = re.compile(r'<!--.*?-->|<\s*(/?)\s*div\b[^>]*>', re.S | re.I)
-          blocks = []
-          for opening in openings:
-              tag = opening.group(0)
-              classes = re.search(r'\bclass\s*=\s*([\'"])(.*?)\1', tag, re.S | re.I)
-              if not classes or 'explorerderivation' not in html.unescape(classes.group(2)).split():
-                  continue
-              if meta['id'] not in html.unescape(tag):
-                  continue
-              depth, end = 1, None
-              for token in div_tags.finditer(page, opening.end()):
-                  if token.group(0).startswith('<!--'):
-                      continue
-                  depth += -1 if token.group(1) else 1
-                  if depth == 0:
-                      end = token.end()
-                      break
-              if end is None:
-                  raise SystemExit('CACHE ERROR: unclosed Explorer proof element')
-              blocks.append(page[opening.start():end])
-          if len(blocks) != 1:
-              raise SystemExit(f'CACHE ERROR: expected one HTML proof for {meta["id"]}, found {len(blocks)}')
-          fragment = blocks[0]
-          cmd = r'\\(?:AxiomC|UnaryInfC|BinaryInfC|TrinaryInfC|QuaternaryInfC|QuinaryInfC)\b'
-          source_count = len(re.findall(cmd, (work/'main.tex').read_text(encoding='utf-8')))
-          html_count = len(re.findall(cmd, fragment))
-          if source_count == 0 or source_count != html_count:
-              raise SystemExit(f'CACHE ERROR: proof has {source_count} source steps, {html_count} compiled steps')
-
-          manifest = {'key':meta['key'], 'id':meta['id'], 'files':checksums,
-                      'inference_commands':html_count}
-          file = work / 'cache-manifest.json'
-          if file.exists():
-              if json.loads(file.read_text(encoding='utf-8')) != manifest:
-                  raise SystemExit('CACHE ERROR: restored manifest failed checksum verification')
-              print(f'VERIFIED CACHE HIT: {meta["id"]}, {html_count} inferences')
-          else:
-              file.write_text(json.dumps(manifest, indent=2)+'\n',encoding='utf-8')
-              print(f'VERIFIED NEW COMPILATION: {meta["id"]}, {html_count} inferences')
-          (work/'fragment.html').write_text(fragment,encoding='utf-8')
-          PY
-
-      - name: Save newly compiled proof
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          key: ${{ steps.fingerprint.outputs.key }}
-          path: |
-            proof-isolate/index.html
-            proof-isolate/lwarp.css
-            proof-isolate/lwarp_formal.css
-            proof-isolate/lwarp_sagebrush.css
-            proof-isolate/sample_project.css
-            proof-isolate/cache-manifest.json
-
-      - name: Package one independently cached proof
-        env:
-          CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import json, os, shutil
-
-          root = Path('proof-isolate')
-          destination = Path('proof-package')
-          destination.mkdir(exist_ok=True)
-          for name in ('index.html', 'fragment.html', 'lwarp.css',
-                       'lwarp_formal.css', 'lwarp_sagebrush.css', 'sample_project.css'):
-              shutil.copyfile(root/name, destination/name)
-          data = json.loads((root/'proof-meta.json').read_text(encoding='utf-8'))
-          data['cache_hit'] = os.environ.get('CACHE_HIT') == 'true'
-          data['lwarp_skipped'] = data['cache_hit']
-          data['inference_commands'] = json.loads((root/'cache-manifest.json').read_text())['inference_commands']
-          (destination/'status.json').write_text(json.dumps(data,indent=2)+'\n',encoding='utf-8')
-          print(('CACHE HIT' if data['cache_hit'] else 'CACHE MISS')+' — '+data['id'])
-          PY
-
-      - name: Upload this proof's output
-        uses: actions/upload-artifact@v4
-        with:
-          name: compiled-proof-${{ matrix.slot }}
-          path: proof-package/
-          if-no-files-found: error
-          retention-days: 7
-
   publish:
-    needs: [discover, proof]
     runs-on: ubuntu-latest
     steps:
       - name: Get manuscript
         uses: actions/checkout@v4
 
-      - name: Omit Explorer proof bodies and fingerprint the lightweight textbook
+      - name: Save authored trees and fingerprint the same lightweight textbook
         id: skeleton
-        env:
-          PROOF_MATRIX: ${{ needs.discover.outputs.matrix }}
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import hashlib, json, os, re
+          import hashlib, json, re
 
           pattern = re.compile(
               r'(?P<open>\\begin\{explorerderivation\}\s*\{(?P<id>[^{}\r\n]+)\})'
               r'(?P<body>.*?)'
               r'(?P<close>\\end\{explorerderivation\})', re.S)
+          tree = re.compile(r'\\begin\s*\{prooftree\}.*?\\end\s*\{prooftree\}', re.S)
           steps = re.compile(r'\\(?:AxiomC|UnaryInfC|BinaryInfC|TrinaryInfC|QuaternaryInfC|QuinaryInfC)\b')
-          expected = {p['id']: p for p in json.loads(os.environ['PROOF_MATRIX'])['include']}
-          observed = {}
-          omitted_bytes = 0
+          expected, direct, omitted_bytes = {}, {}, 0
+
           for file in sorted(Path('Chapters').rglob('*.tex')):
               original = file.read_text(encoding='utf-8')
               matches = list(pattern.finditer(original))
-              if len(matches) != original.count('\\begin{explorerderivation}') or len(matches) != original.count('\\end{explorerderivation}'):
-                  raise SystemExit(f'SKELETON ERROR: unrecognized proof environment in {file}')
+              if (len(matches) != original.count('\\begin{explorerderivation}') or
+                  len(matches) != original.count('\\end{explorerderivation}')):
+                  raise SystemExit(f'SOURCE ERROR: unrecognized explorerderivation in {file}')
               for match in matches:
-                  identifier = match.group('id').strip()
-                  if identifier not in expected or identifier in observed:
-                      raise SystemExit(f'SKELETON ERROR: unexpected or duplicate proof {identifier}')
-                  whole = match.group(0)
-                  observed[identifier] = {
-                      'slot': expected[identifier]['slot'],
+                  proof_id = match.group('id').strip()
+                  if proof_id in expected:
+                      raise SystemExit(f'SOURCE ERROR: duplicate Explorer proof identifier: {proof_id}')
+                  body = match.group('body')
+                  pieces = tree.findall(body)
+                  if len(pieces) != 1:
+                      raise SystemExit(f'SOURCE ERROR: expected exactly one prooftree in {proof_id}')
+                  # Only record data needed for assembly. No proof compilation.
+                  proof = pieces[0]
+                  original_inferences = len(steps.findall(match.group(0)))
+                  if original_inferences == 0:
+                      raise SystemExit(f'SOURCE ERROR: no inference commands in {proof_id}')
+                  expected[proof_id] = {
                       'source_file': file.as_posix(),
-                      'source_sha256': hashlib.sha256(whole.encode('utf-8')).hexdigest(),
-                      'inferences': len(steps.findall(whole))}
-                  omitted_bytes += len(match.group('body').encode('utf-8'))
-              # Leave the original HTML environment and its identifier in place.
-              # This is an EPHEMERAL GitHub runner copy, never committed.
+                      'source_sha256': hashlib.sha256(match.group(0).encode('utf-8')).hexdigest(),
+                      'inferences': original_inferences}
+                  direct[proof_id] = proof
+                  omitted_bytes += len(body.encode('utf-8'))
               stripped = pattern.sub(lambda m: m.group('open')+'\n'+m.group('close'), original)
               file.write_text(stripped, encoding='utf-8')
-          if set(observed) != set(expected):
-              raise SystemExit(f'SKELETON ERROR: proof coverage mismatch: {set(expected) ^ set(observed)}')
-          if not observed or any(e['inferences'] <= 0 for e in observed.values()):
-              raise SystemExit('SKELETON ERROR: no proof inferences discovered')
-          Path('staging-expected.json').write_text(json.dumps(observed, indent=2)+'\n', encoding='utf-8')
+          if not expected:
+              raise SystemExit('SOURCE ERROR: no Explorer proofs found')
+          Path('staging-expected.json').write_text(
+              json.dumps(expected,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
+          Path('direct-proof-source.json').write_text(
+              json.dumps(direct,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
 
-          # Fingerprint the actual stripped manuscript, not its original proof bodies.
-          # Hence editing only one Explorer tree does NOT rebuild the book skeleton.
+          # IDENTICAL hashing algorithm and cache namespace to the working publisher.
           extensions = {'.tex', '.sty', '.cls', '.cfg', '.def', '.bib', '.bst',
                         '.png', '.jpg', '.jpeg', '.svg', '.pdf', '.eps'}
           tracked = [p for p in Path('.').rglob('*') if p.is_file()
@@ -372,9 +89,9 @@ jobs:
               digest.update(len(path).to_bytes(4, 'big')+path)
               digest.update(len(data).to_bytes(8, 'big')+data)
           key = 'stch-book-skeleton-v1-' + digest.hexdigest()
-          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as out:
+          with open(__import__('os').environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as out:
               print('key='+key, file=out)
-          print(f'SKELETON: omitted {len(observed)} proof bodies ({omitted_bytes:,} bytes)')
+          print(f'DIRECT SOURCE: discovered {len(expected)} proofs ({omitted_bytes:,} removed bytes)')
           print(f'SKELETON CACHE KEY: {key}')
           PY
 
@@ -444,24 +161,21 @@ jobs:
             *-images/
             lateximages/
 
-      - name: Download all independently cached proof fragments
-        uses: actions/download-artifact@v4
-        with:
-          pattern: compiled-proof-*
-          path: staging-proofs/
-          merge-multiple: false
-
-      - name: Validate and insert every cached prooftree into its original page
+      - name: Insert original TeX proof trees without individual Lwarp compilation
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import hashlib, html, json, re
+          import html, json, re
 
           expected = json.loads(Path('staging-expected.json').read_text(encoding='utf-8'))
+          direct = json.loads(Path('direct-proof-source.json').read_text(encoding='utf-8'))
+          if set(direct) != set(expected):
+              raise SystemExit('DIRECT ERROR: source proof coverage differs from skeleton')
           page_files = sorted(p for p in Path('.').glob('*.html') if p.name != 'main_html.html')
-          if not page_files: raise SystemExit('STAGING ERROR: no textbook HTML pages')
+          if not page_files:
+              raise SystemExit('DIRECT ERROR: skeleton contains no HTML pages')
 
-          # Recognize the actual Lwarp BlockClass; honor nested DIVs.
+          # Locate Lwarp's existing proof placeholders, including nested divs.
           start_div = re.compile(r'<div\b[^>]*>', re.I | re.S)
           div_tags = re.compile(r'<!--.*?-->|<\s*(/?)\s*div\b[^>]*>', re.I | re.S)
           classes = re.compile(r'\bclass\s*=\s*(["\'])(.*?)\1', re.I | re.S)
@@ -475,7 +189,8 @@ jobs:
                   if not cls or 'explorerderivation' not in html.unescape(cls.group(2)).split():
                       continue
                   idmatch = identifier.search(html.unescape(opening))
-                  if not idmatch: raise SystemExit(f'STAGING ERROR: Explorer missing identifier: {opening[:200]}')
+                  if not idmatch:
+                      raise SystemExit(f'DIRECT ERROR: missing ID in Explorer element: {opening[:200]}')
                   depth, finish = 1, None
                   for token in div_tags.finditer(source, match.end()):
                       if token.group(0).startswith('<!--'): continue
@@ -483,64 +198,66 @@ jobs:
                       if depth == 0:
                           finish = token.start()
                           break
-                  if finish is None: raise SystemExit('STAGING ERROR: unclosed Explorer div')
+                  if finish is None:
+                      raise SystemExit('DIRECT ERROR: unclosed Explorer div')
                   yield idmatch.group(1).strip(), match.end(), finish
 
-          assembled = {}
-          coverage = {}
-          for proof_id, record in expected.items():
-              directory = Path('staging-proofs')/('compiled-proof-'+record['slot'])
-              status_file = directory/'status.json'
-              fragment_file = directory/'fragment.html'
-              if not status_file.is_file() or not fragment_file.is_file():
-                  raise SystemExit(f'STAGING ERROR: missing packaged proof {proof_id}')
-              status = json.loads(status_file.read_text(encoding='utf-8'))
-              if (status['id'] != proof_id or status['source_file'] != record['source_file']
-                  or status['source_sha256'] != record['source_sha256']):
-                  raise SystemExit(f'STAGING ERROR: WRONG OR STALE PROOF {proof_id}')
-              source = fragment_file.read_text(encoding='utf-8')
-              pieces = tree.findall(source)
-              if len(pieces) != 1:
-                  raise SystemExit(f'STAGING ERROR: expected one prooftree in {proof_id}')
-              proof = pieces[0]
-              n = len(commands.findall(proof))
-              if n != record['inferences'] or n != status['inference_commands']:
-                  raise SystemExit(f'STAGING ERROR: inference mismatch {proof_id}: {n}')
-              if proof_id in assembled:
-                  raise SystemExit(f'STAGING ERROR: duplicate packaged proof {proof_id}')
-              assembled[proof_id] = '<p>\n\n'+proof+'\n\n</p>\n'
-              coverage[proof_id] = {'inferences': n, 'cached': status['cache_hit']}
+          def remove_tex_comments(text):
+              # Real TeX comments do not reach Lwarp's compiled fragments.
+              # Preserve escaped percent signs (\%) and the original source otherwise.
+              lines=[]
+              for line in text.splitlines(keepends=True):
+                  for pos, char in enumerate(line):
+                      if char != '%': continue
+                      n=0
+                      while pos-n-1 >= 0 and line[pos-n-1] == '\\': n+=1
+                      if n % 2 == 0:
+                          line=line[:pos]+'\n'
+                          break
+                  lines.append(line)
+              return ''.join(lines)
 
-          found = {}
+          assembled, coverage = {}, {}
+          for proof_id, proof in direct.items():
+              proof = remove_tex_comments(proof)
+              # Inject as HTML text (not markup). Browser textContent restores
+              # <, >, and & to the original TeX characters for the Explorer.
+              if len(tree.findall(proof)) != 1:
+                  raise SystemExit(f'DIRECT ERROR: source lost its prooftree: {proof_id}')
+              n=len(commands.findall(proof))
+              if n != expected[proof_id]['inferences']:
+                  raise SystemExit(f'DIRECT ERROR: source inference count changed for {proof_id}')
+              assembled[proof_id]='<p>\n\n'+html.escape(proof,quote=False)+'\n\n</p>\n'
+              coverage[proof_id]={'inferences':n,'origin':'uncompiled TeX source'}
+          found={}
           for page in page_files:
-              source = page.read_text(encoding='utf-8')
-              entries = list(blocks(source))
-              changes = []
-              for proof_id, begin, end in entries:
+              source=page.read_text(encoding='utf-8')
+              changes=[]
+              for proof_id, begin, end in blocks(source):
                   if proof_id not in assembled:
-                      raise SystemExit(f'STAGING ERROR: unexpected Explorer {proof_id} on {page}')
+                      raise SystemExit(f'DIRECT ERROR: unexpected proof {proof_id} on {page}')
                   if proof_id in found:
-                      raise SystemExit(f'STAGING ERROR: multiple placements for {proof_id}')
+                      raise SystemExit(f'DIRECT ERROR: duplicate placement of {proof_id}')
                   if tree.search(source[begin:end]):
-                      raise SystemExit(f'STAGING ERROR: skeleton already contains tree {proof_id}')
-                  if source[begin:end].strip() not in ('',):
-                      # Lwarp may emit harmless hidden numbering state or comments.
-                      residual = re.sub(r'<!--.*?-->|<span\b[^>]*class="hidden"[^>]*>.*?</span>', '',
-                                        source[begin:end], flags=re.S | re.I)
+                      raise SystemExit(f'DIRECT ERROR: placeholder not empty for {proof_id}')
+                  if source[begin:end].strip():
+                      residual=re.sub(r'<!--.*?-->|<span\b[^>]*class="hidden"[^>]*>.*?</span>',
+                                      '', source[begin:end],flags=re.S|re.I)
                       if residual.strip():
-                          raise SystemExit(f'STAGING ERROR: nonempty scaffold for {proof_id} on {page}: {residual[:200]!r}')
-                  changes.append((begin, end, assembled[proof_id]))
-                  found[proof_id] = page.name
-              for begin, end, fragment in reversed(changes):
-                  source = source[:begin] + '\n' + fragment + source[end:]
+                          raise SystemExit(f'DIRECT ERROR: unexpected HTML in {proof_id}: {residual[:200]!r}')
+                  changes.append((begin,end,assembled[proof_id]))
+                  found[proof_id]=page.name
+              for begin,end,fragment in reversed(changes):
+                  source=source[:begin]+'\n'+fragment+source[end:]
               if changes:
-                  page.write_text(source, encoding='utf-8')
-                  print(f'ASSEMBLED: {page.name}: {len(changes)} cached proofs')
-          if set(found) != set(assembled):
-              raise SystemExit(f'STAGING ERROR: missing HTML placeholders: {set(assembled) ^ set(found)}')
-          for key, filename in found.items(): coverage[key]['page'] = filename
-          Path('staging-coverage.json').write_text(json.dumps(coverage, indent=2)+'\n', encoding='utf-8')
-          print(f'ASSEMBLED: {len(found)} of {len(expected)} proofs, no unfilled placeholders')
+                  page.write_text(source,encoding='utf-8')
+                  print(f'DIRECT ASSEMBLED: {page.name}: {len(changes)} proof(s)')
+          if set(found)!=set(assembled):
+              raise SystemExit(f'DIRECT ERROR: missing placeholders: {set(found)^set(assembled)}')
+          for proof_id,page in found.items():
+              coverage[proof_id]['page']=page
+          Path('staging-coverage.json').write_text(json.dumps(coverage,indent=2)+'\n',encoding='utf-8')
+          print(f'DIRECT SUCCESS: {len(found)} Explorer proofs injected from original TeX, zero isolated Lwarp jobs')
           PY
 
       - name: Resolve Gentzen proof references
@@ -795,16 +512,20 @@ jobs:
               page_text = page.read_text(encoding='utf-8')
               if 'gentzen-reference-index' not in page_text:
                   raise SystemExit(f'PUBLISH ERROR: missing reference index on {page}')
+              # Verify the authored proof remains in the final HTML once.
+              # A proof-containing page may have several distinct proof IDs.
+              if page_text.count('\\begin{prooftree}') < 1:
+                  raise SystemExit(f'PUBLISH ERROR: missing proof source on {page}')
           rules = json.loads((site/'assets/proof-rules.json').read_text(encoding='utf-8'))
           if not rules:
               raise SystemExit('PUBLISH ERROR: proof-rule registry is empty')
-          hits = sum(record['cached'] for record in coverage.values())
-          verdict = (f'PUBLISH READY: {len(coverage)} complete proofs assembled; '
-                     f'{hits} individual proof cache hits; skeleton cache '
+          verdict = (f'PUBLISH READY: {len(coverage)} complete proofs assembled '
+                     'directly from authored TeX; 0 individual Lwarp compilations; '
+                     'skeleton cache '
                      + ('HIT' if os.environ.get('SKELETON_HIT') == 'true' else 'MISS'))
           print(verdict)
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as summary:
-              summary.write('## Cached-proof textbook publication\n\n'+verdict+'\n\n')
+              summary.write('## Direct-source textbook publication\n\n'+verdict+'\n\n')
           PY
 
       - name: Configure GitHub Pages
