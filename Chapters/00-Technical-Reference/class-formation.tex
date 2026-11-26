@@ -101,23 +101,18 @@ Restricted universal introduction therefore establishes the restricted specifica
 
 The two implications yield the required equivalence.
 
+
 \begin{explorerderivation}{meta:restricted-unrestricted-class-formulation}
 \begin{prooftree}
   \AxiomC{}
   \RightLabel{\(1\)}
- \UnaryInfC{\(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\)}
-  \RightLabel{D\ref{def:restricted-universal-quantification}}
-  \dashedLine
-  \UnaryInfC{\(\forall\xi\bigl(\Set(\xi)\to(\xi\in\eta\leftrightarrow\varphi)\bigr)\)}
-  \solidLine
-  \RightLabel{\(\forall\)-E}
-  \UnaryInfC{\(\Set(\zeta)\to\bigl(\zeta\in\eta\leftrightarrow\varphi[\zeta/\xi]\bigr)\)}
+  \UnaryInfC{\(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\)}
   \AxiomC{}
   \RightLabel{\(2\)}
   \UnaryInfC{\(\zeta\in\eta\)}
   \RightLabel{Set-I}
   \UnaryInfC{\(\Set(\zeta)\)}
-  \RightLabel{\(\to\)-E}
+  \RightLabel{\(\forall_S\)-E}
   \BinaryInfC{\(\zeta\in\eta\leftrightarrow\varphi[\zeta/\xi]\)}
   \RightLabel{\(\land\)-Con}
   \UnaryInfC{\((\Set(\zeta)\land\zeta\in\eta)\leftrightarrow(\Set(\zeta)\land\varphi[\zeta/\xi])\)}
@@ -138,18 +133,12 @@ The two implications yield the required equivalence.
   \AxiomC{}
   \RightLabel{\(1\)}
   \UnaryInfC{\(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\)}
-  \RightLabel{D\ref{def:restricted-universal-quantification}}
-  \dashedLine
-  \UnaryInfC{\(\forall\xi\bigl(\Set(\xi)\to(\xi\in\eta\leftrightarrow\varphi)\bigr)\)}
-  \solidLine
-  \RightLabel{\(\forall\)-E}
-  \UnaryInfC{\(\Set(\zeta)\to\bigl(\zeta\in\eta\leftrightarrow\varphi[\zeta/\xi]\bigr)\)}
   \AxiomC{}
   \RightLabel{\(3\)}
   \UnaryInfC{\(\Set(\zeta)\land\varphi[\zeta/\xi]\)}
   \RightLabel{\(\land\)-E}
   \UnaryInfC{\(\Set(\zeta)\)}
-  \RightLabel{\(\to\)-E}
+  \RightLabel{\(\forall_S\)-E}
   \BinaryInfC{\(\zeta\in\eta\leftrightarrow\varphi[\zeta/\xi]\)}
   \RightLabel{\(\land\)-Con}
   \UnaryInfC{\((\Set(\zeta)\land\zeta\in\eta)\leftrightarrow(\Set(\zeta)\land\varphi[\zeta/\xi])\)}
@@ -215,6 +204,7 @@ The two implications yield the required equivalence.
   \BinaryInfC{\(\bigl(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\bigr)\leftrightarrow\bigl(\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\bigr)\)}
 \end{prooftree}
 \end{explorerderivation}
+
 \end{proof}
 
 In particular, the Class Formation Schema also yields
