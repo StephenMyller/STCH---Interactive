@@ -103,142 +103,116 @@ The two implications yield the required equivalence.
 
 \begin{explorerderivation}{meta:restricted-unrestricted-class-formulation}
 \begin{prooftree}
-    \AxiomC{}
-    \RightLabel{\(2\)}
-    \UnaryInfC{\(\zeta\in\eta\)}
-    \RightLabel{\(\exists\)-I}
-    \UnaryInfC{\(\exists B(\zeta\in B)\)}
-    \RightLabel{D\ref{def:set}}
-    \dashedLine
-    \UnaryInfC{\(\Set(\zeta)\)}
-    \solidLine
-    %
-    \AxiomC{}
-    \RightLabel{\(1\)}
-    \UnaryInfC{\(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\)}
-    \RightLabel{D\ref{def:restricted-universal-quantification}}
-    \dashedLine
-    \UnaryInfC{\(\forall\xi\bigl(\Set(\xi)\to(\xi\in\eta\leftrightarrow\varphi)\bigr)\)}
-    \solidLine
-    \RightLabel{\(\forall\)-E}
-    \UnaryInfC{\(\Set(\zeta)\to\bigl(\zeta\in\eta\leftrightarrow \varphi[\zeta/\xi]\bigr)\)}
-    %
-    \AxiomC{}
-    \RightLabel{\(2\)}
-    \UnaryInfC{\(\zeta\in\eta\)}
-    \RightLabel{\(\exists\)-I}
-    \UnaryInfC{\(\exists B(\zeta\in B)\)}
-    \RightLabel{D\ref{def:set}}
-    \dashedLine
-    \UnaryInfC{\(\Set(\zeta)\)}
-    \solidLine
-    %
-    \RightLabel{\(\to\)-E}
-    \BinaryInfC{\(\bigl(\zeta\in\eta\leftrightarrow \varphi[\zeta/\xi]\bigr)\)}
-    %
-    \AxiomC{}
-    \RightLabel{\(2\)}
-    \UnaryInfC{\(\zeta\in\eta\)}
-    %
-    \RightLabel{\(\leftrightarrow\)-E}
-    \BinaryInfC{\(\varphi[\zeta/\xi]\)}
-    %
-    \RightLabel{\(\land\)-I}
-    \BinaryInfC{\(\bigl(\Set(\zeta)\land \varphi[\zeta/\xi]\bigr)\)}
-    \RightLabel{\(\to\)-I, \(2\)}
-    \UnaryInfC{\(\zeta\in\eta\to\bigl(\Set(\zeta)\land \varphi[\zeta/\xi]\bigr)\)}
-    %
-    \AxiomC{}
-    \RightLabel{\(1\)}
-    \UnaryInfC{\(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\)}
-    \RightLabel{D\ref{def:restricted-universal-quantification}}
-    \dashedLine
-    \UnaryInfC{\(\forall\xi\bigl(\Set(\xi)\to(\xi\in\eta\leftrightarrow\varphi)\bigr)\)}
-    \solidLine
-    \RightLabel{\(\forall\)-E}
-    \UnaryInfC{\(\Set(\zeta)\to\bigl(\zeta\in\eta\leftrightarrow \varphi[\zeta/\xi]\bigr)\)}
-    %
-    \AxiomC{}
-    \RightLabel{\(3\)}
-    \UnaryInfC{\(\bigl(\Set(\zeta)\land \varphi[\zeta/\xi]\bigr)\)}
-    \RightLabel{\(\land\)-E}
-    \UnaryInfC{\(\Set(\zeta)\)}
-    %
-    \RightLabel{\(\to\)-E}
-    \BinaryInfC{\(\bigl(\zeta\in\eta\leftrightarrow \varphi[\zeta/\xi]\bigr)\)}
-    %
-    \AxiomC{}
-    \RightLabel{\(3\)}
-    \UnaryInfC{\(\bigl(\Set(\zeta)\land \varphi[\zeta/\xi]\bigr)\)}
-    \RightLabel{\(\land\)-E}
-    \UnaryInfC{\(\varphi[\zeta/\xi]\)}
-    %
-    \RightLabel{\(\leftrightarrow\)-E}
-    \BinaryInfC{\(\zeta\in\eta\)}
-    \RightLabel{\(\to\)-I, \(3\)}
-    \UnaryInfC{\(\bigl(\Set(\zeta)\land \varphi[\zeta/\xi]\bigr)\to\zeta\in\eta\)}
-    %
-    \RightLabel{\(\leftrightarrow\)-I}
-    \BinaryInfC{\(\bigl(\zeta\in\eta\leftrightarrow \bigl(\Set(\zeta)\land \varphi[\zeta/\xi]\bigr)\bigr)\)}
-    \RightLabel{\(\forall\)-I}
-    \UnaryInfC{\(\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\)}
-    \RightLabel{\(\to\)-I, \(1\)}
-    \UnaryInfC{\(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\to\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\)}
-    %
-    \AxiomC{}
-    \RightLabel{\(4\)}
-    \UnaryInfC{\(\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\)}
-    \RightLabel{\(\forall\)-E}
-    \UnaryInfC{\(\bigl(\zeta\in\eta\leftrightarrow \bigl(\Set(\zeta)\land \varphi[\zeta/\xi]\bigr)\bigr)\)}
-    %
-    \AxiomC{}
-    \RightLabel{\(6\)}
-    \UnaryInfC{\(\zeta\in\eta\)}
-    %
-    \RightLabel{\(\leftrightarrow\)-E}
-    \BinaryInfC{\(\bigl(\Set(\zeta)\land \varphi[\zeta/\xi]\bigr)\)}
-    \RightLabel{\(\land\)-E}
-    \UnaryInfC{\(\varphi[\zeta/\xi]\)}
-    \RightLabel{\(\to\)-I, \(6\)}
-    \UnaryInfC{\(\zeta\in\eta\to\varphi[\zeta/\xi]\)}
-    %
-    \AxiomC{}
-    \RightLabel{\(4\)}
-    \UnaryInfC{\(\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\)}
-    \RightLabel{\(\forall\)-E}
-    \UnaryInfC{\(\bigl(\zeta\in\eta\leftrightarrow \bigl(\Set(\zeta)\land \varphi[\zeta/\xi]\bigr)\bigr)\)}
-    %
-    \AxiomC{}
-    \RightLabel{\(5\)}
-    \UnaryInfC{\(\Set(\zeta)\)}
-    %
-    \AxiomC{}
-    \RightLabel{\(7\)}
-    \UnaryInfC{\(\varphi[\zeta/\xi]\)}
-    %
-    \RightLabel{\(\land\)-I}
-    \BinaryInfC{\(\bigl(\Set(\zeta)\land \varphi[\zeta/\xi]\bigr)\)}
-    %
-    \RightLabel{\(\leftrightarrow\)-E}
-    \BinaryInfC{\(\zeta\in\eta\)}
-    \RightLabel{\(\to\)-I, \(7\)}
-    \UnaryInfC{\(\varphi[\zeta/\xi]\to\zeta\in\eta\)}
-    %
-    \RightLabel{\(\leftrightarrow\)-I}
-    \BinaryInfC{\(\bigl(\zeta\in\eta\leftrightarrow \varphi[\zeta/\xi]\bigr)\)}
-    \RightLabel{\(\to\)-I, \(5\)}
-    \UnaryInfC{\(\Set(\zeta)\to\bigl(\zeta\in\eta\leftrightarrow \varphi[\zeta/\xi]\bigr)\)}
-    \RightLabel{\(\forall\)-I}
-    \UnaryInfC{\(\forall\xi\bigl(\Set(\xi)\to(\xi\in\eta\leftrightarrow\varphi)\bigr)\)}
-    \RightLabel{D\ref{def:restricted-universal-quantification}}
-    \dashedLine
-    \UnaryInfC{\(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\)}
-    \solidLine
-    \RightLabel{\(\to\)-I, \(4\)}
-    \UnaryInfC{\(\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\to\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\)}
-    %
-    \RightLabel{\(\leftrightarrow\)-I}
-    \BinaryInfC{\(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\leftrightarrow\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\)}
+  \AxiomC{}
+  \RightLabel{\(1\)}
+ \UnaryInfC{\(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\)}
+  \RightLabel{D\ref{def:restricted-universal-quantification}}
+  \dashedLine
+  \UnaryInfC{\(\forall\xi\bigl(\Set(\xi)\to(\xi\in\eta\leftrightarrow\varphi)\bigr)\)}
+  \solidLine
+  \RightLabel{\(\forall\)-E}
+  \UnaryInfC{\(\Set(\zeta)\to\bigl(\zeta\in\eta\leftrightarrow\varphi[\zeta/\xi]\bigr)\)}
+  \AxiomC{}
+  \RightLabel{\(2\)}
+  \UnaryInfC{\(\zeta\in\eta\)}
+  \RightLabel{Set-I}
+  \UnaryInfC{\(\Set(\zeta)\)}
+  \RightLabel{\(\to\)-E}
+  \BinaryInfC{\(\zeta\in\eta\leftrightarrow\varphi[\zeta/\xi]\)}
+  \RightLabel{\(\land\)-Con}
+  \UnaryInfC{\((\Set(\zeta)\land\zeta\in\eta)\leftrightarrow(\Set(\zeta)\land\varphi[\zeta/\xi])\)}
+  \AxiomC{}
+  \RightLabel{\(2\)}
+  \UnaryInfC{\(\zeta\in\eta\)}
+  \RightLabel{Set-I}
+  \UnaryInfC{\(\Set(\zeta)\)}
+  \AxiomC{}
+  \RightLabel{\(2\)}
+  \UnaryInfC{\(\zeta\in\eta\)}
+  \RightLabel{\(\land\)-I}
+  \BinaryInfC{\(\Set(\zeta)\land\zeta\in\eta\)}
+  \RightLabel{\(\leftrightarrow\)-E}
+  \BinaryInfC{\(\Set(\zeta)\land\varphi[\zeta/\xi]\)}
+  \RightLabel{\(\to\)-I, \(2\)}
+  \UnaryInfC{\(\zeta\in\eta\to\bigl(\Set(\zeta)\land\varphi[\zeta/\xi]\bigr)\)}
+  \AxiomC{}
+  \RightLabel{\(1\)}
+  \UnaryInfC{\(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\)}
+  \RightLabel{D\ref{def:restricted-universal-quantification}}
+  \dashedLine
+  \UnaryInfC{\(\forall\xi\bigl(\Set(\xi)\to(\xi\in\eta\leftrightarrow\varphi)\bigr)\)}
+  \solidLine
+  \RightLabel{\(\forall\)-E}
+  \UnaryInfC{\(\Set(\zeta)\to\bigl(\zeta\in\eta\leftrightarrow\varphi[\zeta/\xi]\bigr)\)}
+  \AxiomC{}
+  \RightLabel{\(3\)}
+  \UnaryInfC{\(\Set(\zeta)\land\varphi[\zeta/\xi]\)}
+  \RightLabel{\(\land\)-E}
+  \UnaryInfC{\(\Set(\zeta)\)}
+  \RightLabel{\(\to\)-E}
+  \BinaryInfC{\(\zeta\in\eta\leftrightarrow\varphi[\zeta/\xi]\)}
+  \RightLabel{\(\land\)-Con}
+  \UnaryInfC{\((\Set(\zeta)\land\zeta\in\eta)\leftrightarrow(\Set(\zeta)\land\varphi[\zeta/\xi])\)}
+  \AxiomC{}
+  \RightLabel{\(3\)}
+  \UnaryInfC{\(\Set(\zeta)\land\varphi[\zeta/\xi]\)}
+  \RightLabel{\(\leftrightarrow\)-E}
+  \BinaryInfC{\(\Set(\zeta)\land\zeta\in\eta\)}
+  \RightLabel{\(\land\)-E}
+  \UnaryInfC{\(\zeta\in\eta\)}
+  \RightLabel{\(\to\)-I, \(3\)}
+  \UnaryInfC{\(\bigl(\Set(\zeta)\land\varphi[\zeta/\xi]\bigr)\to\zeta\in\eta\)}
+  \RightLabel{\(\leftrightarrow\)-I}
+  \BinaryInfC{\(\zeta\in\eta\leftrightarrow\bigl(\Set(\zeta)\land\varphi[\zeta/\xi]\bigr)\)}
+  \RightLabel{\(\forall\)-I}
+  \UnaryInfC{\(\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\)}
+  \RightLabel{\(\to\)-I, \(1\)}
+  \UnaryInfC{\(\bigl(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\bigr)\to\bigl(\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\bigr)\)}
+  \AxiomC{}
+  \RightLabel{\(4\)}
+  \UnaryInfC{\(\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\)}
+  \RightLabel{\(\forall\)-E}
+  \UnaryInfC{\(\zeta\in\eta\leftrightarrow\bigl(\Set(\zeta)\land\varphi[\zeta/\xi]\bigr)\)}
+  \AxiomC{}
+  \RightLabel{\(6\)}
+  \UnaryInfC{\(\zeta\in\eta\)}
+  \RightLabel{\(\leftrightarrow\)-E}
+  \BinaryInfC{\(\Set(\zeta)\land\varphi[\zeta/\xi]\)}
+  \RightLabel{\(\land\)-E}
+  \UnaryInfC{\(\varphi[\zeta/\xi]\)}
+  \RightLabel{\(\to\)-I, \(6\)}
+  \UnaryInfC{\(\zeta\in\eta\to\varphi[\zeta/\xi]\)}
+  \AxiomC{}
+  \RightLabel{\(4\)}
+  \UnaryInfC{\(\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\)}
+  \RightLabel{\(\forall\)-E}
+  \UnaryInfC{\(\zeta\in\eta\leftrightarrow\bigl(\Set(\zeta)\land\varphi[\zeta/\xi]\bigr)\)}
+  \AxiomC{}
+  \RightLabel{\(5\)}
+  \UnaryInfC{\(\Set(\zeta)\)}
+  \AxiomC{}
+  \RightLabel{\(7\)}
+  \UnaryInfC{\(\varphi[\zeta/\xi]\)}
+  \RightLabel{\(\land\)-I}
+  \BinaryInfC{\(\Set(\zeta)\land\varphi[\zeta/\xi]\)}
+  \RightLabel{\(\leftrightarrow\)-E}
+  \BinaryInfC{\(\zeta\in\eta\)}
+  \RightLabel{\(\to\)-I, \(7\)}
+  \UnaryInfC{\(\varphi[\zeta/\xi]\to\zeta\in\eta\)}
+  \RightLabel{\(\leftrightarrow\)-I}
+  \BinaryInfC{\(\zeta\in\eta\leftrightarrow\varphi[\zeta/\xi]\)}
+  \RightLabel{\(\to\)-I, \(5\)}
+  \UnaryInfC{\(\Set(\zeta)\to\bigl(\zeta\in\eta\leftrightarrow\varphi[\zeta/\xi]\bigr)\)}
+  \RightLabel{\(\forall\)-I}
+  \UnaryInfC{\(\forall\xi\bigl(\Set(\xi)\to(\xi\in\eta\leftrightarrow\varphi)\bigr)\)}
+  \RightLabel{D\ref{def:restricted-universal-quantification}}
+  \dashedLine
+  \UnaryInfC{\(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\)}
+  \solidLine
+  \RightLabel{\(\to\)-I, \(4\)}
+  \UnaryInfC{\(\bigl(\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\bigr)\to\bigl(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\bigr)\)}
+  \RightLabel{\(\leftrightarrow\)-I}
+  \BinaryInfC{\(\bigl(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\bigr)\leftrightarrow\bigl(\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\bigr)\)}
 \end{prooftree}
 \end{explorerderivation}
 \end{proof}
