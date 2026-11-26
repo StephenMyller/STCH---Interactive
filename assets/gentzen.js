@@ -237,53 +237,56 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-/* Integrate the existing theme toggle with Lwarp's Contents title.
-   The textbook's theme script owns the toggle's behavior and persistence;
-   moving the SAME button preserves its original event listeners.
-   The current theme is reflected by CSS, while accessible instructions
-   stay accurate after changes made anywhere on the page. */
+/* Place the existing theme toggle INSIDE the actual Contents header.
+   Lwarp can wrap the heading in intermediate divs, so do not require it
+   to be a direct child of the sidebar container. This code does not
+   recreate the button; its original theme handler and persistence remain. */
 (() => {
-  function setup() {
-    const heading = document.querySelector('.sidetoccontainer > .sidetoctitle');
-    if (!heading) return;
+  function placeThemeToggle() {
+    const heading = document.querySelector('.sidetoccontainer .sidetoctitle')
+      || document.querySelector('.sidetoctitle');
+    const button = document.querySelector('.book-theme-toggle');
+    if (!heading || !button) return false;
 
-    function placeToggle() {
-      const toggle = document.querySelector('.book-theme-toggle');
-      if (!toggle) return false;
-      if (toggle.parentElement !== heading) heading.append(toggle);
+    if (button.parentElement !== heading) heading.appendChild(button);
 
-      const updateAccessibility = () => {
+    // Register the accessibility updater once, regardless of how often
+    // other site scripts reconstruct their DOM.
+    if (!button.dataset.contentsThemeReady) {
+      button.dataset.contentsThemeReady = 'true';
+      const update = () => {
         const dark = document.documentElement.dataset.bookTheme === 'dark';
-        const instruction = dark ? 'Switch to light mode' : 'Switch to dark mode';
-        toggle.setAttribute('aria-label', instruction);
-        toggle.setAttribute('title', instruction);
-        toggle.setAttribute('aria-pressed', String(dark));
+        const label = dark ? 'Switch to light mode' : 'Switch to dark mode';
+        button.setAttribute('aria-label', label);
+        button.setAttribute('title', label);
+        button.setAttribute('aria-pressed', String(dark));
       };
-      updateAccessibility();
-      const themeObserver = new MutationObserver(updateAccessibility);
+      update();
+      const themeObserver = new MutationObserver(update);
       themeObserver.observe(document.documentElement, {
-        attributes: true, attributeFilter: ['data-book-theme']
+        attributes: true,
+        attributeFilter: ['data-book-theme']
       });
-      return true;
     }
+    return true;
+  }
 
-    // Another (earlier) site script may insert the button at DOMContentLoaded.
-    // Defer placement until that event's other handlers have run.
-    requestAnimationFrame(() => {
-      if (placeToggle()) return;
-      // Also handle a theme script that inserts its button asynchronously.
-      const bodyObserver = new MutationObserver(() => {
-        if (placeToggle()) bodyObserver.disconnect();
-      });
-      bodyObserver.observe(document.body, {childList: true, subtree: true});
-      setTimeout(() => bodyObserver.disconnect(), 8000);
+  function initialize() {
+    if (placeThemeToggle()) return;
+    // The separate theme script may create the button only after our own
+    // DOMContentLoaded listener. Observe until the required elements exist;
+    // don't give up after an arbitrary timeout.
+    const observer = new MutationObserver(() => {
+      if (placeThemeToggle()) observer.disconnect();
     });
+    observer.observe(document.documentElement, {childList: true, subtree: true});
+    window.addEventListener('load', placeThemeToggle, {once: true});
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setup, {once: true});
+    document.addEventListener('DOMContentLoaded', initialize, {once: true});
   } else {
-    setup();
+    initialize();
   }
 })();
 
