@@ -1,4 +1,5 @@
 # Stage a complete website from individually cached Gentzen proofs.
+# Restores full LaTeX sources AFTER reference resolution to build the rule registry.
 # Does not deploy to GitHub Pages or modify any tracked manuscript file.
 name: Proof Explorer - cached proofs staged website
 
@@ -302,9 +303,6 @@ jobs:
     steps:
       - name: Get manuscript
         uses: actions/checkout@v4
-
-      - name: Build the rule registry from ORIGINAL LaTeX before omitting proof bodies
-        run: python3 scripts/build_proof_registry.py
 
       - name: Omit Explorer proof bodies and fingerprint the lightweight textbook
         id: skeleton
@@ -628,6 +626,44 @@ jobs:
               raise SystemExit(f'Unresolved proof-tree references: {sorted(missing)}')
           print(f'Resolved {count} proof-tree reference(s).')
           PY
+
+      - name: Restore original Explorer sources and build reference-aware rule registry
+        run: |
+          set -euo pipefail
+          # The skeleton conversion needs empty Explorer bodies; the registry
+          # needs the original complete LaTeX. GitHub Actions uses an ephemeral
+          # checkout, so restoring these files cannot affect the manuscript.
+          git restore --source=HEAD --worktree -- Chapters
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json, re
+
+          expected = json.loads(Path('staging-expected.json').read_text(encoding='utf-8'))
+          pattern = re.compile(
+              r'\\begin\{explorerderivation\}\s*\{([^{}\r\n]+)\}'
+              r'(.*?)\\end\{explorerderivation\}', re.S)
+          found = {}
+          for file in sorted(Path('Chapters').rglob('*.tex')):
+              source = file.read_text(encoding='utf-8')
+              for match in pattern.finditer(source):
+                  proof_id = match.group(1).strip()
+                  if proof_id not in expected or proof_id in found:
+                      raise SystemExit(f'REGISTRY ERROR: unexpected or duplicate proof {proof_id}')
+                  record = expected[proof_id]
+                  if (record['source_file'] != file.as_posix() or
+                      record['source_sha256'] != hashlib.sha256(
+                          match.group(0).encode('utf-8')).hexdigest()):
+                      raise SystemExit(f'REGISTRY ERROR: source restoration mismatch for {proof_id}')
+                  found[proof_id] = True
+          if set(found) != set(expected):
+              raise SystemExit(f'REGISTRY ERROR: missing original proofs: {set(expected) - set(found)}')
+          if not any('gentzen-reference-index' in page.read_text(encoding='utf-8')
+                     for page in Path('.').glob('*.html') if page.name != 'main_html.html'):
+              raise SystemExit('REGISTRY ERROR: reference index was not generated')
+          print(f'REGISTRY: restored all {len(found)} original Explorer proofs; reference index present')
+          PY
+          python3 scripts/build_proof_registry.py
+          test -s assets/proof-rules.json
 
       - name: Enable and version website assets
         env:
