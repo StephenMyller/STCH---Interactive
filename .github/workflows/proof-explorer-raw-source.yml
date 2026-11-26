@@ -20,6 +20,12 @@ jobs:
             "https://stephenmyller.github.io/STCH---Interactive/assets/proof-rules.json" \
             --output proof-experiment/published-proof-rules.json
 
+      - name: Retrieve deployed reference index
+        run: |
+          curl --fail --location --show-error --silent --retry 3 \
+            "https://stephenmyller.github.io/STCH---Interactive/index.html" \
+            --output proof-experiment/published-index.html
+
       - name: Extract one complete proof and prepare isolated browser experiment
         run: |
           python3 - <<'PY'
@@ -46,6 +52,45 @@ jobs:
           if len(trees) != 1:
               raise SystemExit('Selected proof must contain exactly one complete prooftree')
           source = trees[0].group(0)
+
+          # The published HTML contains the same global numbered-reference
+          # index used by the normal build's proof-reference resolver.
+          SITE_ROOT = 'https://stephenmyller.github.io/STCH---Interactive/'
+          from urllib.parse import urljoin, quote
+          published_index = (OUTPUT / 'published-index.html').read_text(encoding='utf-8')
+          index_match = re.search(
+              r'<script\s+id="gentzen-reference-index"\s+type="application/json">(.*?)</script>',
+              published_index, re.S,
+          )
+          if not index_match:
+              raise SystemExit('Published index.html has no gentzen-reference-index; cannot resolve source references')
+          numbered = json.loads(index_match.group(1))
+          if not isinstance(numbered, dict):
+              raise SystemExit('Published reference index has an unexpected structure')
+
+          unresolved = set()
+          resolved_count = 0
+          def link_for(label):
+              value = numbered.get(label)
+              if not isinstance(value, list) or len(value) != 2 or not all(isinstance(x, str) for x in value):
+                  unresolved.add(label)
+                  return None
+              number, page_name = value
+              url = urljoin(SITE_ROOT, page_name + '#' + quote(label, safe=':-._'))
+              return url, number
+
+          def replace_ref(match):
+              global resolved_count
+              entry = link_for(match.group(1))
+              if entry is None:
+                  return match.group(0)
+              url, number = entry
+              resolved_count += 1
+              return rf'\href{{{url}}}{{{number}}}'
+
+          source = re.sub(r'\\ref\s*\{\s*([^{}\s]+)\s*\}', replace_ref, source)
+          if unresolved:
+              raise SystemExit('Missing published numbered references: ' + ', '.join(sorted(unresolved)))
 
           # A lightweight sanity check: the source should have one connected inference root.
           # This is a structural check only, NOT a mathematical proof checker.
@@ -94,13 +139,24 @@ jobs:
           if patched_js.count(needle) != 1:
               raise SystemExit('Could not locate registry fetch in gentzen.js')
           patched_js = patched_js.replace(needle, replacement_fetch, 1)
+          # Rebase existing links from expanded registry proofs to the real
+          # published textbook (the experiment itself runs under file://).
+          old_href = "anchor.setAttribute('href', destination.content);"
+          new_href = ("anchor.setAttribute('href', "
+                      "destination.content.startsWith('#proof-expand-') "
+                      "? destination.content "
+                      ": new URL(destination.content, 'https://stephenmyller.github.io/STCH---Interactive/').href);")
+          if patched_js.count(old_href) != 1:
+              raise SystemExit('Could not locate proof-label link rendering in gentzen.js')
+          patched_js = patched_js.replace(old_href, new_href, 1)
 
           OUTPUT.mkdir(exist_ok=True)
           (OUTPUT / 'poc-gentzen.js').write_text(patched_js, encoding='utf-8')
           proof_obj = {'id':IDENTIFIER, 'tex':source,
                        'source_file':str(source_path.relative_to(ROOT)),
                        'sha256':hashlib.sha256(source.encode()).hexdigest(),
-                       'inference_steps':len(list(command.finditer(source)))}
+                       'inference_steps':len(list(command.finditer(source))),
+                       'references_resolved':resolved_count}
           (OUTPUT / 'proof-source.json').write_text(json.dumps(proof_obj, indent=2, ensure_ascii=False)+'\n', encoding='utf-8')
 
           def js_data(value):
@@ -150,8 +206,8 @@ jobs:
               <p class="poc-detail">Source: __SOURCE_FILE__</p>
               <div class="explorerderivation" style="--explorer-id: __ID__;"></div>
               <p class="poc-detail">Requires an internet connection to load MathJax.
-                The separate-source experiment does not yet resolve LaTeX <code>\\ref</code> labels into their numbered web links.
-                Those reference labels are an explicit remaining integration task.</p>
+                Numbered source references are resolved using the currently published textbook's reference index.
+                This does not yet test generation of references from a fresh, unpublished build.</p>
             </main>
           </body>
           </html>
@@ -162,6 +218,7 @@ jobs:
           (OUTPUT / 'open-this.html').write_text(page, encoding='utf-8')
           print(f'POC extracted: {IDENTIFIER} from {source_path.relative_to(ROOT)}')
           print(f'POC proof: {len(source):,} characters, {proof_obj["inference_steps"]} inference commands')
+          print(f'POC resolved numbered LaTeX references: {resolved_count}')
           print('POC output: proof-experiment/open-this.html, poc-gentzen.js, proof-source.json')
           PY
 
@@ -178,9 +235,13 @@ jobs:
           assert source['id'] == 'meta:restricted-unrestricted-class-formulation'
           assert '\\begin{prooftree}' in source['tex']
           assert '\\end{prooftree}' in source['tex']
+          assert source['references_resolved'] >= 1, 'Expected numbered references in Metatheorem D.2'
+          assert chr(92) + 'ref{' not in source['tex'], 'Unresolved numbered source reference remains'
+          assert 'https://stephenmyller.github.io/STCH---Interactive/' in source['tex']
           registry = json.loads((folder / 'published-proof-rules.json').read_text(encoding='utf-8'))
           assert registry['version'] == 7
           print(f"Verified isolated proof: {source['inference_steps']} proof commands")
+          print(f"Verified resolved numbered references: {source['references_resolved']}")
           print(f"Available registered rules: {len(registry['rules'])}")
           PY
 
