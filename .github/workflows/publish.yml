@@ -390,6 +390,9 @@ jobs:
           python3 scripts/build_proof_registry.py
           test -s assets/proof-rules.json
 
+      - name: Assemble Gentzen source modules
+        run: python3 scripts/build_gentzen.py --write
+
       - name: Enable and version website assets
         env:
           ASSET_VERSION: ${{ github.sha }}
