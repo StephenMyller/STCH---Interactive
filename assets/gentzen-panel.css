@@ -1249,7 +1249,7 @@ main.bodycontainer .explorerderivation {
 
 /* Keep the heading accessible at the top of the scrolling table of
    contents without letting the following navigation scroll above it. */
-.sidetoccontainer > .sidetoctitle {
+.sidetoctitle {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1266,14 +1266,14 @@ main.bodycontainer .explorerderivation {
 
 /* Preserve Lwarp's title typography, including if it puts the words
    in a nested element rather than as a direct text node. */
-.sidetoccontainer > .sidetoctitle > :not(.book-theme-toggle) {
+.sidetoctitle > :not(.book-theme-toggle) {
   min-width: 0;
 }
 
 /* The original button retains its existing click handler and text;
    only its VISUAL label is replaced. The JavaScript maintains the
    accessible name and tooltip as the current theme changes. */
-.sidetoccontainer > .sidetoctitle > .book-theme-toggle {
+.sidetoctitle > .book-theme-toggle {
   position: static;
   display: inline-flex;
   align-items: center;
@@ -1298,7 +1298,7 @@ main.bodycontainer .explorerderivation {
   transition: background-color 130ms ease, opacity 130ms ease;
 }
 
-.sidetoccontainer > .sidetoctitle > .book-theme-toggle::before {
+.sidetoctitle > .book-theme-toggle::before {
   content: "\2600";           /* Sun: current theme is light */
   display: block;
   font-family: system-ui, sans-serif;
@@ -1308,17 +1308,17 @@ main.bodycontainer .explorerderivation {
 }
 
 html[data-book-theme="dark"]
-  .sidetoccontainer > .sidetoctitle > .book-theme-toggle::before {
+  .sidetoctitle > .book-theme-toggle::before {
   content: "\263E";           /* Moon: current theme is dark */
   font-size: 1.48rem;
 }
 
-.sidetoccontainer > .sidetoctitle > .book-theme-toggle:hover {
+.sidetoctitle > .book-theme-toggle:hover {
   background: var(--book-hover);
   opacity: 1;
 }
 
-.sidetoccontainer > .sidetoctitle > .book-theme-toggle:focus-visible {
+.sidetoctitle > .book-theme-toggle:focus-visible {
   opacity: 1;
   outline: 2px solid var(--book-link);
   outline-offset: 2px;
@@ -1327,7 +1327,7 @@ html[data-book-theme="dark"]
 /* In the narrow reading layout, Contents is part of the normal page
    flow. The title and control scroll together, never overlay prose. */
 @media screen and (max-width: 800px) {
-  .sidetoccontainer > .sidetoctitle {
+  .sidetoctitle {
     position: relative;
     top: auto;
   }
