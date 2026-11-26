@@ -1,0 +1,110 @@
+name: Benchmark Lwarp without Explorer trees
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get project files
+        uses: actions/checkout@v4
+
+      - name: Temporarily omit Explorer tree bodies
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          pattern = re.compile(
+              r'(?P<opening>\\begin\{explorerderivation\}\{[^{}\r\n]+\})'
+              r'(?P<body>.*?)'
+              r'(?P<closing>\\end\{explorerderivation\})',
+              re.S,
+          )
+          total = 0
+          saved = 0
+          for file in sorted(Path('.').rglob('*.tex')):
+              if '.git' in file.parts:
+                  continue
+              source = file.read_text(encoding='utf-8')
+              begins = len(re.findall(r'\\begin\{explorerderivation\}', source))
+              ends = len(re.findall(r'\\end\{explorerderivation\}', source))
+              matches = list(pattern.finditer(source))
+              if begins != ends or len(matches) != begins:
+                  raise SystemExit(f'Cannot safely omit Explorer trees in {file}')
+              if not matches:
+                  continue
+              saved += sum(len(match.group('body')) for match in matches)
+              replacement = pattern.sub(
+                  lambda match: match.group('opening') + '\n' + match.group('closing'),
+                  source,
+              )
+              file.write_text(replacement, encoding='utf-8')
+              total += len(matches)
+              print(f'{file}: omitted {len(matches)} Explorer tree(s)')
+
+          if total == 0:
+              raise SystemExit('No explorerderivation environments found; benchmark aborted')
+          print(f'BENCHMARK: Omitted {total} Explorer tree(s), {saved:,} characters of tree bodies')
+          print('BENCHMARK: Only this temporary runner copy was changed; no files are committed or published')
+          PY
+
+      - name: Convert LaTeX without Explorer tree bodies
+        uses: xu-cheng/texlive-action@v3
+        with:
+          os: alpine
+          run: |
+            last=$(date +%s)
+            mark() {
+              now=$(date +%s)
+              echo "TIMING: $1 — $((now - last)) seconds"
+              last="$now"
+            }
+
+            apk add --no-cache poppler-utils ghostscript
+            mark "Install poppler-utils and ghostscript"
+
+            pdflatex -interaction=nonstopmode -halt-on-error main.tex
+            mark "pdflatex"
+
+            lwarpmk html1
+            mark "First lwarpmk html1"
+
+            lwarpmk html1
+            mark "Second lwarpmk html1"
+
+            lwarpmk limages
+            mark "lwarpmk limages command"
+
+            for attempt in $(seq 1 60); do
+              ready=true
+              for svg in main-images/*.svg; do
+                if [ ! -s "$svg" ] || ! grep -q '</svg>' "$svg"; then
+                  ready=false
+                  break
+                fi
+              done
+              if [ "$ready" = true ]; then
+                break
+              fi
+              sleep 1
+            done
+
+            for svg in main-images/*.svg; do
+              if [ ! -s "$svg" ] || ! grep -q '</svg>' "$svg"; then
+                echo "ERROR: SVG generation failed: $svg"
+                exit 1
+              fi
+            done
+            mark "SVG readiness wait and verification"
+
+            lwarpmk html
+            mark "Final lwarpmk html"
+
+            test -f index.html
+            mark "Check index.html exists"
