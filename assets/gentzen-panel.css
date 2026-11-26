@@ -1237,3 +1237,27 @@ main.bodycontainer .explorerderivation {
   text-align: center !important;
   margin: 0;
 }
+/* ================================================================
+   17. KEEP THE THEME TOGGLE CLEAR OF THE PROOF PANEL CONTROLS
+   ================================================================
+
+   The fixed theme toggle occupies the upper-right corner. When a
+   formal derivation is open, the Close control must not sit behind it.
+   On desktop/tablet widths, reserve the toggle's horizontal space,
+   allowing the panel controls to wrap when the column is narrower.
+   On phones, stack the panel header below the fixed toggle instead.
+   These rules affect only open panels when the toggle is present.
+*/
+@media screen and (min-width: 801px) {
+  body:has(.book-theme-toggle) .gentzen-panel.is-open .gentzen-panel-header {
+    flex-wrap: wrap;
+    padding-right: 12rem;
+  }
+}
+
+@media screen and (max-width: 800px) {
+  body:has(.book-theme-toggle) .gentzen-panel.is-open .gentzen-panel-header {
+    flex-wrap: wrap;
+    padding-top: 3.75rem;
+  }
+}
