@@ -94,7 +94,7 @@ main.bodycontainer section.textbody .flushright p {
    2. LARGE SCREENS — THREE-COLUMN LAYOUT
    ================================================================
 
-   Applies only when the screen is at least 1600 CSS pixels wide.
+   Applies only when the screen is at least 1360 CSS pixels wide.
 
    Desired arrangement:
 
@@ -113,7 +113,7 @@ main.bodycontainer section.textbody .flushright p {
    CSS Grid provides the column structure.
    ================================================================ */
 
-@media screen and (min-width: 1600px) {
+@media screen and (min-width: 1360px) {
 
   /* --------------------------------------------------------------
      A. CREATE THE THREE-COLUMN GRID
@@ -480,7 +480,7 @@ main.bodycontainer section.textbody .flushright p {
    4. MEDIUM SCREENS — TWO-COLUMN LAYOUT
    ================================================================
 
-   Applies between 801px and 1599px.
+   Applies between 801px and 1359px.
 
      +------------+-----------------------+
      |            |                       |
@@ -492,7 +492,7 @@ main.bodycontainer section.textbody .flushright p {
    Instead, it becomes a drawer, defined in Section 5.
    ================================================================ */
 
-@media screen and (min-width: 801px) and (max-width: 1599px) {
+@media screen and (min-width: 801px) and (max-width: 1359px) {
 
   /* Sidebar plus flexible manuscript column. */
 
@@ -532,7 +532,7 @@ main.bodycontainer section.textbody .flushright p {
    5. SMALLER SCREENS — SLIDING PROOF DRAWER
    ================================================================
 
-   Applies to ALL screens narrower than 1600px.
+   Applies to ALL screens narrower than 1360px.
 
    Rather than occupying a permanent column, the proof panel
    floats over the page and slides in from the right.
@@ -540,7 +540,7 @@ main.bodycontainer section.textbody .flushright p {
    This rule applies to both medium screens and phones.
    ================================================================ */
 
-@media screen and (max-width: 1599px) {
+@media screen and (max-width: 1359px) {
 
   .gentzen-panel {
 
@@ -989,7 +989,7 @@ html[data-book-theme="dark"] nav.sidetoc a:hover {
    a reader opens or closes a proof.
    ================================================================ */
 
-@media screen and (min-width: 1600px) {
+@media screen and (min-width: 1360px) {
 
   /* Keep the right column's background visible. */
 
@@ -1035,11 +1035,11 @@ html[data-book-theme="dark"] nav.sidetoc a:hover {
    override scrolling restrictions on other elements.
    ================================================================ */
 
-@media screen and (min-width: 1600px) {
-
-  html body {
-    overflow-y: auto !important;
-  }
+/* Normal textbook reading must scroll at EVERY screen width.
+   Do not interfere with the full-screen Proof Explorer's scroll lock. */
+html:not(.proof-explorer-mode),
+html:not(.proof-explorer-mode) body {
+  overflow-y: auto !important;
 }
 
 /* ================================================================
@@ -1161,7 +1161,7 @@ main.bodycontainer a.side-panel-link-active {
 /* Keep the left sidebar background continuous
    for the entire height of the textbook page. */
 
-@media screen and (min-width: 1600px) {
+@media screen and (min-width: 1360px) {
   div.pagegrid:has(> div.sidetoccontainer) {
     --toc-column-width: clamp(18rem, 20vw, 22rem);
 
@@ -1177,7 +1177,7 @@ main.bodycontainer a.side-panel-link-active {
 
 
 /* Let the three-column grid grow with the manuscript. */
-@media screen and (min-width: 1600px) {
+@media screen and (min-width: 1360px) {
   div.pagegrid:has(> div.sidetoccontainer) {
     height: auto !important;
     max-height: none !important;
