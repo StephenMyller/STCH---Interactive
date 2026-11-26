@@ -1244,7 +1244,7 @@ main.bodycontainer .explorerderivation {
 
    The existing theme button is MOVED into .sidetoctitle by gentzen.js.
    It belongs to the heading's flex layout, not to the viewport's
-   floating controls. The title and icon share symmetrical padding.
+   floating controls. The icon and title now form one centered, compact group.
 */
 
 /* Keep the heading accessible at the top of the scrolling table of
@@ -1252,8 +1252,8 @@ main.bodycontainer .explorerderivation {
 .sidetoctitle {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  justify-content: center;
+  gap: 0.35rem;
   min-height: 3.65rem;
   box-sizing: border-box;
   padding: 0.65rem 0.95rem 0.65rem 1.1rem;
@@ -1274,6 +1274,7 @@ main.bodycontainer .explorerderivation {
    only its VISUAL label is replaced. The JavaScript maintains the
    accessible name and tooltip as the current theme changes. */
 .sidetoctitle > .book-theme-toggle {
+  order: -1;               /* Show the icon just LEFT of Contents. */
   position: static;
   display: inline-flex;
   align-items: center;
