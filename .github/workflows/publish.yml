@@ -162,12 +162,12 @@ jobs:
               for label in re.findall(r'<a\b[^>]*\bid="([^"]+)"', html):
                   anchors.setdefault(label, page.name)
           trees = re.compile(
-              r'(\begin\s*\{prooftree\})(.*?)(\end\s*\{prooftree\})',
+              r'(\\begin\s*\{prooftree\})(.*?)(\\end\s*\{prooftree\})',
               re.S,
           )
-          refs = re.compile(r'\ref\s*\{\s*([^{}\s]+)\s*\}')
+          refs = re.compile(r'\\ref\s*\{\s*([^{}\s]+)\s*\}')
           hyperrefs = re.compile(
-              r'\hyperref\s*\[\s*([^\[\]\s]+)\s*\]\s*\{([^{}]*)\}'
+              r'\\hyperref\s*\[\s*([^\[\]\s]+)\s*\]\s*\{([^{}]*)\}'
           )
           count = 0
           missing = set()
@@ -207,7 +207,7 @@ jobs:
               updated = trees.sub(rewrite_tree, html)
               index_tag = (
               '<script id="gentzen-reference-index" type="application/json">'
-              + json.dumps(targets).replace('</', '<\/')
+              + json.dumps(targets).replace('</', r'<\/')
               + '</script>'
               )
               existing_tag = re.compile(
