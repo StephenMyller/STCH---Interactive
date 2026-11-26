@@ -1,0 +1,17 @@
+# Non-publishing check. The current website and publishing workflow are untouched.
+name: Gentzen modularization - equivalence check
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get repository
+        uses: actions/checkout@v4
+      - name: Compare module output with the existing Gentzen script
+        run: python3 scripts/build_gentzen.py --verify
