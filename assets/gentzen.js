@@ -663,8 +663,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function makeExplorer(proofs, requested) {
     const ordinal = Number(requested);
-    const selected = Number.isSafeInteger(ordinal) && ordinal >= 1
-      ? proofs[ordinal - 1] : undefined;
+    const numbered = /^\d+$/.test(requested) &&
+      Number.isSafeInteger(ordinal) && ordinal >= 1;
+    let selected;
+    if (numbered) {
+      // Preserve the existing sidebar-based entry route unchanged.
+      selected = proofs[ordinal - 1];
+    } else {
+      // A standalone explorerderivation is addressed by its stable LaTeX ID.
+      const matches = [...document.querySelectorAll('.explorerderivation')]
+        .filter(proof =>
+          proof.style.getPropertyValue('--explorer-id').trim() === requested);
+      selected = matches.length === 1 ? matches[0] : undefined;
+      if (matches.length > 1) {
+        console.error(`Proof Explorer: duplicate derivation ID "${requested}".`);
+      }
+    }
 
     const overlay = document.createElement('div');
     overlay.className = 'proof-explorer-overlay';
@@ -672,7 +686,9 @@ document.addEventListener('DOMContentLoaded', () => {
     toolbar.className = 'proof-explorer-toolbar';
     const heading = document.createElement('strong');
     heading.className = 'proof-explorer-title';
-    heading.textContent = `Proof Explorer · ${ordinal}`;
+    heading.textContent = numbered
+      ? `Proof Explorer · ${ordinal}`
+      : 'Proof Explorer';
     toolbar.append(heading);
 
     const button = (name, label) => {
@@ -938,6 +954,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function replaceWithFullProof() {
     const stage = document.querySelector('.proof-explorer-stage');
+    // Direct entry has already placed the full derivation into the stage.
+    if (stage?.querySelector(':scope > .explorerderivation')) return true;
     const snippet = stage?.querySelector(':scope > .formalderivation');
     if (!snippet) return false; // The original explorer has not opened yet.
 
@@ -3640,5 +3658,65 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('DOMContentLoaded', waitForExplorer, {once: true});
   } else {
     waitForExplorer();
+  }
+})();
+
+
+/* Standalone Proof Explorer entry points.
+   If a full explorerderivation has no corresponding sidebar formalderivation,
+   put an "Open in Proof Explorer" link in the manuscript immediately before
+   the hidden full derivation. No new LaTeX commands or extra proof trees.
+   The link uses the same full-window viewer as sidebar-launched proofs. */
+(() => {
+  'use strict';
+  function installStandaloneExplorerLinks() {
+    if (new URLSearchParams(location.search).has('proof-explorer')) return;
+    const main = document.querySelector('main.bodycontainer');
+    if (!main) return;
+
+    const idOf = element =>
+      element.style.getPropertyValue('--explorer-id').trim();
+    const sidebarIds = new Set(
+      [...document.querySelectorAll('.formalderivation')]
+        .map(idOf).filter(Boolean)
+    );
+    const fullProofs = [...main.querySelectorAll('.explorerderivation')];
+    const counts = new Map();
+    for (const proof of fullProofs) {
+      const id = idOf(proof);
+      if (id) counts.set(id, (counts.get(id) || 0) + 1);
+    }
+
+    for (const proof of fullProofs) {
+      const id = idOf(proof);
+      // A sidebar proof already has its own Explorer entry point.
+      // Unidentified or ambiguously identified proofs cannot be linked safely.
+      if (!id || sidebarIds.has(id) || counts.get(id) !== 1 ||
+          proof.dataset.directExplorerLauncher === 'true') continue;
+
+      const url = new URL(location.href);
+      url.searchParams.set('proof-explorer', id);
+      // Return to the result, rather than the top of the chapter, if possible.
+      url.hash = document.getElementById(id) ? id : '';
+
+      const trigger = document.createElement('div');
+      trigger.className = 'derivation-trigger';
+      const link = document.createElement('a');
+      link.className = 'proof-explorer-launch';
+      link.textContent = 'Open in Proof Explorer';
+      link.title = 'Explore the complete Gentzen derivation';
+      link.href = url.href;
+      link.target = '_blank';
+      link.rel = 'noopener';
+      trigger.append(link);
+      proof.before(trigger);
+      proof.dataset.directExplorerLauncher = 'true';
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', installStandaloneExplorerLinks,
+      {once: true});
+  } else {
+    installStandaloneExplorerLinks();
   }
 })();
