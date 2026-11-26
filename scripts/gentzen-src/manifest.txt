@@ -1,0 +1,11 @@
+01-context-panel.part.js
+02-theme-and-navigation.part.js
+03-explorer-viewer.part.js
+04-full-proof-selection.part.js
+05-expansion-formulas.part.js
+06-class-builder-and-restricted-rules.part.js
+07-quantifier-expansion.part.js
+08-rule-discovery.part.js
+09-tree-transformation.part.js
+10-explorer-expansion-interface.part.js
+11-standalone-links.part.js
