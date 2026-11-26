@@ -1,0 +1,286 @@
+name: Proof Explorer - isolated Lwarp comparison
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get project files
+        uses: actions/checkout@v4
+
+      - name: Extract Metatheorem D.2 into a standalone Lwarp document
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          import re
+          import shutil
+
+          root = Path.cwd()
+          out = root / 'proof-isolate'
+          out.mkdir(exist_ok=True)
+          identifier = 'meta:restricted-unrestricted-class-formulation'
+          pattern = re.compile(r'\\begin\{explorerderivation\}\{([^{}\r\n]+)\}(.*?)\\end\{explorerderivation\}', re.S)
+          found = []
+          for path in sorted((root / 'Chapters').rglob('*.tex')):
+              text = path.read_text(encoding='utf-8')
+              for match in pattern.finditer(text):
+                  if match.group(1).strip() == identifier:
+                      found.append((path, match))
+          if len(found) != 1:
+              raise SystemExit(f'Expected exactly one {identifier}, found {len(found)}')
+          source_path, match = found[0]
+          body = match.group(2)
+          if len(re.findall(r'\\begin\{prooftree\}', body)) != 1 or len(re.findall(r'\\end\{prooftree\}', body)) != 1:
+              raise SystemExit('Selected environment must have exactly one complete prooftree')
+          full = match.group(0)
+          shutil.copyfile(root / 'preamble.tex', out / 'preamble.tex')
+          (out / 'main.tex').write_text(
+              '\\documentclass[leqno]{article}\n\\input{preamble}\n\\begin{document}\n'
+              + full + '\n\\end{document}\n', encoding='utf-8')
+          (out / 'specimen.json').write_text(json.dumps({
+              'id': identifier, 'source_file': str(source_path.relative_to(root)),
+              'source_characters': len(full)
+          }, indent=2) + '\n', encoding='utf-8')
+          print(f'ISOLATION: extracted {identifier} from {source_path.relative_to(root)}; {len(full)} characters')
+          print('ISOLATION: source files untouched; standalone build at proof-isolate/main.tex')
+          PY
+
+      - name: Compile isolated proof with the normal Lwarp process
+        uses: xu-cheng/texlive-action@v3
+        with:
+          os: alpine
+          run: |
+            set -eo pipefail
+            apk add --no-cache poppler-utils ghostscript
+            cd proof-isolate
+            last=$(date +%s)
+            mark() {
+              now=$(date +%s)
+              echo "TIMING: $1 — $((now - last)) seconds"
+              last="$now"
+            }
+            pdflatex -interaction=nonstopmode -halt-on-error main.tex > pdf-build.log 2>&1 || { tail -100 pdf-build.log; exit 1; }
+            mark "PDF pre-pass"
+            lwarpmk html1 > first-html.log 2>&1 || { tail -100 first-html.log; exit 1; }
+            mark "First isolated HTML pass"
+            lwarpmk html1 > second-html.log 2>&1 || { tail -100 second-html.log; exit 1; }
+            mark "Second isolated HTML pass"
+            lwarpmk limages > images.log 2>&1 || { tail -100 images.log; exit 1; }
+            mark "Lwarp image step"
+            lwarpmk html > final-html.log 2>&1 || { tail -100 final-html.log; exit 1; }
+            mark "Final Lwarp HTML step"
+            test -s index.html || { echo "No compiled proof index.html"; exit 1; }
+
+      - name: Retrieve the existing published textbook and proof registry
+        run: |
+          set -euo pipefail
+          SITE="https://stephenmyller.github.io/STCH---Interactive"
+          curl --fail --location --silent --show-error --retry 4             "$SITE/Class-Formation-Syntax.html"             -o proof-isolate/published-Class-Formation-Syntax.html
+          curl --fail --location --silent --show-error --retry 4             "$SITE/index.html"             -o proof-isolate/published-index.html
+          curl --fail --location --silent --show-error --retry 4             "$SITE/assets/proof-rules.json"             -o proof-isolate/published-proof-rules.json
+          mkdir -p proof-comparison
+          for file in lwarp.css lwarp_formal.css lwarp_sagebrush.css sample_project.css; do
+            curl --fail --location --silent --show-error --retry 4               "$SITE/$file" -o "proof-comparison/$file"
+          done
+
+      - name: Place isolated and published proofs into identical textbook pages
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import html
+          import json
+          import re
+          import shutil
+          from urllib.parse import quote, urljoin
+
+          root = Path.cwd()
+          work = root / 'proof-isolate'
+          out = root / 'proof-comparison'
+          out.mkdir(exist_ok=True)
+          site = 'https://stephenmyller.github.io/STCH---Interactive/'
+          identifier = 'meta:restricted-unrestricted-class-formulation'
+
+          # Extract an entire Lwarp-produced class block, not a reconstruction of its TeX.
+          # The block is expected to contain exactly one prooftree and no nested divs.
+          block_pattern = re.compile(r'<div\b[^>]*\bclass="[^"]*\bexplorerderivation\b[^"]*"[^>]*>.*?</div\s*>', re.S | re.I)
+
+          def find_proof_block(source, where):
+              candidates = []
+              for m in block_pattern.finditer(source):
+                  open_tag = source[m.start():source.find('>', m.start())+1]
+                  if re.search(r'--explorer-id:\s*'+re.escape(identifier)+r'\s*;', html.unescape(open_tag)):
+                      candidates.append(m)
+              if len(candidates) != 1:
+                  raise SystemExit(f'{where}: expected one class-block for {identifier}; found {len(candidates)}')
+              block = candidates[0].group(0)
+              if block.count('\\begin{prooftree}') != 1 and not re.search(r'\\begin\s*\{prooftree\}', block):
+                  raise SystemExit(f'{where}: Explorer block contains no prooftree')
+              if len(re.findall(r'\\end\s*\{prooftree\}', block)) != 1:
+                  raise SystemExit(f'{where}: expected one closing prooftree')
+              return candidates[0]
+
+          new_compiled = (work / 'index.html').read_text(encoding='utf-8')
+          original = (work / 'published-Class-Formation-Syntax.html').read_text(encoding='utf-8')
+          original_home = (work / 'published-index.html').read_text(encoding='utf-8')
+          index_match = re.search(r'<script\s+id="gentzen-reference-index"\s+type="application/json">(.*?)</script>', original_home, re.S)
+          if not index_match:
+              raise SystemExit('Published index.html lacks gentzen-reference-index')
+          index = json.loads(index_match.group(1))
+          if not isinstance(index, dict):
+              raise SystemExit('Unexpected reference index structure')
+
+          compiled_match = find_proof_block(new_compiled, 'standalone Lwarp output')
+          published_match = find_proof_block(original, 'published Class Formation page')
+          compiled = compiled_match.group(0)
+          published = published_match.group(0)
+
+          # Resolve references within the isolated fragment exactly as in the main
+          # publication's postprocessing step, then make the links work under file://.
+          missing = set()
+          reference_count = 0
+
+          def fix_ref(match):
+              global reference_count
+              label = match.group(1)
+              value = index.get(label)
+              if not isinstance(value, list) or len(value) != 2:
+                  missing.add(label)
+                  return match.group(0)
+              number, page = value
+              reference_count += 1
+              return r'\href{' + urljoin(site, page+'#'+quote(label, safe=':-._')) + '}{' + str(number) + '}'
+
+          compiled = re.sub(r'\\ref\s*\{\s*([^{}\s]+)\s*\}', fix_ref, compiled)
+          if missing:
+              raise SystemExit('Unresolved numbered references: ' + ', '.join(sorted(missing)))
+
+          # Convert resolved hyperlinks from the published original to absolute URLs,
+          # preserving the original math commands and visual typography.
+          def absolutize(fragment):
+              def replace(match):
+                  address = match.group(1)
+                  if address.startswith('#proof-expand-'):
+                      return match.group(0)
+                  if not (address.startswith('#') or address.startswith('http:') or address.startswith('https:') or address.endswith('.html') or '.html#' in address):
+                      return match.group(0)
+                  return r'\href{' + urljoin(site + 'Class-Formation-Syntax.html', address) + '}{'
+              return re.sub(r'\\href\s*\{([^{}]+)\}\s*\{', replace, fragment)
+
+          compiled = absolutize(compiled)
+          published = absolutize(published)
+
+          # Bundle existing (not rewritten) site assets, with one CORS-safe registry
+          # loader for files opened directly from a downloaded ZIP.
+          shutil.copytree(root / 'assets', out / 'assets', dirs_exist_ok=True)
+          js = (root / 'assets/gentzen.js').read_text(encoding='utf-8')
+          needle = "const response = await fetch(url, {cache: 'no-store'});"
+          if js.count(needle) != 1:
+              raise SystemExit('Explorer registry loader changed; cannot safely patch experiment')
+          js = js.replace(needle,
+             "const response = window.__STCH_POC_REGISTRY ? "
+             "{ok: true, json: async () => window.__STCH_POC_REGISTRY} "
+             ": await fetch(url, {cache: 'no-store'});", 1)
+          link_setting = "anchor.setAttribute('href', destination.content);"
+          if js.count(link_setting) != 1:
+              raise SystemExit('Explorer label-link handler has changed')
+          js = js.replace(link_setting,
+              "anchor.setAttribute('href', destination.content.startsWith('#proof-expand-') "
+              "? destination.content : new URL(destination.content, 'https://stephenmyller.github.io/STCH---Interactive/').href);", 1)
+          (out / 'poc-gentzen.js').write_text(js, encoding='utf-8')
+          registry = json.loads((work / 'published-proof-rules.json').read_text(encoding='utf-8'))
+          inline_registry = json.dumps(registry, ensure_ascii=False).replace('</','<\\/')
+
+          published_with_abs = original[:published_match.start()] + published + original[published_match.end():]
+          compiled_injected = original[:published_match.start()] + compiled + original[published_match.end():]
+
+          def make_page(source):
+              # Use the same HTML and MathJax configuration as the live textbook.
+              script = ('<script id="stch-poc-registry" type="application/json">' + inline_registry + '</script>\n'
+                        '<script>window.__STCH_POC_REGISTRY = JSON.parse(document.getElementById("stch-poc-registry").textContent);</script>\n')
+              source = source.replace('</head>', script + '</head>', 1)
+              source, changed = re.subn(r'(<script\b[^>]*\bsrc=["\'])assets/gentzen\.js(?:\?[^"\']*)?(["\'])',
+                                        r'\1poc-gentzen.js\2', source)
+              if changed != 1:
+                  raise SystemExit(f'Expected one gentzen.js script tag; found {changed}')
+              return source
+
+          (out / 'original.html').write_text(make_page(published_with_abs), encoding='utf-8')
+          (out / 'isolated.html').write_text(make_page(compiled_injected), encoding='utf-8')
+          (out / 'fragment-published.html').write_text(published, encoding='utf-8')
+          (out / 'fragment-isolated.html').write_text(compiled, encoding='utf-8')
+          shutil.copyfile(work / 'main.tex', out / 'isolated-main.tex.txt')
+
+          # A simple entry page opens either version in the *same* Explorer mode.
+          query = '?proof-explorer=' + quote(identifier, safe=':-._')
+          index_html = f'''<!doctype html><html lang="en"><head><meta charset="utf-8">
+          <title>STCH isolated Lwarp proof comparison</title>
+          <style>body{{font:17px/1.6 Georgia,serif;max-width:760px;margin:5rem auto;padding:0 2rem;background:#f7f5f0;color:#242424}}
+          a{{display:inline-block;padding:.65rem 1rem;margin:.5rem .3rem .5rem 0;border:1px solid #999;border-radius:4px;color:inherit}}
+          code{{font-size:.85em}}p{{margin:1rem 0}}</style></head><body>
+          <h1>Metatheorem D.2 — isolated Lwarp comparison</h1>
+          <p>Both links open the <em>same published page</em> using the same Proof Explorer code and MathJax settings. Only the full Explorer proof block differs.</p>
+          <p><a href="original.html{query}">A — Published proof</a><a href="isolated.html{query}">B — Separately compiled proof</a></p>
+          <p>Compare inference-line lengths, rule-label placement, references, zoom/pan, and Set-I / ∧-Con expansions. The second version was compiled independently by Lwarp.</p>
+          <p>These local files are an experiment; the public website is unchanged.</p></body></html>'''
+          (out / 'open-this.html').write_text(index_html, encoding='utf-8')
+
+          # Resolve comparison statistics, not just apparent success.
+          def proof_commands(text):
+              return len(re.findall(r'\\(?:AxiomC|UnaryInfC|BinaryInfC|TrinaryInfC|QuaternaryInfC|QuinaryInfC)\b', text))
+          result = {
+              'id':identifier,
+              'published_inference_commands':proof_commands(published),
+              'standalone_inference_commands':proof_commands(compiled),
+              'standalone_references_resolved':reference_count,
+              'published_fragment_characters':len(published),
+              'standalone_fragment_characters':len(compiled),
+              'uses_same_published_page':True,
+              'isolated_fragment_generated_by_lwarp':True,
+              'source_file': json.loads((work/'specimen.json').read_text(encoding='utf-8'))['source_file'],
+          }
+          if result['published_inference_commands'] != result['standalone_inference_commands']:
+              raise SystemExit('Different proof versions: inference step counts do not match. Comparison would be misleading.')
+          (out / 'comparison.json').write_text(json.dumps(result, indent=2)+'\n', encoding='utf-8')
+          print('ISOLATION: compilation succeeded; A and B have',result['standalone_inference_commands'],'inference commands')
+          print('ISOLATION: resolved',reference_count,'LaTeX numbered references')
+          print('ISOLATION: output proof-comparison/open-this.html')
+          PY
+
+      - name: Verify the two independently obtained proof fragments
+        run: |
+          node --check proof-comparison/poc-gentzen.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, re
+          out = Path('proof-comparison')
+          for item in ('open-this.html', 'original.html', 'isolated.html',
+                       'fragment-published.html', 'fragment-isolated.html',
+                       'poc-gentzen.js', 'comparison.json'):
+              assert (out / item).is_file() and (out / item).stat().st_size, item
+          result = json.loads((out / 'comparison.json').read_text())
+          assert result['standalone_inference_commands'] > 30
+          assert result['standalone_inference_commands'] == result['published_inference_commands']
+          assert result['standalone_references_resolved'] >= 1
+          for file in ('original.html', 'isolated.html'):
+              page = (out / file).read_text()
+              assert 'poc-gentzen.js' in page
+              assert 'stch-poc-registry' in page
+              assert 'meta:restricted-unrestricted-class-formulation' in page
+          print('VERIFIED: isolated Lwarp and published proof have equal inference counts')
+          print('VERIFIED: current proof registry and reference links are available')
+          print('VERIFIED: output open-this.html contains side-by-side choices')
+          PY
+
+      - name: Downloadable browser experiment
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolated-lwarp-proof-comparison
+          path: proof-comparison/
+          if-no-files-found: error
+          retention-days: 7
