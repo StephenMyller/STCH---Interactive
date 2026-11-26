@@ -237,6 +237,56 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+/* Integrate the existing theme toggle with Lwarp's Contents title.
+   The textbook's theme script owns the toggle's behavior and persistence;
+   moving the SAME button preserves its original event listeners.
+   The current theme is reflected by CSS, while accessible instructions
+   stay accurate after changes made anywhere on the page. */
+(() => {
+  function setup() {
+    const heading = document.querySelector('.sidetoccontainer > .sidetoctitle');
+    if (!heading) return;
+
+    function placeToggle() {
+      const toggle = document.querySelector('.book-theme-toggle');
+      if (!toggle) return false;
+      if (toggle.parentElement !== heading) heading.append(toggle);
+
+      const updateAccessibility = () => {
+        const dark = document.documentElement.dataset.bookTheme === 'dark';
+        const instruction = dark ? 'Switch to light mode' : 'Switch to dark mode';
+        toggle.setAttribute('aria-label', instruction);
+        toggle.setAttribute('title', instruction);
+        toggle.setAttribute('aria-pressed', String(dark));
+      };
+      updateAccessibility();
+      const themeObserver = new MutationObserver(updateAccessibility);
+      themeObserver.observe(document.documentElement, {
+        attributes: true, attributeFilter: ['data-book-theme']
+      });
+      return true;
+    }
+
+    // Another (earlier) site script may insert the button at DOMContentLoaded.
+    // Defer placement until that event's other handlers have run.
+    requestAnimationFrame(() => {
+      if (placeToggle()) return;
+      // Also handle a theme script that inserts its button asynchronously.
+      const bodyObserver = new MutationObserver(() => {
+        if (placeToggle()) bodyObserver.disconnect();
+      });
+      bodyObserver.observe(document.body, {childList: true, subtree: true});
+      setTimeout(() => bodyObserver.disconnect(), 8000);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setup, {once: true});
+  } else {
+    setup();
+  }
+})();
+
 /* Collapsible Lwarp table of contents — unchanged. */
 document.addEventListener('DOMContentLoaded', () => {
   const nav = document.querySelector('nav.sidetoc');
