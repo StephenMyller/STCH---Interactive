@@ -132,23 +132,23 @@ By the Class-Term Extension Metatheorem (\ref{meta:class-term-extension}), every
 \AxiomC{}
 \RightLabel{\(3\)}
 \UnaryInfC{\(\Real_T(h)\land a\in h\)}
-\RightLabel{\(\land-E\)}
+\RightLabel{\(\land\)-E}
 \UnaryInfC{\(\Real_T(h)\)}
 \RightLabel{D\ref{def:realization-of-class-term}}
 \dashedLine
 \UnaryInfC{\(\forall u(u\in h\leftrightarrow\Cond_T(u))\)}
-\RightLabel{\(\forall-E\)}
+\RightLabel{\(\forall\)-E}
 \UnaryInfC{\(a\in h\leftrightarrow\Cond_T(a)\)}
 \AxiomC{}
 \RightLabel{\(3\)}
 \UnaryInfC{\(\Real_T(h)\land a\in h\)}
-\RightLabel{\(\land-E\)}
+\RightLabel{\(\land\)-E}
 \UnaryInfC{\(a\in h\)}
-\RightLabel{\(\leftrightarrow-E\)}
+\RightLabel{\(\leftrightarrow\)-E}
 \BinaryInfC{\(\Cond_T(a)\)}
-\RightLabel{\(\exists-E, 3\)}
+\RightLabel{\(\exists\)-E, \(3\)}
 \BinaryInfC{\(\Cond_T(a)\)}
-\RightLabel{\(\to-I, 1\)}
+\RightLabel{\(\to\)-I, \(1\)}
 \UnaryInfC{\(a\in T\to\Cond_T(a)\)}
 \AxiomC{}
 \RightLabel{M\ref{meta:class-term-extension}}
@@ -162,25 +162,25 @@ By the Class-Term Extension Metatheorem (\ref{meta:class-term-extension}), every
 \RightLabel{D\ref{def:realization-of-class-term}}
 \dashedLine
 \UnaryInfC{\(\forall u(u\in h\leftrightarrow\Cond_T(u))\)}
-\RightLabel{\(\forall-E\)}
+\RightLabel{\(\forall\)-E}
 \UnaryInfC{\(a\in h\leftrightarrow\Cond_T(a)\)}
 \AxiomC{}
 \RightLabel{\(2\)}
 \UnaryInfC{\(\Cond_T(a)\)}
-\RightLabel{\(\leftrightarrow-E\)}
+\RightLabel{\(\leftrightarrow\)-E}
 \BinaryInfC{\(a\in h\)}
-\RightLabel{\(\land-I\)}
+\RightLabel{\(\land\)-I}
 \BinaryInfC{\(\Real_T(h)\land a\in h\)}
-\RightLabel{\(\exists-I\)}
+\RightLabel{\(\exists\)-I}
 \UnaryInfC{\(\exists h(\Real_T(h)\land a\in h)\)}
 \RightLabel{D\ref{def:contextual-elimination}}
 \dashedLine
 \UnaryInfC{\(a\in T\)}
-\RightLabel{\(\exists-E, 4\)}
+\RightLabel{\(\exists\)-E, \(4\)}
 \BinaryInfC{\(a\in T\)}
-\RightLabel{\(\to-I, 2\)}
+\RightLabel{\(\to\)-I, \(2\)}
 \UnaryInfC{\(\Cond_T(a)\to a\in T\)}
-\RightLabel{\(\leftrightarrow-I\)}
+\RightLabel{\(\leftrightarrow\)-I}
 \BinaryInfC{\(a\in T\leftrightarrow\Cond_T(a)\)}
 \end{prooftree}
 \end{explorerderivation}
@@ -223,35 +223,35 @@ By contextual elimination, \(A=T\) means that \(A\) is identical to a realizatio
 \AxiomC{}
 \RightLabel{\(3\)}
 \UnaryInfC{\(\Real_T(h)\land A=h\)}
-\RightLabel{\(\land-E\)}
+\RightLabel{\(\land\)-E}
 \UnaryInfC{\(\Real_T(h)\)}
 \AxiomC{}
 \RightLabel{\(3\)}
 \UnaryInfC{\(\Real_T(h)\land A=h\)}
-\RightLabel{\(\land-E\)}
+\RightLabel{\(\land\)-E}
 \UnaryInfC{\(A=h\)}
-\RightLabel{\(=-E\)}
+\RightLabel{\(=\)-E}
 \BinaryInfC{\(\Real_T(A)\)}
-\RightLabel{\(\exists-E, 3\)}
+\RightLabel{\(\exists\)-E, \(3\)}
 \BinaryInfC{\(\Real_T(A)\)}
-\RightLabel{\(\to-I, 1\)}
+\RightLabel{\(\to\)-I, \(1\)}
 \UnaryInfC{\(A=T\to\Real_T(A)\)}
 \AxiomC{}
 \RightLabel{\(2\)}
 \UnaryInfC{\(\Real_T(A)\)}
 \AxiomC{}
-\RightLabel{\(=-I\)}
+\RightLabel{\(=\)-I}
 \UnaryInfC{\(A=A\)}
-\RightLabel{\(\land-I\)}
+\RightLabel{\(\land\)-I}
 \BinaryInfC{\(\Real_T(A)\land A=A\)}
-\RightLabel{\(\exists-I\)}
+\RightLabel{\(\exists\)-I}
 \UnaryInfC{\(\exists h(\Real_T(h)\land A=h)\)}
 \RightLabel{D\ref{def:contextual-elimination}}
 \dashedLine
 \UnaryInfC{\(A=T\)}
-\RightLabel{\(\to-I, 2\)}
+\RightLabel{\(\to\)-I, \(2\)}
 \UnaryInfC{\(\Real_T(A)\to A=T\)}
-\RightLabel{\(\leftrightarrow-I\)}
+\RightLabel{\(\leftrightarrow\)-I}
 \BinaryInfC{\(A=T\leftrightarrow\Real_T(A)\)}
 \end{prooftree}
 \end{explorerderivation}
