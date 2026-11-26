@@ -1,0 +1,193 @@
+name: Proof Explorer raw-source experiment
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  experiment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get project files
+        uses: actions/checkout@v4
+
+      - name: Retrieve deployed Proof Explorer rule registry
+        run: |
+          mkdir -p proof-experiment
+          curl --fail --location --show-error --silent --retry 3 \
+            "https://stephenmyller.github.io/STCH---Interactive/assets/proof-rules.json" \
+            --output proof-experiment/published-proof-rules.json
+
+      - name: Extract one complete proof and prepare isolated browser experiment
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, re, html, hashlib
+
+          ROOT = Path.cwd()
+          IDENTIFIER = 'meta:restricted-unrestricted-class-formulation'
+          OUTPUT = ROOT / 'proof-experiment'
+
+          # Extract the original environment; the checkout stays unchanged.
+          found = []
+          pattern = re.compile(r'\\begin\{explorerderivation\}\{([^{}\r\n]+)\}(.*?)\\end\{explorerderivation\}', re.S)
+          for path in ROOT.rglob('*.tex'):
+              if '.git' in path.parts or 'proof-experiment' in path.parts:
+                  continue
+              for hit in pattern.finditer(path.read_text(encoding='utf-8')):
+                  if hit.group(1).strip() == IDENTIFIER:
+                      found.append((path, hit.group(2)))
+          if len(found) != 1:
+              raise SystemExit(f'Expected exactly one Explorer proof for {IDENTIFIER}; found {len(found)}')
+          source_path, body = found[0]
+          trees = list(re.finditer(r'\\begin\{prooftree\}(.*?)\\end\{prooftree\}', body, re.S))
+          if len(trees) != 1:
+              raise SystemExit('Selected proof must contain exactly one complete prooftree')
+          source = trees[0].group(0)
+
+          # A lightweight sanity check: the source should have one connected inference root.
+          # This is a structural check only, NOT a mathematical proof checker.
+          command = re.compile(r'\\(AxiomC|UnaryInfC|BinaryInfC|TrinaryInfC|QuaternaryInfC|QuinaryInfC)\s*\{')
+          levels = {'AxiomC':0, 'UnaryInfC':1, 'BinaryInfC':2, 'TrinaryInfC':3,
+                    'QuaternaryInfC':4, 'QuinaryInfC':5}
+          stack = 0
+          for match in command.finditer(source):
+              n = levels[match.group(1)]
+              if n == 0:
+                  stack += 1
+              else:
+                  if stack < n:
+                      raise SystemExit('Malformed or disconnected proof-tree stack')
+                  stack = stack - n + 1
+          if stack != 1:
+              raise SystemExit(f'Expected one connected root; found {stack}')
+
+          registry_path = ROOT / 'proof-experiment/published-proof-rules.json'
+          registry = json.loads(registry_path.read_text(encoding='utf-8'))
+          if registry.get('version') != 7:
+              raise SystemExit('Registry schema does not match the current Explorer (v7)')
+
+          original_js = (ROOT / 'assets/gentzen.js').read_text(encoding='utf-8')
+          anchor = '  function locateExplorerMath(stage) {\n'
+          replacement = '''  function locateExplorerMath(stage) {
+              // Isolated experiment: supply the source directly instead of requiring
+              // a MathJax proof-tree item created during Lwarp conversion.
+              const poc = window.__STCH_POC_PROOF;
+              const shell = stage.querySelector(':scope > .explorerderivation');
+              if (poc && shell && shell.style.getPropertyValue('--explorer-id').trim() === poc.id) {
+                let root = shell.querySelector('[data-poc-math-root]');
+                if (!root) {
+                  root = document.createElement('span');
+                  root.dataset.pocMathRoot = 'true';
+                  shell.append(root);
+                }
+                return { math: poc.tex, typesetRoot: root };
+              }
+          '''
+          if original_js.count(anchor) != 1:
+              raise SystemExit('Could not locate Explorer source lookup in gentzen.js')
+          patched_js = original_js.replace(anchor, replacement, 1)
+          needle = "const response = await fetch(url, {cache: 'no-store'});"
+          replacement_fetch = "const response = window.__STCH_POC_REGISTRY ? {ok: true, json: async () => window.__STCH_POC_REGISTRY} : await fetch(url, {cache: 'no-store'});"
+          if patched_js.count(needle) != 1:
+              raise SystemExit('Could not locate registry fetch in gentzen.js')
+          patched_js = patched_js.replace(needle, replacement_fetch, 1)
+
+          OUTPUT.mkdir(exist_ok=True)
+          (OUTPUT / 'poc-gentzen.js').write_text(patched_js, encoding='utf-8')
+          proof_obj = {'id':IDENTIFIER, 'tex':source,
+                       'source_file':str(source_path.relative_to(ROOT)),
+                       'sha256':hashlib.sha256(source.encode()).hexdigest(),
+                       'inference_steps':len(list(command.finditer(source)))}
+          (OUTPUT / 'proof-source.json').write_text(json.dumps(proof_obj, indent=2, ensure_ascii=False)+'\n', encoding='utf-8')
+
+          def js_data(value):
+              # Protect inline script content; JavaScript parses these as JSON expressions.
+              return json.dumps(value, ensure_ascii=False).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
+
+          page = '''<!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>STCH Proof Explorer — raw-source experiment</title>
+            <style>
+              body { font: 16px/1.5 Georgia, serif; margin: 0; background:#f7f5f0; color:#202126; }
+              main.bodycontainer { max-width:860px; padding:2.5rem; margin:auto; }
+              .explorerderivation { display:none; }
+              .proof-explorer-stage .explorerderivation { display:block !important; }
+              .derivation-trigger { padding:.8rem 0; }
+              .poc-note { line-height:1.55; border-left:3px solid #888; padding:.7rem 1rem; background:#8881; }
+              .poc-detail { font-family:system-ui,sans-serif; font-size:.8rem; color:#555; }
+            </style>
+            <script>
+              window.__STCH_POC_PROOF = __PROOF__;
+              window.__STCH_POC_REGISTRY = __REGISTRY__;
+              window.MathJax = {
+                loader:{load:['[tex]/bussproofs','[tex]/html']},
+                tex:{packages:{'[+]':['bussproofs','html']}, macros:{
+                  Set:'\\\\operatorname{Set}', PC:'\\\\operatorname{PC}', Cond:'\\\\operatorname{Cond}',
+                  Real:'\\\\operatorname{Real}', Dep:'\\\\operatorname{Dep}', Trans:'\\\\operatorname{Trans}',
+                  Ind:'\\\\operatorname{Ind}', Unique:'\\\\mathop{\\\\exists^{\\\\leq 1}}',
+                  defequiv:'\\\\mathrel{\\\\equiv_{\\\\mathrm{df}}}'
+                }},
+                svg:{fontCache:'global'},
+                startup:{typeset:false}
+              };
+            </script>
+            <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+            <script defer src="poc-gentzen.js"></script>
+          </head>
+          <body>
+            <main class="bodycontainer">
+              <h1>Proof Explorer — raw-source experiment</h1>
+              <p class="poc-note">This is an isolated browser experiment, <strong>not</strong> the published textbook.
+                The complete proof comes from an extracted LaTeX source file, without Lwarp typesetting it.
+                Click the link below to test the existing Explorer renderer, zooming and rule expansion.</p>
+              <p><strong>Metatheorem D.2:</strong> Restricted and Unrestricted Membership Specifications</p>
+              <p class="poc-detail">Source: __SOURCE_FILE__</p>
+              <div class="explorerderivation" style="--explorer-id: __ID__;"></div>
+              <p class="poc-detail">Requires an internet connection to load MathJax.
+                The separate-source experiment does not yet resolve LaTeX <code>\\ref</code> labels into their numbered web links.
+                Those reference labels are an explicit remaining integration task.</p>
+            </main>
+          </body>
+          </html>
+          '''
+          page = page.replace('__PROOF__', js_data(proof_obj)).replace('__REGISTRY__', js_data(registry))
+          page = page.replace('__SOURCE_FILE__', html.escape(proof_obj['source_file']))
+          page = page.replace('__ID__', html.escape(IDENTIFIER, quote=True))
+          (OUTPUT / 'open-this.html').write_text(page, encoding='utf-8')
+          print(f'POC extracted: {IDENTIFIER} from {source_path.relative_to(ROOT)}')
+          print(f'POC proof: {len(source):,} characters, {proof_obj["inference_steps"]} inference commands')
+          print('POC output: proof-experiment/open-this.html, poc-gentzen.js, proof-source.json')
+          PY
+
+      - name: Verify the experiment files
+        run: |
+          node --check proof-experiment/poc-gentzen.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          folder = Path('proof-experiment')
+          for name in ('open-this.html', 'poc-gentzen.js', 'proof-source.json'):
+              assert (folder / name).is_file() and (folder / name).stat().st_size
+          source = json.loads((folder / 'proof-source.json').read_text(encoding='utf-8'))
+          assert source['id'] == 'meta:restricted-unrestricted-class-formulation'
+          assert '\\begin{prooftree}' in source['tex']
+          assert '\\end{prooftree}' in source['tex']
+          registry = json.loads((folder / 'published-proof-rules.json').read_text(encoding='utf-8'))
+          assert registry['version'] == 7
+          print(f"Verified isolated proof: {source['inference_steps']} proof commands")
+          print(f"Available registered rules: {len(registry['rules'])}")
+          PY
+
+      - name: Upload experiment (not a Pages deployment)
+        uses: actions/upload-artifact@v4
+        with:
+          name: proof-explorer-raw-source-experiment
+          path: proof-experiment/
+          if-no-files-found: error
+          retention-days: 7
