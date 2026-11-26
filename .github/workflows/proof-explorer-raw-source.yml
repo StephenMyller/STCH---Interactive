@@ -1,4 +1,4 @@
-name: Proof Explorer native geometry experiment
+name: Proof Explorer custom-geometry experiment
 
 on:
   workflow_dispatch:
@@ -150,21 +150,6 @@ jobs:
               raise SystemExit('Could not locate proof-label link rendering in gentzen.js')
           patched_js = patched_js.replace(old_href, new_href, 1)
 
-          # Isolated geometry experiment: render the tree with the manuscript's
-          # MathJax bussproofs layout; retain the custom renderer as fallback.
-          old_render = "      try {\n        replacement = await drawProof(prepared.tex);\n      } catch (layoutError) {\n        // Retain the earlier renderer for an unsupported proof-tree command.\n        console.warn('Proof Explorer: full-subtree layout unavailable; using MathJax', layoutError);\n        replacement = await texEngine.tex2svgPromise(prepared.tex, {display: true});\n      }"
-          new_render = '      try {\n        // Use the manuscript\'s own bussproofs renderer for its inference\n        // lines, centering, and RightLabel placement.\n        replacement = await texEngine.tex2svgPromise(prepared.tex, {display: true});\n        if (!replacement.querySelector(\'svg\') ||\n            replacement.querySelector(\'merror,[data-mml-node="merror"]\')) {\n          throw new Error(\'MathJax produced an invalid native proof tree\');\n        }\n      } catch (nativeError) {\n        console.warn(\'Proof Explorer: native bussproofs unavailable; using subtree layout\', nativeError);\n        replacement = await drawProof(prepared.tex);\n      }'
-          if patched_js.count(old_render) != 1:
-              raise SystemExit('Could not locate current tree rendering branch in gentzen.js')
-          patched_js = patched_js.replace(old_render, new_render, 1)
-
-          old_center = "const proof = stage.querySelector('.pe-tree');"
-          new_center = 'const proof = stage.querySelector(\'.pe-tree, mjx-container[display="true"]\');'
-
-          if patched_js.count(old_center) != 1:
-              raise SystemExit('Could not locate Explorer centering selector')
-          patched_js = patched_js.replace(old_center, new_center, 1)
-
           OUTPUT.mkdir(exist_ok=True)
           (OUTPUT / 'poc-gentzen.js').write_text(patched_js, encoding='utf-8')
           proof_obj = {'id':IDENTIFIER, 'tex':source,
@@ -183,7 +168,7 @@ jobs:
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>STCH Proof Explorer — native geometry experiment</title>
+            <title>STCH Proof Explorer — raw-source experiment</title>
             <style>
               body { font: 16px/1.5 Georgia, serif; margin: 0; background:#f7f5f0; color:#202126; }
               main.bodycontainer { max-width:860px; padding:2.5rem; margin:auto; }
@@ -213,10 +198,10 @@ jobs:
           </head>
           <body>
             <main class="bodycontainer">
-              <h1>Proof Explorer — native geometry experiment</h1>
+              <h1>Proof Explorer — raw-source experiment</h1>
               <p class="poc-note">This is an isolated browser experiment, <strong>not</strong> the published textbook.
                 The complete proof comes from an extracted LaTeX source file, without Lwarp typesetting it.
-                The tree now uses the manuscript’s own MathJax bussproofs rendering for lines and labels. Test zooming, panning and rule expansion as before.</p>
+                Click the link below to test the existing Explorer renderer, zooming and rule expansion.</p>
               <p><strong>Metatheorem D.2:</strong> Restricted and Unrestricted Membership Specifications</p>
               <p class="poc-detail">Source: __SOURCE_FILE__</p>
               <div class="explorerderivation" style="--explorer-id: __ID__;"></div>
@@ -235,6 +220,102 @@ jobs:
           print(f'POC proof: {len(source):,} characters, {proof_obj["inference_steps"]} inference commands')
           print(f'POC resolved numbered LaTeX references: {resolved_count}')
           print('POC output: proof-experiment/open-this.html, poc-gentzen.js, proof-source.json')
+          PY
+
+      - name: Adjust custom inference geometry in isolated viewer
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('proof-experiment/poc-gentzen.js')
+          source = path.read_text(encoding='utf-8')
+
+          label_before = '''    .proof-explorer-stage .pe-label {
+                display: inline-flex; flex: 0 0 auto; min-height: 1em;
+                align-items: center; line-height: 1;
+                font-size: .70em; /* match the manuscript's scriptsize labels */
+              }'''
+          label_after = '''    .proof-explorer-stage .pe-label {
+                position: absolute;
+                top: 50%; left: 0;
+                display: inline-flex; align-items: center;
+                width: max-content; min-height: 1em;
+                line-height: 1; white-space: nowrap;
+                font-size: .70em;
+                transform: translateY(-50%);
+                pointer-events: auto;
+              }'''
+          if source.count(label_before) != 1:
+              raise SystemExit('Cannot uniquely identify the existing inference-label CSS')
+          source = source.replace(label_before, label_after, 1)
+
+          start = '    function inferenceLineMetrics(layout) {'
+          end = '    async function render() {'
+          if source.count(start) != 1 or source.count(end) != 1:
+              raise SystemExit('Cannot uniquely identify existing geometry functions')
+          before, tail = source.split(start, 1)
+          _, after = tail.split(end, 1)
+          geometry = '''    function inferenceLineMetrics(layout) {
+                const {row, bar, anchors} = layout;
+                const rowRect = row.getBoundingClientRect();
+                if (!rowRect.width || !row.offsetWidth) return null;
+                const scale = rowRect.width / row.offsetWidth;
+                const toX = position => (position - rowRect.left) / scale;
+                const fontSize = parseFloat(getComputedStyle(row).fontSize) || 16;
+                const padding = fontSize * .30;
+                const gap = fontSize * .25;
+                const minimum = fontSize * .95;
+                const rectangles = anchors.map(el => el.getBoundingClientRect())
+                  .filter(rect => rect.width > 1 && rect.height > 0);
+                if (!rectangles.length) return null;
+                const naturalLeft = Math.min(...rectangles.map(rect => toX(rect.left))) - padding;
+                const naturalRight = Math.max(...rectangles.map(rect => toX(rect.right))) + padding;
+                const leftLabel = row.querySelector(':scope > .pe-left-label');
+                const rightLabel = row.querySelector(':scope > .pe-right-label');
+                const leftWidth = leftLabel ? leftLabel.getBoundingClientRect().width / scale : 0;
+                const rightWidth = rightLabel ? rightLabel.getBoundingClientRect().width / scale : 0;
+                return {row, bar, naturalLeft, naturalRight, minimum, gap,
+                        leftLabel, rightLabel, leftWidth, rightWidth};
+              }
+
+              function trimInferenceLines(tree) {
+                const nodes = [...tree.querySelectorAll('.pe-node:not(.pe-leaf)')];
+                for (const node of [...nodes].reverse()) {
+                  const layout = inferenceLayoutAnchors(node);
+                  if (!layout) continue;
+                  const measured = inferenceLineMetrics(layout);
+                  if (!measured) continue;
+                  const {row, naturalLeft, naturalRight, gap, leftLabel, rightLabel,
+                         leftWidth, rightWidth} = measured;
+                  const extentLeft = naturalLeft - (leftLabel ? gap + leftWidth : 0);
+                  const extentRight = naturalRight + (rightLabel ? gap + rightWidth : 0);
+                  const additionalLeft = Math.max(0, -extentLeft);
+                  const additionalRight = Math.max(0, extentRight - row.offsetWidth);
+                  if (additionalLeft > .5) node.style.paddingLeft = `${Math.ceil(additionalLeft + 2)}px`;
+                  if (additionalRight > .5) node.style.paddingRight = `${Math.ceil(additionalRight + 2)}px`;
+                }
+                for (const node of nodes) {
+                  const layout = inferenceLayoutAnchors(node);
+                  if (!layout) continue;
+                  const measured = inferenceLineMetrics(layout);
+                  if (!measured) continue;
+                  const {bar, naturalLeft, naturalRight, minimum, gap,
+                         leftLabel, rightLabel, leftWidth} = measured;
+                  const center = (naturalLeft + naturalRight) / 2;
+                  const width = Math.max(minimum, naturalRight - naturalLeft);
+                  const left = center - width / 2;
+                  const right = center + width / 2;
+                  bar.style.setProperty('--pe-line-left', `${left}px`);
+                  bar.style.setProperty('--pe-line-width', `${width}px`);
+                  if (leftLabel) leftLabel.style.left = `${left - gap - leftWidth}px`;
+                  if (rightLabel) rightLabel.style.left = `${right + gap}px`;
+                }
+              }
+
+          '''
+          source = before + geometry + end + after
+          assert 'replacement = await drawProof(prepared.tex);' in source
+          path.write_text(source, encoding='utf-8')
+          print('Custom subtree layout retained; corrected inference-line and label positioning')
           PY
 
       - name: Verify the experiment files
@@ -263,7 +344,7 @@ jobs:
       - name: Upload experiment (not a Pages deployment)
         uses: actions/upload-artifact@v4
         with:
-          name: proof-explorer-native-geometry-experiment
+          name: proof-explorer-custom-geometry-experiment
           path: proof-experiment/
           if-no-files-found: error
           retention-days: 7
