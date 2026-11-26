@@ -1239,78 +1239,102 @@ main.bodycontainer .explorerderivation {
 }
 
 /* ================================================================
-   17. THEME TOGGLE BESIDE THE CONTENTS HEADING
+   17. CONTENTS HEADER — INLINE THEME CONTROL
    ================================================================
 
-   The theme toggle is authored separately from the Lwarp table of
-   contents, so CSS places it visually alongside the Contents title.
-   The sidebar heading stays at the top of its scrolling container,
-   preventing sidebar links from passing behind the toggle.
-
-   Nothing is reserved in the Gentzen panel header: its original
-   heading / Explorer / Close alignment is preserved.
+   The existing theme button is MOVED into .sidetoctitle by gentzen.js.
+   It belongs to the heading's flex layout, not to the viewport's
+   floating controls. The title and icon share symmetrical padding.
 */
 
-@media screen and (min-width: 801px) {
-  div.sidetoccontainer > div.sidetoctitle {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    min-height: 3.25rem;
-    box-sizing: border-box;
-    background: var(--book-nav, #e0ddd5);
-  }
-
-  .book-theme-toggle {
-    position: fixed;
-    top: 0.6rem;
-    right: auto;
-    bottom: auto;
-    left: 8.25rem;
-    padding: 0.38rem 0.55rem;
-    white-space: nowrap;
-  }
+/* Keep the heading accessible at the top of the scrolling table of
+   contents without letting the following navigation scroll above it. */
+.sidetoccontainer > .sidetoctitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 3.65rem;
+  box-sizing: border-box;
+  padding: 0.65rem 0.95rem 0.65rem 1.1rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--book-nav);
+  border-bottom: 1px solid var(--book-border);
 }
 
-/* On narrow screens the Contents area belongs to the document's
-   normal flow. Let the toggle scroll away with it instead of floating
-   above the text or an open proof drawer. */
+/* Preserve Lwarp's title typography, including if it puts the words
+   in a nested element rather than as a direct text node. */
+.sidetoccontainer > .sidetoctitle > :not(.book-theme-toggle) {
+  min-width: 0;
+}
+
+/* The original button retains its existing click handler and text;
+   only its VISUAL label is replaced. The JavaScript maintains the
+   accessible name and tooltip as the current theme changes. */
+.sidetoccontainer > .sidetoctitle > .book-theme-toggle {
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 2rem;
+  width: 2rem;
+  height: 2rem;
+  min-width: 2rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 0.45rem;
+  background: transparent;
+  color: var(--book-ink);
+  font-size: 0;             /* hide original Light/Dark mode words */
+  line-height: 1;
+  opacity: 0.75;
+  cursor: pointer;
+  box-shadow: none;
+  transform: none;
+  text-decoration: none;
+  transition: background-color 130ms ease, opacity 130ms ease;
+}
+
+.sidetoccontainer > .sidetoctitle > .book-theme-toggle::before {
+  content: "\2600";           /* Sun: current theme is light */
+  display: block;
+  font-family: system-ui, sans-serif;
+  font-size: 1.22rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+html[data-book-theme="dark"]
+  .sidetoccontainer > .sidetoctitle > .book-theme-toggle::before {
+  content: "\263E";           /* Moon: current theme is dark */
+  font-size: 1.48rem;
+}
+
+.sidetoccontainer > .sidetoctitle > .book-theme-toggle:hover {
+  background: var(--book-hover);
+  opacity: 1;
+}
+
+.sidetoccontainer > .sidetoctitle > .book-theme-toggle:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--book-link);
+  outline-offset: 2px;
+}
+
+/* In the narrow reading layout, Contents is part of the normal page
+   flow. The title and control scroll together, never overlay prose. */
 @media screen and (max-width: 800px) {
-  div.sidetoccontainer > div.sidetoctitle {
-    min-height: 3.4rem;
-    box-sizing: border-box;
-    padding-right: 9rem;
-  }
-
-  .book-theme-toggle {
-    position: absolute;
-    top: 0.6rem;
-    right: auto;
-    bottom: auto;
-    left: 8.25rem;
-    padding: 0.38rem 0.55rem;
-    white-space: nowrap;
+  .sidetoccontainer > .sidetoctitle {
+    position: relative;
+    top: auto;
   }
 }
 
-@media screen and (max-width: 360px) {
-  .book-theme-toggle {
-    left: 7.1rem;
-    font-size: 0.75rem;
-    padding: 0.32rem 0.4rem;
-  }
-}
-
-/* On compact screens a drawer needs the full header width. The toggle
-   belongs to the page navigation, so it disappears while the drawer is
-   open rather than covering its controls. */
-@media screen and (max-width: 1359px) {
-  body:has(.gentzen-panel.is-open) > .book-theme-toggle,
-  body:has(.gentzen-panel.is-open) .book-theme-toggle {
-    visibility: hidden;
-  }
-}
-
+/* On a small screen the right-hand derivation is a drawer. Keep its
+   existing, independent header behavior from the earlier responsive fix. */
 @media screen and (max-width: 800px) {
   .gentzen-panel-header {
     flex-wrap: wrap;
