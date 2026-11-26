@@ -1,4 +1,4 @@
-name: Proof Explorer raw-source experiment
+name: Proof Explorer native geometry experiment
 
 on:
   workflow_dispatch:
@@ -150,6 +150,21 @@ jobs:
               raise SystemExit('Could not locate proof-label link rendering in gentzen.js')
           patched_js = patched_js.replace(old_href, new_href, 1)
 
+          # Isolated geometry experiment: render the tree with the manuscript's
+          # MathJax bussproofs layout; retain the custom renderer as fallback.
+          old_render = "      try {\n        replacement = await drawProof(prepared.tex);\n      } catch (layoutError) {\n        // Retain the earlier renderer for an unsupported proof-tree command.\n        console.warn('Proof Explorer: full-subtree layout unavailable; using MathJax', layoutError);\n        replacement = await texEngine.tex2svgPromise(prepared.tex, {display: true});\n      }"
+          new_render = '      try {\n        // Use the manuscript\'s own bussproofs renderer for its inference\n        // lines, centering, and RightLabel placement.\n        replacement = await texEngine.tex2svgPromise(prepared.tex, {display: true});\n        if (!replacement.querySelector(\'svg\') ||\n            replacement.querySelector(\'merror,[data-mml-node="merror"]\')) {\n          throw new Error(\'MathJax produced an invalid native proof tree\');\n        }\n      } catch (nativeError) {\n        console.warn(\'Proof Explorer: native bussproofs unavailable; using subtree layout\', nativeError);\n        replacement = await drawProof(prepared.tex);\n      }'
+          if patched_js.count(old_render) != 1:
+              raise SystemExit('Could not locate current tree rendering branch in gentzen.js')
+          patched_js = patched_js.replace(old_render, new_render, 1)
+
+          old_center = "const proof = stage.querySelector('.pe-tree');"
+          new_center = 'const proof = stage.querySelector(\'.pe-tree, mjx-container[display="true"]\');'
+
+          if patched_js.count(old_center) != 1:
+              raise SystemExit('Could not locate Explorer centering selector')
+          patched_js = patched_js.replace(old_center, new_center, 1)
+
           OUTPUT.mkdir(exist_ok=True)
           (OUTPUT / 'poc-gentzen.js').write_text(patched_js, encoding='utf-8')
           proof_obj = {'id':IDENTIFIER, 'tex':source,
@@ -168,7 +183,7 @@ jobs:
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>STCH Proof Explorer — raw-source experiment</title>
+            <title>STCH Proof Explorer — native geometry experiment</title>
             <style>
               body { font: 16px/1.5 Georgia, serif; margin: 0; background:#f7f5f0; color:#202126; }
               main.bodycontainer { max-width:860px; padding:2.5rem; margin:auto; }
@@ -198,10 +213,10 @@ jobs:
           </head>
           <body>
             <main class="bodycontainer">
-              <h1>Proof Explorer — raw-source experiment</h1>
+              <h1>Proof Explorer — native geometry experiment</h1>
               <p class="poc-note">This is an isolated browser experiment, <strong>not</strong> the published textbook.
                 The complete proof comes from an extracted LaTeX source file, without Lwarp typesetting it.
-                Click the link below to test the existing Explorer renderer, zooming and rule expansion.</p>
+                The tree now uses the manuscript’s own MathJax bussproofs rendering for lines and labels. Test zooming, panning and rule expansion as before.</p>
               <p><strong>Metatheorem D.2:</strong> Restricted and Unrestricted Membership Specifications</p>
               <p class="poc-detail">Source: __SOURCE_FILE__</p>
               <div class="explorerderivation" style="--explorer-id: __ID__;"></div>
@@ -248,7 +263,7 @@ jobs:
       - name: Upload experiment (not a Pages deployment)
         uses: actions/upload-artifact@v4
         with:
-          name: proof-explorer-raw-source-experiment
+          name: proof-explorer-native-geometry-experiment
           path: proof-experiment/
           if-no-files-found: error
           retention-days: 7
