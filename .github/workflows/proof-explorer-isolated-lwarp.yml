@@ -1,4 +1,4 @@
-name: Proof Explorer - isolated Lwarp comparison
+name: Proof Explorer - isolated Lwarp comparison (preflight)
 
 on:
   workflow_dispatch:
@@ -51,6 +51,113 @@ jobs:
           print('ISOLATION: source files untouched; standalone build at proof-isolate/main.tex')
           PY
 
+      - name: Preflight published proof and registry before compiling
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import html
+          import re
+          import os
+          import time
+          from urllib.error import HTTPError, URLError
+          from urllib.parse import urljoin, urlsplit, urldefrag
+          from urllib.request import Request, urlopen
+
+          site = os.environ.get('STCH_SITE_URL', 'https://stephenmyller.github.io/STCH---Interactive/').rstrip('/') + '/'
+          work = Path('proof-isolate')
+          work.mkdir(exist_ok=True)
+          identifier = 'meta:restricted-unrestricted-class-formulation'
+
+          def fetch(relative):
+              url = urljoin(site, relative)
+              print(f'PREFLIGHT: GET {url}', flush=True)
+              try:
+                  req = Request(url, headers={'User-Agent': 'STCH-proof-comparison/1.1'})
+                  with urlopen(req, timeout=16) as response:
+                      data = response.read()
+                  print(f'PREFLIGHT: OK {len(data):,} bytes: {url}', flush=True)
+                  return data
+              except HTTPError as exc:
+                  print(f'PREFLIGHT: HTTP {exc.code}: {url}', flush=True)
+                  return None
+              except (URLError, TimeoutError, OSError) as exc:
+                  print(f'PREFLIGHT: failed {url}: {exc}', flush=True)
+                  return None
+
+          home = fetch('index.html')
+          registry = fetch('assets/proof-rules.json')
+          if not home or not registry:
+              raise SystemExit('PREFLIGHT FAILED: published index.html or proof registry is unavailable. No LaTeX compilation was started.')
+          (work / 'published-index.html').write_bytes(home)
+          (work / 'published-proof-rules.json').write_bytes(registry)
+
+          # Use the actual navigation links where available instead of assuming Lwarp's
+          # current page filenames. Try likely filenames first to reduce web requests.
+          candidates = [
+              'Class-Formation-Syntax.html',
+              'Restricted-and-Unrestricted-Membership-Specifications.html',
+              'Technical-Appendix.html',
+              'The-Class-Term-Extension-Metatheorem.html',
+          ]
+          for link in re.findall(r"""\bhref\s*=\s*['"]([^'"]+)['"]""", home.decode('utf-8', 'replace'), re.I):
+              link = html.unescape(link)
+              dest = urlsplit(urljoin(site, link))
+              base = urlsplit(site)
+              if dest.netloc == base.netloc and dest.path.startswith(base.path) and dest.path.lower().endswith('.html'):
+                  candidates.append(dest.path[len(base.path):])
+
+          # Last-resort candidates from recent published artifact filenames; these are
+          # only tried if the preferred page is not found.
+          candidates += [
+              'Class-Term-Syntax-Contextual-Elimination.html',
+              'Definitions-as-Extended-Syntax.html',
+              'Axiom-Class-Formation.html',
+              'Fundamental-Class-Builder-Laws.html',
+              'Class-Builder-Notation.html',
+              'Extended-Term-Substitution-Admissibility.html',
+          ]
+          seen = set()
+          found = None
+          for candidate in candidates:
+              if candidate in seen or '..' in candidate.split('/'):
+                  continue
+              seen.add(candidate)
+              body = fetch(candidate)
+              if not body:
+                  continue
+              content = body.decode('utf-8', 'replace')
+              if identifier in content and 'explorerderivation' in content and r'\begin{prooftree}' in content:
+                  found = (candidate, body)
+                  break
+
+          if not found:
+              raise SystemExit(
+                  'PREFLIGHT FAILED: the published website does not currently expose the D.2 '
+                  'Explorer derivation. Checked: ' + ', '.join(seen) + '. '
+                  'No LaTeX compilation was started.'
+              )
+          page, content = found
+          (work / 'published-Class-Formation-Syntax.html').write_bytes(content)
+          (work / 'published-source-page.txt').write_text(page + '\n', encoding='utf-8')
+          print(f'PREFLIGHT: found D.2 on published page {page}', flush=True)
+
+          # Check that we are comparing the same number of steps before an expensive
+          # isolated compilation. A changed published page would be an unfair comparison.
+          source = (work / 'main.tex').read_text(encoding='utf-8')
+          cmd = r'\\(?:AxiomC|UnaryInfC|BinaryInfC|TrinaryInfC|QuaternaryInfC|QuinaryInfC)\b'
+          source_count = len(re.findall(cmd, source))
+          start = content.decode('utf-8', 'replace').find('--explorer-id: ' + identifier)
+          first = content.decode('utf-8', 'replace').find(r'\begin{prooftree}', start)
+          last = content.decode('utf-8', 'replace').find(r'\end{prooftree}', first)
+          if start < 0 or first < 0 or last < 0:
+              raise SystemExit('PREFLIGHT FAILED: published proof block cannot be extracted. No LaTeX compilation was started.')
+          published_count = len(re.findall(cmd, content.decode('utf-8', 'replace')[first:last]))
+          if source_count != published_count:
+              raise SystemExit(f'PREFLIGHT FAILED: repository proof has {source_count} inference commands; '
+                               f'published proof has {published_count}. No LaTeX compilation was started.')
+          print(f'PREFLIGHT OK: both proofs have {source_count} inference commands. Starting isolated Lwarp build.', flush=True)
+          PY
+
       - name: Compile isolated proof with the normal Lwarp process
         uses: xu-cheng/texlive-action@v3
         with:
@@ -77,16 +184,18 @@ jobs:
             mark "Final Lwarp HTML step"
             test -s index.html || { echo "No compiled proof index.html"; exit 1; }
 
-      - name: Retrieve the existing published textbook and proof registry
+      - name: Reuse stylesheets generated by the isolated Lwarp build
         run: |
           set -euo pipefail
-          SITE="https://stephenmyller.github.io/STCH---Interactive"
-          curl --fail --location --silent --show-error --retry 4             "$SITE/Class-Formation-Syntax.html"             -o proof-isolate/published-Class-Formation-Syntax.html
-          curl --fail --location --silent --show-error --retry 4             "$SITE/index.html"             -o proof-isolate/published-index.html
-          curl --fail --location --silent --show-error --retry 4             "$SITE/assets/proof-rules.json"             -o proof-isolate/published-proof-rules.json
           mkdir -p proof-comparison
           for file in lwarp.css lwarp_formal.css lwarp_sagebrush.css sample_project.css; do
-            curl --fail --location --silent --show-error --retry 4               "$SITE/$file" -o "proof-comparison/$file"
+            if [ -f "proof-isolate/$file" ]; then
+              cp "proof-isolate/$file" "proof-comparison/$file"
+              echo "STYLESHEET: $file from isolated Lwarp output"
+            else
+              echo "ERROR: isolated Lwarp did not generate $file"
+              exit 1
+            fi
           done
 
       - name: Place isolated and published proofs into identical textbook pages
@@ -169,7 +278,7 @@ jobs:
                       return match.group(0)
                   if not (address.startswith('#') or address.startswith('http:') or address.startswith('https:') or address.endswith('.html') or '.html#' in address):
                       return match.group(0)
-                  return r'\href{' + urljoin(site + 'Class-Formation-Syntax.html', address) + '}{'
+                  return r'\href{' + urljoin(site + (work / 'published-source-page.txt').read_text(encoding='utf-8').strip(), address) + '}{'
               return re.sub(r'\\href\s*\{([^{}]+)\}\s*\{', replace, fragment)
 
           compiled = absolutize(compiled)
