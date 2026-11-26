@@ -1237,27 +1237,90 @@ main.bodycontainer .explorerderivation {
   text-align: center !important;
   margin: 0;
 }
+
 /* ================================================================
-   17. KEEP THE THEME TOGGLE CLEAR OF THE PROOF PANEL CONTROLS
+   17. THEME TOGGLE BESIDE THE CONTENTS HEADING
    ================================================================
 
-   The fixed theme toggle occupies the upper-right corner. When a
-   formal derivation is open, the Close control must not sit behind it.
-   On desktop/tablet widths, reserve the toggle's horizontal space,
-   allowing the panel controls to wrap when the column is narrower.
-   On phones, stack the panel header below the fixed toggle instead.
-   These rules affect only open panels when the toggle is present.
+   The theme toggle is authored separately from the Lwarp table of
+   contents, so CSS places it visually alongside the Contents title.
+   The sidebar heading stays at the top of its scrolling container,
+   preventing sidebar links from passing behind the toggle.
+
+   Nothing is reserved in the Gentzen panel header: its original
+   heading / Explorer / Close alignment is preserved.
 */
+
 @media screen and (min-width: 801px) {
-  body:has(.book-theme-toggle) .gentzen-panel.is-open .gentzen-panel-header {
-    flex-wrap: wrap;
-    padding-right: 12rem;
+  div.sidetoccontainer > div.sidetoctitle {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    min-height: 3.25rem;
+    box-sizing: border-box;
+    background: var(--book-nav, #e0ddd5);
+  }
+
+  .book-theme-toggle {
+    position: fixed;
+    top: 0.6rem;
+    right: auto;
+    bottom: auto;
+    left: 8.25rem;
+    padding: 0.38rem 0.55rem;
+    white-space: nowrap;
+  }
+}
+
+/* On narrow screens the Contents area belongs to the document's
+   normal flow. Let the toggle scroll away with it instead of floating
+   above the text or an open proof drawer. */
+@media screen and (max-width: 800px) {
+  div.sidetoccontainer > div.sidetoctitle {
+    min-height: 3.4rem;
+    box-sizing: border-box;
+    padding-right: 9rem;
+  }
+
+  .book-theme-toggle {
+    position: absolute;
+    top: 0.6rem;
+    right: auto;
+    bottom: auto;
+    left: 8.25rem;
+    padding: 0.38rem 0.55rem;
+    white-space: nowrap;
+  }
+}
+
+@media screen and (max-width: 360px) {
+  .book-theme-toggle {
+    left: 7.1rem;
+    font-size: 0.75rem;
+    padding: 0.32rem 0.4rem;
+  }
+}
+
+/* On compact screens a drawer needs the full header width. The toggle
+   belongs to the page navigation, so it disappears while the drawer is
+   open rather than covering its controls. */
+@media screen and (max-width: 1359px) {
+  body:has(.gentzen-panel.is-open) > .book-theme-toggle,
+  body:has(.gentzen-panel.is-open) .book-theme-toggle {
+    visibility: hidden;
   }
 }
 
 @media screen and (max-width: 800px) {
-  body:has(.book-theme-toggle) .gentzen-panel.is-open .gentzen-panel-header {
+  .gentzen-panel-header {
     flex-wrap: wrap;
-    padding-top: 3.75rem;
+    justify-content: flex-start;
+    gap: 0.65rem;
+  }
+  .gentzen-panel-header > strong {
+    flex-basis: 100%;
+  }
+  .gentzen-panel-header .gentzen-close {
+    margin-left: auto;
   }
 }
