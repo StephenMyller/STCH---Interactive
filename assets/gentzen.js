@@ -1143,6 +1143,62 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   }
 
+  // Conjunction Congruence has formula-valued metavariables P, Q, and S.
+  // Match its outer connective structure rather than requiring single tokens.
+  function splitConFormula(tex, connective) {
+    let body = bareMath(tex).trim();
+    while (balancedOuterParen(body)) body = body.slice(1, -1).trim();
+    const operator = '\\' + connective;
+    let parentheses = 0, braces = 0, brackets = 0;
+    for (let i = 0; i < body.length; i++) {
+      if (body[i] === '\\') {
+        if (parentheses === 0 && braces === 0 && brackets === 0 &&
+            body.startsWith(operator, i) &&
+            !/[A-Za-z]/.test(body[i + operator.length] || '')) {
+          const left = body.slice(0, i).trim();
+          const right = body.slice(i + operator.length).trim();
+          return left && right ? [left, right] : null;
+        }
+        // Skip a TeX command so its letters are not interpreted as grouping.
+        const command = body.slice(i).match(/^\\[A-Za-z@]+|^\\./);
+        if (command) { i += command[0].length - 1; continue; }
+      }
+      if (body[i] === '{') braces++;
+      else if (body[i] === '}') braces--;
+      else if (body[i] === '(') parentheses++;
+      else if (body[i] === ')') parentheses--;
+      else if (body[i] === '[') brackets++;
+      else if (body[i] === ']') brackets--;
+      if (parentheses < 0 || braces < 0 || brackets < 0) return null;
+    }
+    return null;
+  }
+
+  function matchAndConApplication(rule, branches, conclusion) {
+    if (branches.length !== 1) return null;
+    const premise = splitConFormula(branches[0].formula, 'leftrightarrow');
+    const result = splitConFormula(conclusion, 'leftrightarrow');
+    if (!premise || !result) return null;
+    const left = splitConFormula(result[0], 'land');
+    const right = splitConFormula(result[1], 'land');
+    if (!left || !right) return null;
+    let side, context;
+    if (formulaKey(left[0]) === formulaKey(right[0]) &&
+        formulaKey(left[1]) === formulaKey(premise[0]) &&
+        formulaKey(right[1]) === formulaKey(premise[1])) {
+      side = 'left'; context = left[0];
+    } else if (formulaKey(left[1]) === formulaKey(right[1]) &&
+        formulaKey(left[0]) === formulaKey(premise[0]) &&
+        formulaKey(right[0]) === formulaKey(premise[1])) {
+      side = 'right'; context = left[1];
+    } else return null;
+    // Parenthesize substitutions so any embedded connectives retain scope.
+    const group = s => `(${s.trim()})`;
+    return {bindings: {
+      P: group(premise[0]), Q: group(premise[1]), S: group(context)
+    }, order: [0], andConSide: side};
+  }
+
   // Locate inference nodes by executing the bussproofs stack operations.
   // For each subtree, retain the actual TeX source span: this is what must be
   // grafted into the defining derivation, not just the premise's last formula.
@@ -2266,7 +2322,9 @@ document.addEventListener('DOMContentLoaded', () => {
           if (candidate.premises.length !== arity) continue;
           const candidateLabel = applicationLabel(candidate, label.value);
           if (!candidateLabel) continue;
-          const candidateMatch = candidate.kind === 'builder'
+          const candidateMatch = candidate.kind === 'and-con'
+            ? matchAndConApplication(candidate, branches, arg.content)
+            : candidate.kind === 'builder'
             ? matchBuilderApplication(candidate, branches, arg.content)
             : candidate.kind === 'restricted'
               ? matchRestrictedApplication(candidate, branches, arg.content,
@@ -2298,6 +2356,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dischargeTag: matchedLabel.tag,
             restricted: matched.restricted,
             builder: matched.builder,
+            andConSide: matched.andConSide,
             unique: matched.unique,
             uniquenessIntro: matched.uniquenessIntro,
             forallStar: matched.forallStar,
@@ -2689,8 +2748,11 @@ document.addEventListener('DOMContentLoaded', () => {
       return source.slice(0, hit.start) + replacement + source.slice(hit.end);
     }
     const substitutions = freshSubstitutions(source, hit);
+    const chosenTemplate = hit.rule.kind === 'and-con' && hit.andConSide === 'right'
+      ? hit.rule.templateRight : hit.rule.template;
+    if (!chosenTemplate) throw new Error('Missing conjunction-congruence template');
     let replacement = instantiateTemplate(
-      hit.rule.template, substitutions, hit.originalConclusion
+      chosenTemplate, substitutions, hit.originalConclusion
     );
     if (hit.rule.kind === 'subproof') {
       if (!hit.dischargeTag || !replacement.includes('@@PE_DISCHARGE@@')) {
