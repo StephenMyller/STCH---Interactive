@@ -82,7 +82,7 @@ function setupGentzenPanels() {
   }
 
   function alignWithContext() {
-    if (!active || window.innerWidth < 1600) return;
+    if (!active || window.innerWidth < 1360) return;
 
     const anchor = anchors.get(active);
     if (!anchor) return;
