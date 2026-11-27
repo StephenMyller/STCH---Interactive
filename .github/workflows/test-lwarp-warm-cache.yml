@@ -1,0 +1,284 @@
+# Read-only experiment: can a small prose edit reuse Lwarp cross-reference state?
+# The production publish.yml is NOT modified; this job does not deploy or use caches.
+name: STCH - test warm Lwarp references (preview only)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the textbook
+        uses: actions/checkout@v4
+
+      - name: Prepare identical sources and a controlled prose edit
+        shell: bash
+        run: |
+          set -euo pipefail
+          for variant in baseline warm-edited fresh-edited; do
+            mkdir "$variant"
+            git archive HEAD | tar -x -C "$variant"
+          done
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          # Exact Explorer-body stripping pattern from the publisher.
+          pattern = re.compile(
+              r'(?P<open>\\begin\{explorerderivation\}\s*\{(?P<id>[^{}\r\n]+)\})'
+              r'(?P<body>.*?)'
+              r'(?P<close>\\end\{explorerderivation\})', re.S)
+
+          for variant in ('baseline', 'warm-edited', 'fresh-edited'):
+              root = Path(variant)
+              count = 0
+              for path in sorted((root / 'Chapters').rglob('*.tex')):
+                  original = path.read_text(encoding='utf-8')
+                  matches = list(pattern.finditer(original))
+                  if (len(matches) != original.count('\\begin{explorerderivation}') or
+                      len(matches) != original.count('\\end{explorerderivation}')):
+                      raise SystemExit(f'Unrecognized Explorer environment in {path}')
+                  count += len(matches)
+                  stripped = pattern.sub(lambda m: m.group('open')+'\n'+m.group('close'), original)
+                  path.write_text(stripped, encoding='utf-8')
+              if count == 0:
+                  raise SystemExit(f'No Explorer proof bodies found in {variant}')
+              print(f'{variant}: omitted {count} Explorer proof bodies')
+
+          # Controlled, genuinely visible ordinary-text change. Only the two
+          # edited copies receive it. It is located at the end of the document
+          # to avoid interfering with the author's mathematical source.
+          marker = 'This diagnostic sentence appears only in the preview.'
+          for variant in ('warm-edited', 'fresh-edited'):
+              path = Path(variant) / 'main.tex'
+              text = path.read_text(encoding='utf-8')
+              closing = r'\end{document}'
+              if text.count(closing) != 1:
+                  raise SystemExit(f'Expected exactly one {closing} in {path}')
+              edit = '\n\\par\\noindent ' + marker + '\\par\n'
+              text = text.replace(closing, edit + closing, 1)
+              path.write_text(text, encoding='utf-8')
+          print('The warm-edited and fresh-edited manuscripts are identical.')
+          print('Visible edit:', marker)
+          PY
+
+      - name: Build baseline, warm-edited and fresh-edited skeletons
+        uses: xu-cheng/texlive-action@v3
+        with:
+          os: alpine
+          run: |
+            set -eo pipefail
+            apk add --no-cache poppler-utils ghostscript python3
+            root="$PWD"
+
+            # A failing command writes its log tail and ends that build.
+            timed() {
+              label="$1"; logfile="$2"; shift 2
+              started=$SECONDS
+              if "$@" > "$logfile" 2>&1; then
+                echo "TIMING $label: $((SECONDS-started))s"
+                return 0
+              else
+                echo "FAILED $label after $((SECONDS-started))s"
+                tail -65 "$logfile"
+                return 1
+              fi
+            }
+            check_images() {
+              for attempt in $(seq 1 60); do
+                ready=true
+                for svg in main-images/*.svg; do
+                  if [ ! -s "$svg" ] || ! grep -q '</svg>' "$svg"; then ready=false; break; fi
+                done
+                [ "$ready" = true ] && break
+                sleep 1
+              done
+              for svg in main-images/*.svg; do
+                if [ ! -s "$svg" ] || ! grep -q '</svg>' "$svg"; then
+                  echo "Incomplete SVG: $svg"; return 1
+                fi
+              done
+            }
+
+            # (A) Valid standard baseline, to obtain real, converged aux data.
+            (
+              cd "$root/baseline"
+              echo '===== BASELINE: normal two-pass build ====='
+              timed 'baseline pdflatex' pdf.log pdflatex -interaction=nonstopmode -halt-on-error main.tex
+              timed 'baseline html1 first' first.log lwarpmk html1
+              timed 'baseline html1 second' second.log lwarpmk html1
+              timed 'baseline limages' images.log lwarpmk limages
+              check_images
+              timed 'baseline final html' final.log lwarpmk html
+              test -s index.html
+            )
+
+            # Transfer only cross-reference auxiliary data, not HTML or image
+            # output. This takes place after pdflatex generated the edited
+            # document's own main_html.tex and other configuration files.
+            (
+              cd "$root/warm-edited"
+              echo '===== WARM EDITED: preflight pdflatex ====='
+              timed 'warm-edited pdflatex' pdf.log pdflatex -interaction=nonstopmode -halt-on-error main.tex
+            )
+            (
+              cd "$root/fresh-edited"
+              echo '===== FRESH EDITED: preflight pdflatex ====='
+              timed 'fresh-edited pdflatex' pdf.log pdflatex -interaction=nonstopmode -halt-on-error main.tex
+            )
+            python3 - <<'PY'
+            from pathlib import Path
+            import shutil
+            baseline = Path('baseline')
+            warm = Path('warm-edited')
+            extensions = {
+                '.aux', '.toc', '.lof', '.lot', '.out', '.bbl', '.blg',
+                '.idx', '.ind', '.ilg', '.glo', '.gls', '.acn', '.acr',
+                '.alg', '.lol', '.nav', '.snm', '.sidetoc', '.bcf',
+            }
+            copied = []
+            for src in baseline.rglob('*'):
+                if not src.is_file():
+                    continue
+                if src.suffix.lower() not in extensions and not src.name.endswith('.run.xml'):
+                    continue
+                rel = src.relative_to(baseline)
+                dst = warm / rel
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src, dst)
+                copied.append(str(rel))
+            if not any(n.endswith('_html.aux') for n in copied):
+                raise SystemExit('PREVIEW ERROR: no HTML aux file to restore; cannot test warm start')
+            print('RESTORED CROSS-REFERENCE FILES:', len(copied))
+            for name in sorted(copied)[:30]:
+                print('  ', name)
+            PY
+
+            # (B) Actual experiment: first HTML pass with the restored state.
+            # Never treat failure as success. Continue to the control build.
+            echo '===== WARM EDITED: attempt one HTML pass ====='
+            if (
+              cd "$root/warm-edited"
+              timed 'warm-edited html1 first' first.log lwarpmk html1 &&
+              timed 'warm-edited limages' images.log lwarpmk limages &&
+              check_images &&
+              timed 'warm-edited final html' final.log lwarpmk html &&
+              test -s index.html
+            ); then
+              echo SUCCESS > "$root/warm-status.txt"
+            else
+              echo FAILED > "$root/warm-status.txt"
+              echo 'WARM-START DID NOT COMPLETE; baseline production remains unchanged.'
+            fi
+
+            # (C) Control: exactly the same edited manuscript, clean two passes.
+            (
+              cd "$root/fresh-edited"
+              echo '===== FRESH EDITED: normal two-pass control ====='
+              timed 'fresh-edited html1 first' first.log lwarpmk html1
+              timed 'fresh-edited html1 second' second.log lwarpmk html1
+              timed 'fresh-edited limages' images.log lwarpmk limages
+              check_images
+              timed 'fresh-edited final html' final.log lwarpmk html
+              test -s index.html
+            )
+            echo 'CONTROL SUCCESS: the normal edited two-pass build completed.'
+
+      - name: Compare warm output against standard edited output
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import difflib, hashlib, os
+
+          status = Path('warm-status.txt').read_text(encoding='utf-8').strip()
+          def files(rootname):
+              root = Path(rootname)
+              selected = list(root.glob('*.html')) + list(root.glob('lwarp*.css'))
+              for d in root.iterdir():
+                  if d.is_dir() and (d.name.endswith('-images') or d.name == 'lateximages'):
+                      selected.extend(p for p in d.rglob('*') if p.is_file())
+              return {p.relative_to(root).as_posix(): p for p in selected}
+          warm = files('warm-edited')
+          fresh = files('fresh-edited')
+          missing_warm = sorted(set(fresh) - set(warm))
+          extra_warm = sorted(set(warm) - set(fresh))
+          changed = sorted(name for name in set(warm) & set(fresh)
+                           if hashlib.sha256(warm[name].read_bytes()).digest()
+                           != hashlib.sha256(fresh[name].read_bytes()).digest())
+          identical = (status == 'SUCCESS' and not missing_warm and not extra_warm and not changed)
+          lines = ['# Warm-started Lwarp compilation experiment', '']
+          if status != 'SUCCESS':
+              lines += [
+                  '**RESULT: WARM START FAILED.**', '',
+                  'The previous auxiliary data did not allow the edited skeleton to finish after one forced HTML pass.',
+                  'The normal two-pass control was still built successfully. No production changes were made.', ''
+              ]
+          elif identical:
+              lines += [
+                  '**RESULT: WARM START SUCCEEDED; ALL COMPARED OUTPUTS BYTE-FOR-BYTE IDENTICAL.**', '',
+                  'This supports a conditional single-pass optimization for this controlled prose edit.',
+                  'It does not prove that every kind of change is safe; further tests and a fallback would be required.', ''
+              ]
+          else:
+              lines += [
+                  '**RESULT: WARM START FINISHED, BUT OUTPUTS DIFFER.**', '',
+                  'Do not use the single-pass method in production without investigating the differences.', ''
+              ]
+          lines += [
+              f'- Warm-build status: `{status}`',
+              f'- Warm output files: {len(warm)}',
+              f'- Standard edited output files: {len(fresh)}',
+              f'- Missing from warm: {len(missing_warm)}',
+              f'- Extra in warm: {len(extra_warm)}',
+              f'- Changed files: {len(changed)}', ''
+          ]
+          for heading, values in [('Missing from warm', missing_warm),
+                                  ('Extra in warm', extra_warm), ('Different contents', changed)]:
+              if values:
+                  lines += ['## ' + heading, '']
+                  lines.extend('- `' + v + '`' for v in values[:35])
+                  if len(values) > 35:
+                      lines.append(f'- ... and {len(values)-35} more')
+                  lines.append('')
+          html_diffs = [n for n in changed if n.endswith('.html')]
+          if html_diffs:
+              name = html_diffs[0]
+              a = warm[name].read_text(encoding='utf-8', errors='replace').splitlines()
+              b = fresh[name].read_text(encoding='utf-8', errors='replace').splitlines()
+              diff = list(difflib.unified_diff(a, b, fromfile='warm/'+name,
+                                               tofile='fresh/'+name, lineterm=''))[:100]
+              lines += ['## First HTML difference', '', '```diff', *diff, '```', '']
+          marker = 'This diagnostic sentence appears only in the preview.'
+          fresh_has_marker = any(marker in p.read_text(encoding='utf-8',errors='replace')
+                                 for name,p in fresh.items() if name.endswith('.html'))
+          warm_has_marker = any(marker in p.read_text(encoding='utf-8',errors='replace')
+                                for name,p in warm.items() if name.endswith('.html'))
+          lines += [f'- Test sentence found in standard HTML: **{fresh_has_marker}**',
+                    f'- Test sentence found in warm HTML: **{warm_has_marker}**', '']
+          if not fresh_has_marker:
+              lines.append('**WARNING: the controlled prose edit was not found in output; investigate before interpreting the comparison.**')
+          summary = '\n'.join(lines)+'\n'
+          print(summary)
+          Path('warm-lwarp-comparison.md').write_text(summary,encoding='utf-8')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as f:
+              f.write(summary)
+          PY
+
+      - name: Upload experiment logs and comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stch-warm-lwarp-reference-experiment
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            warm-lwarp-comparison.md
+            warm-status.txt
+            baseline/*.log
+            warm-edited/*.log
+            fresh-edited/*.log
