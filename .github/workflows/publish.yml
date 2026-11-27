@@ -106,6 +106,20 @@ jobs:
             *-images/
             lateximages/
 
+      # A separate, rolling cache of Lwarp's cross-reference auxiliaries.
+      # An exact skeleton HTML cache hit still skips ALL TeX compilation.
+      # On a skeleton miss, restore the newest available auxiliary snapshot
+      # from the current branch; we validate it before trusting one HTML pass.
+      - name: Restore previous Lwarp reference state (best effort)
+        id: warm-aux
+        if: steps.book-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@v4
+        with:
+          key: stch-lwarp-aux-v1-${{ steps.skeleton.outputs.key }}
+          restore-keys: |
+            stch-lwarp-aux-v1-
+          path: .stch-warm-aux-cache/
+
       - name: Report skeleton cache status
         env:
           CACHE_HIT: ${{ steps.book-cache.outputs.cache-hit }}
@@ -116,14 +130,13 @@ jobs:
             echo 'SKELETON CACHE MISS: compiling the textbook with Explorer bodies omitted'
           fi
 
-      - name: Compile the lightweight textbook through existing Lwarp process
+      - name: Compile lightweight textbook (warm Lwarp references with safe fallback)
         if: steps.book-cache.outputs.cache-hit != 'true'
         uses: xu-cheng/texlive-action@v3
         with:
           os: alpine
           run: |
             set -eo pipefail
-            # Diagnostic only: this measures shell commands, not Docker startup/pull time.
             timing_start=$SECONDS
             timing_previous=$SECONDS
             mark() {
@@ -134,14 +147,101 @@ jobs:
 
             apk add --no-cache poppler-utils ghostscript
             mark 'apk package installation'
+            # This preflight must run before restoring old auxiliaries, as in
+            # the successful three-way warm-start comparison experiment.
             pdflatex -interaction=nonstopmode -halt-on-error main.tex > skeleton-pdf.log 2>&1 || { tail -100 skeleton-pdf.log; exit 1; }
             mark 'pdflatex'
+
+            warm_archive='.stch-warm-aux-cache/state.tar.gz'
+            warm_used=false
+            if [ -s "$warm_archive" ] && tar -tzf "$warm_archive" > /dev/null 2>&1; then
+              echo 'WARM AUX: previous reference snapshot found; restoring after pdflatex.'
+              # The archive was created by this workflow from generated files.
+              # Extracting into the working tree reproduces the tested warm start.
+              tar -xzf "$warm_archive" -C .
+              warm_used=true
+              mark 'Restore previous references'
+            else
+              echo 'WARM AUX: no usable previous reference snapshot; use normal two-pass build.'
+            fi
+
             lwarpmk html1 > skeleton-first.log 2>&1 || { tail -100 skeleton-first.log; exit 1; }
             mark 'Lwarp html1 first pass'
-            lwarpmk html1 > skeleton-second.log 2>&1 || { tail -100 skeleton-second.log; exit 1; }
-            mark 'Lwarp html1 second pass'
-            lwarpmk limages > skeleton-images.log 2>&1 || { tail -100 skeleton-images.log; exit 1; }
-            mark 'Lwarp limages'
+
+            needs_second=true
+            if [ "$warm_used" = true ]; then
+              # Conservative check: after one HTML pass, verify that all
+              # cached reference auxiliaries agree with the prior converged
+              # state. If any changed, a second pass is required.
+              if python3 - <<'PYREF'
+            from pathlib import Path
+            import sys, tarfile
+
+            archive = Path('.stch-warm-aux-cache/state.tar.gz')
+            suffixes = {'.aux', '.toc', '.lof', '.lot', '.out', '.bbl', '.blg',
+                        '.idx', '.ind', '.ilg', '.glo', '.gls', '.acn', '.acr',
+                        '.alg', '.lol', '.nav', '.snm', '.sidetoc', '.bcf'}
+            def is_auxiliary(p):
+                return p.suffix.lower() in suffixes or p.name.endswith('.run.xml')
+
+            expected = {}
+            with tarfile.open(archive, 'r:gz') as tar:
+                for member in tar.getmembers():
+                    if member.isfile() and is_auxiliary(Path(member.name)):
+                        data = tar.extractfile(member)
+                        if data is not None:
+                            expected[Path(member.name).as_posix().removeprefix('./')] = data.read()
+            if not any(name.endswith('_html.aux') for name in expected):
+                print('WARM AUX CHECK: missing baseline HTML .aux; second pass required.')
+                sys.exit(1)
+
+            changed = []
+            for name, old_bytes in sorted(expected.items()):
+                p = Path(name)
+                if not p.is_file() or p.read_bytes() != old_bytes:
+                    changed.append(name)
+            # Also catch newly created auxiliary files (e.g. new sections).
+            for p in Path('.').rglob('*'):
+                if not p.is_file() or '.stch-warm-aux-cache' in p.parts:
+                    continue
+                if is_auxiliary(p) and p.as_posix() not in expected:
+                    changed.append(p.as_posix())
+            if changed:
+                print('WARM AUX CHECK: auxiliary files changed after first pass:')
+                for name in sorted(set(changed))[:20]:
+                    print('  ', name)
+                sys.exit(1)
+            print('WARM AUX CHECK: cached reference auxiliaries stable after first pass.')
+            PYREF
+              then
+                needs_second=false
+              else
+                echo 'WARM AUX: reference state changed; taking the normal second pass.'
+              fi
+            fi
+
+            if [ "$needs_second" = false ]; then
+              # Lwarp's own limages check is an additional correctness gate.
+              # A failed check is not ignored: retry via the normal second pass.
+              if lwarpmk limages > skeleton-images.log 2>&1; then
+                mark 'Lwarp limages (warm single-pass)'
+              else
+                echo 'WARM AUX: limages requested another pass (or failed); retrying once via normal two-pass sequence.'
+                tail -45 skeleton-images.log || true
+                needs_second=true
+              fi
+            fi
+
+            if [ "$needs_second" = true ]; then
+              lwarpmk html1 > skeleton-second.log 2>&1 || { tail -100 skeleton-second.log; exit 1; }
+              mark 'Lwarp html1 second pass'
+              lwarpmk limages > skeleton-images.log 2>&1 || { tail -100 skeleton-images.log; exit 1; }
+              mark 'Lwarp limages (two-pass)'
+              echo 'LWARP PATH: two HTML passes (cold start or conservative fallback)'
+            else
+              echo 'LWARP PATH: one HTML pass (warm references verified)'
+            fi
+
             for attempt in $(seq 1 60); do
               ready=true
               for svg in main-images/*.svg; do
@@ -162,6 +262,43 @@ jobs:
             test -s index.html || { echo 'Missing skeleton index.html'; exit 1; }
             mark 'Final index.html check'
             echo "TIMING SHELL TOTAL: $((SECONDS - timing_start))s"
+
+      - name: Snapshot converged Lwarp auxiliary files for future warm starts
+        if: steps.book-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import tarfile
+          root = Path('.')
+          dest = root / '.stch-warm-aux-cache' / 'state.tar.gz'
+          dest.parent.mkdir(parents=True, exist_ok=True)
+          extensions = {
+              '.aux', '.toc', '.lof', '.lot', '.out', '.bbl', '.blg',
+              '.idx', '.ind', '.ilg', '.glo', '.gls', '.acn', '.acr',
+              '.alg', '.lol', '.nav', '.snm', '.sidetoc', '.bcf',
+          }
+          excluded = {'.git', '.github', '.stch-warm-aux-cache', 'site',
+                      'staging', 'staging-proofs', 'proof-isolate',
+                      'proof-package', '__pycache__'}
+          candidates = sorted(p for p in root.rglob('*') if p.is_file()
+                              and not any(part in excluded for part in p.parts)
+                              and (p.suffix.lower() in extensions
+                                   or p.name.endswith('.run.xml')))
+          if not any(p.name.endswith('_html.aux') for p in candidates):
+              raise SystemExit('WARM AUX SAVE ERROR: no generated HTML .aux to preserve')
+          with tarfile.open(dest, 'w:gz') as archive:
+              for p in candidates:
+                  archive.add(p, arcname=p.as_posix())
+          print(f'WARM AUX SNAPSHOT: saved {len(candidates)} auxiliary files ({dest.stat().st_size:,} bytes)')
+          PY
+
+      - name: Save updated Lwarp reference state for subsequent skeleton changes
+        if: steps.book-cache.outputs.cache-hit != 'true' && steps.warm-aux.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          key: stch-lwarp-aux-v1-${{ steps.skeleton.outputs.key }}
+          path: .stch-warm-aux-cache/
 
       - name: Check scaffold and make generated HTML writable
         run: |
