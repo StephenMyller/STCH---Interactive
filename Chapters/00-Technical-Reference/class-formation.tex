@@ -91,8 +91,8 @@ Next, suppose that \(
 \)
 Restricted universal introduction therefore establishes the restricted specification.
 
-The two implications yield the required equivalence.
-
+The two implications yield the required equivalence. Test.
+\end{proof}
 
 \begin{explorerderivation}{meta:restricted-unrestricted-class-formulation}
 \begin{prooftree}
@@ -148,7 +148,7 @@ The two implications yield the required equivalence.
   \RightLabel{\(\forall\)-I}
   \UnaryInfC{\(\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\)}
   \RightLabel{\(\to\)-I, \(1\)}
-  \UnaryInfC{\(\bigl(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\bigr)\to\bigl(\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\bigr)\)}
+  \UnaryInfC{\(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\to\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\)}
   \AxiomC{}
   \RightLabel{\(4\)}
   \UnaryInfC{\(\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\)}
@@ -196,7 +196,6 @@ The two implications yield the required equivalence.
 \end{prooftree}
 \end{explorerderivation}
 
-\end{proof}
 
 In particular, the Class Formation Schema also yields
 \[
