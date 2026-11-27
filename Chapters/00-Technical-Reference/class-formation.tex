@@ -316,6 +316,84 @@ Biconditional elimination yields
 as required.
 \end{proof}
 
+\begin{explorerderivation}{meta:class-formation-by-predicative-reduction}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(\mathrm{A}_2\)}
+    \UnaryInfC{
+        \(\exists h\,\forall_S\xi
+        (\xi\in h\leftrightarrow\varphi^\ast)\)
+    }
+%
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{
+        \(\forall_S\xi
+        (\xi\in h\leftrightarrow\varphi^\ast)\)
+    }
+    \AxiomC{}
+    \RightLabel{\(2\)}
+    \UnaryInfC{\(\Set(\xi)\)}
+    \RightLabel{\(\forall_S\)-E}
+    \BinaryInfC{\(\xi\in h\leftrightarrow\varphi^\ast\)}
+    \AxiomC{}
+    \RightLabel{\(3\)}
+    \UnaryInfC{\(\xi\in h\)}
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(\varphi^\ast\)}
+    \AxiomC{}
+    \RightLabel{Red.}
+    \UnaryInfC{\(\varphi\leftrightarrow\varphi^\ast\)}
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(\varphi\)}
+    \RightLabel{\(\to\)-I, 3}
+    \UnaryInfC{\(\xi\in h\to\varphi\)}
+%
+    \AxiomC{}
+    \RightLabel{Red.}
+    \UnaryInfC{\(\varphi\leftrightarrow\varphi^\ast\)}
+    \AxiomC{}
+    \RightLabel{\(4\)}
+    \UnaryInfC{\(\varphi\)}
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(\varphi^\ast\)}
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{
+        \(\forall_S\xi
+        (\xi\in h\leftrightarrow\varphi^\ast)\)
+    }
+    \AxiomC{}
+    \RightLabel{\(2\)}
+    \UnaryInfC{\(\Set(\xi)\)}
+    \RightLabel{\(\forall_S\)-E}
+    \BinaryInfC{\(\xi\in h\leftrightarrow\varphi^\ast\)}
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(\xi\in h\)}
+    \RightLabel{\(\to\)-I, 4}
+    \UnaryInfC{\(\varphi\to\xi\in h\)}
+%
+    \RightLabel{\(\leftrightarrow\)-I}
+    \BinaryInfC{\(\xi\in h\leftrightarrow\varphi\)}
+    \RightLabel{\(\forall_S\)-I, 2}
+    \UnaryInfC{
+        \(\forall_S\xi
+        (\xi\in h\leftrightarrow\varphi)\)
+    }
+    \RightLabel{\(\exists\)-I}
+    \UnaryInfC{
+        \(\exists\eta\,\forall_S\xi
+        (\xi\in\eta\leftrightarrow\varphi)\)
+    }
+    \RightLabel{\(\exists\)-E, 1}
+    \BinaryInfC{
+        \(\exists\eta\,\forall_S\xi
+        (\xi\in\eta\leftrightarrow\varphi)\)
+    }
+\end{prooftree}
+\end{explorerderivation}
+
+
 The resulting formulas are \emph{derived instances of Class Formation}. They are theorems obtained from the original schema, not additional axiom instances. Predicative reduction thus enlarges the notation available in membership specifications without enlarging the axioms of NBG.
 
 \nbgpara{6}{Predicativity of Basic Defined Notation}
