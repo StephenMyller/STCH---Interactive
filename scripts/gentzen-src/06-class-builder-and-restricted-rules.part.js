@@ -221,6 +221,40 @@
     return false;
   }
 
+  // Treat the author's explicit substitution notation phi[zeta/xi] as an
+  // instance of schematic phi under the restricted quantifier. This is a
+  // *matching* convention only: the rendered conclusion stays as authored.
+  // Ordinary literal instances remain the first, preferred case.
+  function restrictedUniversalInstance(matrix, binder, witness, conclusion) {
+    const literal = instantiatedMatrix(matrix, binder, witness);
+    if (literal === null) return null;
+    if (formulaKey(literal) === formulaKey(conclusion)) return literal;
+
+    // \bigl(...\bigr) and similar TeX sizes do not affect logical formulas.
+    const withoutSizes = text => text.replace(
+      /\\(?:biggl|biggr|Biggl|Biggr|bigl|bigr|Bigl|Bigr|big|Big|bigg|Bigg|left|right|middle)\b/g,
+      ''
+    );
+    let found = false;
+    let mismatched = false;
+    const annotated = bareMath(conclusion).replace(
+      /\\(varphi|phi|psi|chi|theta)\s*\[\s*(\\[A-Za-z]+|[A-Za-z](?:_\{?[0-9]+\}?)?)\s*\/\s*(\\[A-Za-z]+|[A-Za-z](?:_\{?[0-9]+\}?)?)\s*\]/g,
+      (whole, variable, to, from) => {
+        if (to !== witness || from !== binder) {
+          mismatched = true;
+          return whole;
+        }
+        found = true;
+        return `\\${variable}`;
+      }
+    );
+    if (!found || mismatched ||
+        formulaKey(withoutSizes(literal)) !== formulaKey(withoutSizes(annotated))) {
+      return null;
+    }
+    return bareMath(conclusion);
+  }
+
   function matchRestrictedApplication(rule, branches, conclusion, labelInfo, source) {
     const mode = rule.mode;
     const arity = mode === 'forall-i' ? 1 : 2;
@@ -239,8 +273,8 @@
         const q = restrictedQuantifier(first.formula, 'forall');
         const witness = second && setVariable(second.formula);
         if (!q || !witness) continue;
-        const instance = instantiatedMatrix(q.body, q.binder, witness);
-        if (instance === null || formulaKey(instance) !== formulaKey(conclusion)) continue;
+        const instance = restrictedUniversalInstance(q.body, q.binder, witness, conclusion);
+        if (instance === null) continue;
         return {bindings: {}, order, restricted: {q, witness, instance}};
       }
       if (mode === 'exists-i') {
