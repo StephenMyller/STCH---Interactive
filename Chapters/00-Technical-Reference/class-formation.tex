@@ -243,75 +243,84 @@ Predicative reduction must be distinguished from primitive expansion. Primitive 
 
 A provable equivalence alone does not automatically enlarge the permitted syntax. A reduction must be assigned and justified, with the stated restrictions on variables and dependencies. In particular, unrestricted quantification over classes cannot be made admissible merely by concealing it within a new abbreviation.
 
+
+\begin{metatheorem}[Equivalence of Predicative Reductions]
+\label{meta:equivalence-of-predicative-reductions}
+Let \(\varphi^\ast\) be obtained from an admitted extended formula
+\(\varphi\) through a finite sequence of justified predicative
+reductions. Each replacement is made in a logical context in which
+provable equivalence is preserved, and all required alphabetic
+renamings and side conditions are respected. Then
+\[
+\vdash\varphi\leftrightarrow\varphi^\ast.
+\]
+\end{metatheorem}
+
+\begin{proof}
+Write the reduction sequence as
+\[
+\varphi=\varphi_0\rightsquigarrow\varphi_1
+\rightsquigarrow\cdots\rightsquigarrow\varphi_n=\varphi^\ast.
+\]
+At each step, the prescribed reduction replaces a subformula by a
+provably equivalent one. Propositional and quantifier congruence
+preserve that equivalence in the surrounding logical context. Hence
+\(\vdash\varphi_i\leftrightarrow\varphi_{i+1}\) for each \(i<n\).
+
+We now use induction on the number of reduction steps. With no steps,
+\(\varphi_0=\varphi_n\), so the conclusion follows by reflexivity
+of the biconditional. Suppose the claim holds after \(n\) steps.
+The induction hypothesis yields
+\(\vdash\varphi_0\leftrightarrow\varphi_n\), while the next
+justified reduction yields
+\(\vdash\varphi_n\leftrightarrow\varphi_{n+1}\).
+Propositional logic
+then gives
+\(\vdash\varphi_0\leftrightarrow\varphi_{n+1}\).
+Thus every finite sequence of justified reductions preserves
+provable equivalence.
+\end{proof}
+
 \nbgpara{5}{Class Formation by Predicative Reduction}
 
 The preceding definitions justify the use of predicative extended formulas in membership specifications, even when those formulas are not themselves core predicative.
 
 \begin{metatheorem}[Class Formation by Predicative Reduction]
 \label{meta:class-formation-by-predicative-reduction}
-Let \(\varphi\) be a predicative extended formula, and let \(\varphi^\ast\) be a core predicative reduct of \(\varphi\). Suppose that the reductions leading to \(\varphi^\ast\) have been justified independently of the present application of Class Formation.
+Let \(\varphi\) be a predicative extended formula, and let
+\(\varphi^\ast\) be a core predicative reduct of \(\varphi\).
+Suppose that the reductions leading to \(\varphi^\ast\) have been
+justified independently of the present application of Class Formation.
 
-Let \(\xi\) and \(\eta\) be distinct variables, and suppose that \(\eta\) does not occur free in \(\varphi\). Then
+Let \(\xi\) and \(\eta\) be distinct variables, and suppose that
+\(\eta\) does not occur free in \(\varphi\). Then
 \[
 \vdash
 \exists\eta\,\forall_S\xi
-\bigl(
-\xi\in\eta\leftrightarrow\varphi
-\bigr).
+\bigl(\xi\in\eta\leftrightarrow\varphi\bigr).
 \]
 \end{metatheorem}
 
 \begin{proof}
-Since each reduction is justified, the equivalence of an expression and its reduct is preserved when the replacement is made within a larger formula. Repeated application, using propositional reasoning and quantifier congruence where necessary, therefore establishes
+The reductions introduce no new free variables, so \(\eta\) does
+not occur free in \(\varphi^\ast\). Since \(\varphi^\ast\) is core
+predicative, the Class Formation Schema guarantees a class whose
+members are precisely the sets satisfying \(\varphi^\ast\):
 \[
 \vdash
-\varphi\leftrightarrow\varphi^\ast.
+\exists\eta\,\forall_S\xi
+\bigl(\xi\in\eta\leftrightarrow\varphi^\ast\bigr).
 \]
 
-Consequently,
-\[
-\vdash
-\forall_S\xi
-\bigl(
-\xi\in\eta\leftrightarrow\varphi
-\bigr)
-\leftrightarrow
-\forall_S\xi
-\bigl(
-\xi\in\eta\leftrightarrow\varphi^\ast
-\bigr).
-\]
-Quantifier congruence gives
-\[
-\vdash
-\begin{aligned}[t]
-&
-\exists\eta\,\forall_S\xi
-\bigl(
-\xi\in\eta\leftrightarrow\varphi
-\bigr)\leftrightarrow
-\exists\eta\,\forall_S\xi
-\bigl(
-\xi\in\eta\leftrightarrow\varphi^\ast
-\bigr).
-\end{aligned}
-\]
-
-Since predicative reductions introduce no new free variables, \(\eta\) does not occur free in \(\varphi^\ast\). Moreover, \(\varphi^\ast\) is core predicative. The Class Formation Schema therefore supplies
+By Metatheorem~\ref{meta:equivalence-of-predicative-reductions},
+\(\varphi\) and \(\varphi^\ast\) are provably equivalent. Hence
+any class satisfying the displayed specification also satisfies
+the specification with \(\varphi\) in place of \(\varphi^\ast\).
+Replacement of Provable Equivalents therefore gives
 \[
 \vdash
 \exists\eta\,\forall_S\xi
-\bigl(
-\xi\in\eta\leftrightarrow\varphi^\ast
-\bigr).
-\]
-Biconditional elimination yields
-\[
-\vdash
-\exists\eta\,\forall_S\xi
-\bigl(
-\xi\in\eta\leftrightarrow\varphi
-\bigr),
+\bigl(\xi\in\eta\leftrightarrow\varphi\bigr),
 \]
 as required.
 \end{proof}
@@ -319,73 +328,17 @@ as required.
 \begin{explorerderivation}{meta:class-formation-by-predicative-reduction}
 \begin{prooftree}
     \AxiomC{}
+    \RightLabel{MT\ref{meta:equivalence-of-predicative-reductions}}
+    \UnaryInfC{\(\varphi^\ast\leftrightarrow\varphi\)}
+%
+    \AxiomC{}
     \RightLabel{\(\mathrm{A}_2\)}
     \UnaryInfC{
-        \(\exists h\,\forall_S\xi
-        (\xi\in h\leftrightarrow\varphi^\ast)\)
-    }
-%
-    \AxiomC{}
-    \RightLabel{\(1\)}
-    \UnaryInfC{
-        \(\forall_S\xi
-        (\xi\in h\leftrightarrow\varphi^\ast)\)
-    }
-    \AxiomC{}
-    \RightLabel{\(2\)}
-    \UnaryInfC{\(\Set(\xi)\)}
-    \RightLabel{\(\forall_S\)-E}
-    \BinaryInfC{\(\xi\in h\leftrightarrow\varphi^\ast\)}
-    \AxiomC{}
-    \RightLabel{\(3\)}
-    \UnaryInfC{\(\xi\in h\)}
-    \RightLabel{\(\leftrightarrow\)-E}
-    \BinaryInfC{\(\varphi^\ast\)}
-    \AxiomC{}
-    \RightLabel{Red.}
-    \UnaryInfC{\(\varphi\leftrightarrow\varphi^\ast\)}
-    \RightLabel{\(\leftrightarrow\)-E}
-    \BinaryInfC{\(\varphi\)}
-    \RightLabel{\(\to\)-I, 3}
-    \UnaryInfC{\(\xi\in h\to\varphi\)}
-%
-    \AxiomC{}
-    \RightLabel{Red.}
-    \UnaryInfC{\(\varphi\leftrightarrow\varphi^\ast\)}
-    \AxiomC{}
-    \RightLabel{\(4\)}
-    \UnaryInfC{\(\varphi\)}
-    \RightLabel{\(\leftrightarrow\)-E}
-    \BinaryInfC{\(\varphi^\ast\)}
-    \AxiomC{}
-    \RightLabel{\(1\)}
-    \UnaryInfC{
-        \(\forall_S\xi
-        (\xi\in h\leftrightarrow\varphi^\ast)\)
-    }
-    \AxiomC{}
-    \RightLabel{\(2\)}
-    \UnaryInfC{\(\Set(\xi)\)}
-    \RightLabel{\(\forall_S\)-E}
-    \BinaryInfC{\(\xi\in h\leftrightarrow\varphi^\ast\)}
-    \RightLabel{\(\leftrightarrow\)-E}
-    \BinaryInfC{\(\xi\in h\)}
-    \RightLabel{\(\to\)-I, 4}
-    \UnaryInfC{\(\varphi\to\xi\in h\)}
-%
-    \RightLabel{\(\leftrightarrow\)-I}
-    \BinaryInfC{\(\xi\in h\leftrightarrow\varphi\)}
-    \RightLabel{\(\forall_S\)-I, 2}
-    \UnaryInfC{
-        \(\forall_S\xi
-        (\xi\in h\leftrightarrow\varphi)\)
-    }
-    \RightLabel{\(\exists\)-I}
-    \UnaryInfC{
         \(\exists\eta\,\forall_S\xi
-        (\xi\in\eta\leftrightarrow\varphi)\)
+        (\xi\in\eta\leftrightarrow\varphi^\ast)\)
     }
-    \RightLabel{\(\exists\)-E, 1}
+%
+    \RightLabel{Eqv-Rep}
     \BinaryInfC{
         \(\exists\eta\,\forall_S\xi
         (\xi\in\eta\leftrightarrow\varphi)\)

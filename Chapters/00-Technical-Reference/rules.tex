@@ -645,13 +645,77 @@ in later derivations. Each is admissible in the deductive
 system already defined and introduces no additional
 inference principle.
 
+We begin with a propositional inference rule, then consider
+congruence and replacement of equivalent formulas, and finally
+record a basic rule governing identity.
+
+\nbgparar{Disjunctive Syllogism} \quad
+From a disjunction and the negation of one
+of its disjuncts, we may infer the other:
+
+\begin{prooftree}
+    \AxiomC{\(\varphi\lor\psi\)}
+    \AxiomC{\(\neg\varphi\)}
+    \RightLabel{DS}
+    \BinaryInfC{\(\psi\)}
+\end{prooftree}
+
+To justify this rule, we derive
+\[
+\vdash
+(\varphi\lor\psi)\to(\neg\varphi\to\psi).
+\]
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{\(\varphi\lor\psi\)}
+%
+    \AxiomC{}
+    \RightLabel{3}
+    \UnaryInfC{\(\varphi\)}
+%
+    \AxiomC{}
+    \RightLabel{2}
+    \UnaryInfC{\(\neg\varphi\)}
+%
+    \RightLabel{\(\neg\)-E}
+    \BinaryInfC{\(\bot\)}
+    \RightLabel{\(\bot\)-E}
+    \UnaryInfC{\(\psi\)}
+%
+    \AxiomC{}
+    \RightLabel{4}
+    \UnaryInfC{\(\psi\)}
+%
+    \RightLabel{\(\lor\)-E, \(3,4\)}
+    \TrinaryInfC{\(\psi\)}
+%
+    \RightLabel{\(\to\)-I, 2}
+    \UnaryInfC{\(\neg\varphi\to\psi\)}
+    \RightLabel{\(\to\)-I, 1}
+    \UnaryInfC{
+        \((\varphi\lor\psi)\to
+        (\neg\varphi\to\psi)\)
+    }
+\end{prooftree}
+
+Thus, an application of DS abbreviates
+an application of the displayed theorem
+followed by two applications of \(\to\)-E.
+The rule is also admissible with the
+disjuncts exchanged.
+
+
+\vspace{0.4cm}
+
 \nbgparar{Negation Congruence} \quad
 From a biconditional, we may infer the biconditional
 of the corresponding negations:
 
 \begin{prooftree}
     \AxiomC{\(\varphi\leftrightarrow\psi\)}
-    \RightLabel{NC}
+    \RightLabel{$\neg$-Con}
     \UnaryInfC{\(\neg\varphi\leftrightarrow\neg\psi\)}
 \end{prooftree}
 
@@ -713,113 +777,6 @@ To justify this rule, we derive
 Thus, an application of Negation Congruence abbreviates
 an application of the displayed theorem followed by
 \(\to\)-E.
-
-\vspace{0.4cm}
-
-\nbgparar{Symmetry of Identity} \quad
-Identity may be reversed:
-
-\begin{prooftree}
-    \AxiomC{\(\xi=\eta\)}
-    \RightLabel{\(=\)-Sym}
-    \UnaryInfC{\(\eta=\xi\)}
-\end{prooftree}
-
-To justify this rule, we derive
-\[
-\vdash
-\xi=\eta\to\eta=\xi.
-\]
-
-\begin{prooftree}
-    \AxiomC{}
-    \RightLabel{1}
-    \UnaryInfC{\(\xi=\eta\)}
-    \AxiomC{}
-    \RightLabel{\(=\)-I}
-    \UnaryInfC{\(\xi=\xi\)}
-    \RightLabel{\(=\)-E}
-    \BinaryInfC{\(\eta=\xi\)}
-    \RightLabel{\(\to\)-I, 1}
-    \UnaryInfC{\(\xi=\eta\to\eta=\xi\)}
-\end{prooftree}
-
-The application of \(=\)-E uses the formula
-\[
-\zeta=\xi,
-\]
-substituting \(\xi\) and \(\eta\), respectively, for
-\(\zeta\). Both substitutions satisfy the side conditions
-of the primitive rule. Thus, an application of \(=\)-Sym likewise abbreviates
-an application of the displayed theorem followed by
-\(\to\)-E.
-
-For the sake of economy, throughout our derivations, we allow the two sides
-of an equality to be exchanged without explicitly
-invoking the symmetry of identity. Thus, whenever
-\(a=b\) has been established, we may also use \(b=a\).
-Such steps are understood to abbreviate an
-application of the derived rule \(=\)-Sym.
-
-
-\vspace{0.4cm}
-
-\nbgparar{Disjunctive Syllogism} \quad
-From a disjunction and the negation of one
-of its disjuncts, we may infer the other:
-
-\begin{prooftree}
-    \AxiomC{\(\varphi\lor\psi\)}
-    \AxiomC{\(\neg\varphi\)}
-    \RightLabel{DS}
-    \BinaryInfC{\(\psi\)}
-\end{prooftree}
-
-To justify this rule, we derive
-\[
-\vdash
-(\varphi\lor\psi)\to(\neg\varphi\to\psi).
-\]
-
-\begin{prooftree}
-    \AxiomC{}
-    \RightLabel{1}
-    \UnaryInfC{\(\varphi\lor\psi\)}
-%
-    \AxiomC{}
-    \RightLabel{3}
-    \UnaryInfC{\(\varphi\)}
-%
-    \AxiomC{}
-    \RightLabel{2}
-    \UnaryInfC{\(\neg\varphi\)}
-%
-    \RightLabel{\(\neg\)-E}
-    \BinaryInfC{\(\bot\)}
-    \RightLabel{\(\bot\)-E}
-    \UnaryInfC{\(\psi\)}
-%
-    \AxiomC{}
-    \RightLabel{4}
-    \UnaryInfC{\(\psi\)}
-%
-    \RightLabel{\(\lor\)-E, \(3,4\)}
-    \TrinaryInfC{\(\psi\)}
-%
-    \RightLabel{\(\to\)-I, 2}
-    \UnaryInfC{\(\neg\varphi\to\psi\)}
-    \RightLabel{\(\to\)-I, 1}
-    \UnaryInfC{
-        \((\varphi\lor\psi)\to
-        (\neg\varphi\to\psi)\)
-    }
-\end{prooftree}
-
-Thus, an application of DS abbreviates
-an application of the displayed theorem
-followed by two applications of \(\to\)-E.
-The rule is also admissible with the
-disjuncts exchanged.
 
 
 \vspace{0.4cm}
@@ -899,3 +856,96 @@ Thus, an application of \(\land\)-Con abbreviates
 an application of the displayed theorem followed by
 \(\to\)-E. The rule is also admissible with the
 new conjunct placed on the right.
+
+
+\vspace{0.4cm}
+
+\nbgparar{Replacement of Provable Equivalents} \quad
+A formula occurrence may be replaced by a provably equivalent
+formula, even when it occurs within a larger formula:
+
+\begin{prooftree}
+    \AxiomC{\(\vdash\varphi\leftrightarrow\psi\)}
+    \AxiomC{\(\Phi[\varphi]\)}
+    \RightLabel{Eqv-Rep}
+    \BinaryInfC{\(\Phi[\psi]\)}
+\end{prooftree}
+
+Here \(\Phi[-]\) denotes a formula context with one distinguished
+occurrence of a formula. The first premise asserts that the
+biconditional is a theorem, not merely an undischarged assumption.
+The context is formed using the logical connectives and quantifiers
+of the established extended syntax. Replacements must preserve the
+intended binding of variables; bound variables may be renamed
+alphabetically where needed to prevent accidental capture.
+
+To justify the rule, we establish by structural induction on
+\(\Phi[-]\) that
+\[
+\vdash\varphi\leftrightarrow\psi
+\quad\Longrightarrow\quad
+\vdash\Phi[\varphi]\leftrightarrow\Phi[\psi].
+\]
+If the context consists only of the distinguished occurrence,
+this is immediate. Passing through a propositional connective
+preserves equivalence by propositional reasoning, including
+the congruence principles established above. Passing through a
+quantifier preserves equivalence by quantifier congruence.
+The theoremhood of \(\varphi\leftrightarrow\psi\) ensures that
+no undischarged assumption obstructs the required quantifier
+introductions. The induction therefore establishes the displayed
+contextual equivalence for every such context.
+
+An application of Eqv-Rep now abbreviates an application of this
+contextual equivalence followed by \(\leftrightarrow\)-E.
+Unlike the preceding congruence rules, Eqv-Rep requires the
+biconditional being substituted to be a theorem, because its
+context may include quantifiers.
+
+
+\vspace{0.4cm}
+
+\nbgparar{Symmetry of Identity} \quad
+Identity may be reversed:
+
+\begin{prooftree}
+    \AxiomC{\(\xi=\eta\)}
+    \RightLabel{\(=\)-Sym}
+    \UnaryInfC{\(\eta=\xi\)}
+\end{prooftree}
+
+To justify this rule, we derive
+\[
+\vdash
+\xi=\eta\to\eta=\xi.
+\]
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{1}
+    \UnaryInfC{\(\xi=\eta\)}
+    \AxiomC{}
+    \RightLabel{\(=\)-I}
+    \UnaryInfC{\(\xi=\xi\)}
+    \RightLabel{\(=\)-E}
+    \BinaryInfC{\(\eta=\xi\)}
+    \RightLabel{\(\to\)-I, 1}
+    \UnaryInfC{\(\xi=\eta\to\eta=\xi\)}
+\end{prooftree}
+
+The application of \(=\)-E uses the formula
+\[
+\zeta=\xi,
+\]
+substituting \(\xi\) and \(\eta\), respectively, for
+\(\zeta\). Both substitutions satisfy the side conditions
+of the primitive rule. Thus, an application of \(=\)-Sym likewise abbreviates
+an application of the displayed theorem followed by
+\(\to\)-E.
+
+For the sake of economy, throughout our derivations, we allow the two sides
+of an equality to be exchanged without explicitly
+invoking the symmetry of identity. Thus, whenever
+\(a=b\) has been established, we may also use \(b=a\).
+Such steps are understood to abbreviate an
+application of the derived rule \(=\)-Sym.
