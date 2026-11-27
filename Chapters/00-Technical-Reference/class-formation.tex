@@ -68,15 +68,11 @@ Suppose first that \(\forall_S\xi
 \zeta\in\eta
 \leftrightarrow
 \varphi[\zeta/\xi],
-\) from which \(\zeta\in\eta\) follows. Hence
-\[
-\zeta\in\eta
+\) from which \(\zeta\in\eta\) follows. Hence \(\zeta\in\eta
 \leftrightarrow
 \bigl(
 \Set(\zeta)\land\varphi[\zeta/\xi]
-\bigr).
-\]
-Since \(\zeta\) was arbitrary, universal generalization establishes the unrestricted specification.
+\bigr).\) Since \(\zeta\) was arbitrary, universal generalization establishes the unrestricted specification.
 
 Next, suppose that \(
 \forall\xi
@@ -84,15 +80,11 @@ Next, suppose that \(
 \xi\in\eta
 \leftrightarrow
 (\Set(\xi)\land\varphi)
-\bigr).\) Assume \(\Set(\zeta)\). Ordinary universal elimination gives
-\[
-\zeta\in\eta
+\bigr).\) Assume \(\Set(\zeta)\). Ordinary universal elimination gives \(\zeta\in\eta
 \leftrightarrow
 \bigl(
 \Set(\zeta)\land\varphi[\zeta/\xi]
-\bigr).
-\]
-Under the assumption \(\Set(\zeta)\), by using propositional reasoning, this is equivalent to \(
+\bigr).\) Under the assumption \(\Set(\zeta)\), by using propositional reasoning, this is equivalent to \(
 \zeta\in\eta
 \leftrightarrow
 \varphi[\zeta/\xi]
@@ -196,12 +188,11 @@ The two implications yield the required equivalence.
   \UnaryInfC{\(\forall\xi\bigl(\Set(\xi)\to(\xi\in\eta\leftrightarrow\varphi)\bigr)\)}
   \RightLabel{D\ref{def:restricted-universal-quantification}}
   \dashedLine
-  \UnaryInfC{\(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\)}
-  \solidLine
+  \UnaryInfC{\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)}
   \RightLabel{\(\to\)-I, \(4\)}
-  \UnaryInfC{\(\bigl(\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\bigr)\to\bigl(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\bigr)\)}
+  \UnaryInfC{\(\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\to\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\)}
   \RightLabel{\(\leftrightarrow\)-I}
-  \BinaryInfC{\(\bigl(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\bigr)\leftrightarrow\bigl(\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\bigr)\)}
+  \BinaryInfC{\(\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)\leftrightarrow\forall\xi\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr)\)}
 \end{prooftree}
 \end{explorerderivation}
 
