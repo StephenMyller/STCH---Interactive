@@ -1,0 +1,134 @@
+# Read-only diagnostic: compare exact production skeleton fingerprints from Git commits.
+# Does not compile, publish, mutate source files, or change any caches.
+name: STCH - investigate skeleton cache fingerprints
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout complete history for read-only comparison
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Recompute reported skeleton keys and list changed hashed inputs
+        env:
+          OLD_KEY: "stch-book-skeleton-v1-d72e838fe1297ac0d942cdecd73764a99b80611b166db33b5d0e8d5e05b192cc"
+          NEW_KEY: "stch-book-skeleton-v1-8013dd281d846583534ad6706d9a20ddeae5f48ffd8606b55d14fee1c5b1a13a"
+        run: |
+          python3 - <<'PY'
+          from pathlib import PurePosixPath
+          from hashlib import sha256
+          import collections, os, re, subprocess
+
+          OLD = os.environ['OLD_KEY'].strip()
+          NEW = os.environ['NEW_KEY'].strip()
+          EXTENSIONS = {'.tex', '.sty', '.cls', '.cfg', '.def', '.bib', '.bst',
+                        '.png', '.jpg', '.jpeg', '.svg', '.pdf', '.eps'}
+          EXCLUDED = {'.git','.github','proof-isolate','proof-package',
+                      'staging-proofs','site','staging','main-images',
+                      'lateximages','__pycache__'}
+          PATTERN = re.compile(
+              r'(?P<open>\\begin\{explorerderivation\}\s*\{(?P<id>[^{}\r\n]+)\})'
+              r'(?P<body>.*?)'
+              r'(?P<close>\\end\{explorerderivation\})', re.S)
+
+          def git(*args):
+              p = subprocess.run(['git', *args], stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE, check=False)
+              if p.returncode:
+                  raise RuntimeError(f'git {args[:2]} failed: {p.stderr.decode(errors="replace")}')
+              return p.stdout
+
+          def data_at(rev, path):
+              return git('show', rev + ':' + path)
+
+          def snapshot(rev):
+              paths = [p.decode('utf-8') for p in
+                       git('ls-tree', '-r', '-z', '--name-only', rev).split(b'\0') if p]
+              files = {}
+              for name in paths:
+                  path = PurePosixPath(name)
+                  if (path.suffix.lower() not in EXTENSIONS or
+                      any(x in EXCLUDED for x in path.parts) or
+                      path.name.startswith('main_html.')):
+                      continue
+                  data = data_at(rev, name)
+                  if name.startswith('Chapters/') and path.suffix == '.tex':
+                      original = data.decode('utf-8')
+                      # Exact same replacement as the production skeleton fingerprint.
+                      stripped = PATTERN.sub(lambda m: m.group('open')+'\n'+m.group('close'), original)
+                      if len(list(PATTERN.finditer(original))) != original.count('\\begin{explorerderivation}'):
+                          raise RuntimeError(f'Unrecognized proof environment in {rev[:9]} {name}')
+                      data = stripped.encode('utf-8')
+                  files[name] = data
+              digest = sha256(b'STCH-STAGING-SKELETON-v1\0')
+              for path in sorted(files):
+                  raw_path = path.encode('utf-8')
+                  raw_data = files[path]
+                  digest.update(len(raw_path).to_bytes(4, 'big') + raw_path)
+                  digest.update(len(raw_data).to_bytes(8, 'big') + raw_data)
+              return 'stch-book-skeleton-v1-' + digest.hexdigest(), files
+
+          commits = git('rev-list','--first-parent','-n','60','HEAD').decode().splitlines()
+          found = {}
+          results = []
+          for i, rev in enumerate(commits):
+              key, files = snapshot(rev)
+              results.append((rev, key))
+              if key in (OLD, NEW) and key not in found:
+                  found[key] = (rev, files)
+              if len(found) == len(set((OLD,NEW))):
+                  break
+
+          lines = ['## Skeleton cache fingerprint diagnostic', '']
+          for label, target in [('Earlier reported', OLD), ('Later reported', NEW)]:
+              match = found.get(target)
+              lines.append(f'- **{label} key:** `{target}`')
+              if match:
+                  commit = git('show','-s','--format=%s',match[0]).decode(errors='replace').strip()
+                  lines.append(f'  - Found at commit `{match[0][:12]}`: {commit}')
+              else:
+                  lines.append('  - **Not found in the last 60 first-parent commits**')
+
+          if OLD in found and NEW in found:
+              oldrev, oldfiles = found[OLD]
+              newrev, newfiles = found[NEW]
+              changes = []
+              for path in sorted(set(oldfiles)|set(newfiles)):
+                  before, after = oldfiles.get(path), newfiles.get(path)
+                  if before == after:
+                      continue
+                  status = 'modified' if before is not None and after is not None else ('added' if before is None else 'removed')
+                  changes.append((path, status, sha256(before).hexdigest()[:12] if before is not None else '—',
+                                  sha256(after).hexdigest()[:12] if after is not None else '—'))
+              lines += ['', f'**Different fingerprinted files: {len(changes)}**', '',
+                        '| Hashed path | Status | Earlier SHA-256 | Later SHA-256 |',
+                        '|---|---|---|---|']
+              for path, status, older, newer in changes:
+                  lines.append(f'| `{path}` | {status} | `{older}` | `{newer}` |')
+              if not changes:
+                  lines.append('| *No differing hashed files (unexpected for distinct keys)* | | | |')
+              print('MATCHED BOTH REPORTED CACHE KEYS.')
+              for path, status, older, newer in changes:
+                  print(f'DIFFERENCE: {status:8} {path:65} {older} -> {newer}')
+          else:
+              lines += ['', '### Recent computed keys (for diagnosis)', '',
+                        '| Commit | Computed skeleton key |', '|---|---|']
+              for rev, key in results[:40]:
+                  lines.append(f'| `{rev[:12]}` | `{key}` |')
+              lines += ['', 'If neither reported key is present, the two runs may refer to other commits, '
+                        'or the runner hashed a file not present in Git. Do not edit the publisher yet.']
+              print('COULD NOT MATCH BOTH REPORTED KEYS. See job summary for computed keys.')
+
+          summary = '\n'.join(lines)+'\n'
+          print(summary)
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as fp:
+              fp.write(summary)
+          PY
