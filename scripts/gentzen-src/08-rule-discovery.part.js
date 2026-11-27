@@ -92,6 +92,104 @@
     return true;
   }
 
+  // Eqv-Rep is a theorem-based contextual rule, not token-for-token
+  // substitution of schematic formula letters.  This first implementation
+  // expands its class-specification instance through an explicit Gentzen
+  // proof.  Unrecognized formula contexts remain authored, unexpanded.
+  function eqvRepTokens(tex) {
+    const presentation = new Set([
+      '\\bigl', '\\bigr', '\\Bigl', '\\Bigr', '\\big', '\\Big',
+      '\\left', '\\right', '\\,', '\\;', '\\:', '\\!',
+      '\\quad', '\\qquad'
+    ]);
+    return mathTokens(tex).filter(token => !presentation.has(token));
+  }
+
+  function eqvRepUnwrap(tokens) {
+    let t = tokens;
+    for (;;) {
+      if (t.length < 2) return t;
+      const pairs = {'(': ')', '{': '}', '[': ']'};
+      const closing = pairs[t[0]];
+      if (!closing || t[t.length - 1] !== closing) return t;
+      const stack = [];
+      let outer = true;
+      for (let i = 0; i < t.length; i++) {
+        if (pairs[t[i]]) stack.push(pairs[t[i]]);
+        else if ([')', '}', ']'].includes(t[i])) {
+          if (stack.pop() !== t[i]) return t;
+          if (!stack.length && i < t.length - 1) outer = false;
+        }
+      }
+      if (stack.length || !outer) return t;
+      t = t.slice(1, -1);
+    }
+  }
+
+  function eqvRepSplit(tokens, connective) {
+    const t = eqvRepUnwrap(tokens);
+    const pairs = {'(': ')', '{': '}', '[': ']'};
+    const stack = [];
+    let division = -1;
+    for (let i = 0; i < t.length; i++) {
+      const token = t[i];
+      if (pairs[token]) stack.push(pairs[token]);
+      else if ([')', '}', ']'].includes(token)) {
+        if (stack.pop() !== token) return null;
+      } else if (token === connective && !stack.length) {
+        if (division !== -1) return null;
+        division = i;
+      }
+    }
+    if (stack.length || division <= 0 || division >= t.length - 1) return null;
+    return [eqvRepUnwrap(t.slice(0, division)),
+            eqvRepUnwrap(t.slice(division + 1))];
+  }
+
+  function eqvRepKey(tokens) {
+    return eqvRepUnwrap(tokens).join('|');
+  }
+
+  function eqvRepClassSpec(formula) {
+    const t = eqvRepTokens(formula);
+    // The particular class specification governed by this expansion:
+    // exists eta forall_S xi (xi in eta <-> condition).
+    if (t[0] !== '\\exists' || !BINDER_VAR.test(t[1] || '') ||
+        t[2] !== '\\forall_S' || !BINDER_VAR.test(t[3] || '')) return null;
+    const eta = t[1], xi = t[3];
+    const pair = eqvRepSplit(t.slice(4), '\\leftrightarrow');
+    if (!pair || eqvRepKey(pair[0]) !== eqvRepKey([xi, '\\in', eta])) return null;
+    return {eta, xi, condition: pair[1]};
+  }
+
+  function matchEqvRepClassFormation(branches, conclusion) {
+    if (branches.length !== 2) return null;
+    const target = eqvRepClassSpec(conclusion);
+    if (!target) return null;
+    for (const order of [[0, 1], [1, 0]]) {
+      const theorem = eqvRepSplit(eqvRepTokens(branches[order[0]].formula),
+        '\\leftrightarrow');
+      const original = eqvRepClassSpec(branches[order[1]].formula);
+      if (!theorem || !original || original.eta !== target.eta ||
+          original.xi !== target.xi) continue;
+      const before = eqvRepKey(original.condition);
+      const after = eqvRepKey(target.condition);
+      const forward = eqvRepKey(theorem[0]) === before &&
+        eqvRepKey(theorem[1]) === after;
+      const reverse = eqvRepKey(theorem[1]) === before &&
+        eqvRepKey(theorem[0]) === after;
+      if (!forward && !reverse) continue;
+      // All auxiliary variables are supplied only in the template.  The
+      // author remains responsible for the theoremhood of the first premise.
+      return {bindings: {}, order, eqvRep: {
+        eta: target.eta, xi: target.xi,
+        before: original.condition.join(' '),
+        after: target.condition.join(' ')
+      }};
+    }
+    return null;
+  }
+
   function findApplications(source, rules) {
     const stack = [];
     const hits = [];
@@ -131,6 +229,15 @@
             rule = {id: 'forall-i-star', kind: 'forall-i-star', fresh: []};
             matchedLabel = {tag: null};
             matched = {bindings: {}, order: [0], forallStar: star};
+          }
+        }
+        if (arity === 2 && normalizeRuleLabel(label.value) === 'Eqv-Rep') {
+          const contextual = matchEqvRepClassFormation(branches, arg.content);
+          if (contextual) {
+            rule = {id: 'rule:eqv-rep', label: 'Eqv-Rep',
+                    kind: 'eqv-rep', fresh: [], premises: [0, 1]};
+            matchedLabel = {tag: null};
+            matched = contextual;
           }
         }
         for (const candidate of (matched ? [] : rules)) {
@@ -175,6 +282,7 @@
             unique: matched.unique,
             uniquenessIntro: matched.uniquenessIntro,
             forallStar: matched.forallStar,
+            eqvRep: matched.eqvRep,
             originalLabel: label.value,
             start: branches[0].start, end: arg.end,
             labelStart: label.start, labelEnd: label.end,

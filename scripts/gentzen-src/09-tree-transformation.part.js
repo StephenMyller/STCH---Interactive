@@ -198,6 +198,84 @@
     return result;
   }
 
+  // Expand the class-specification instance of Eqv-Rep using only
+  // primitive logical rules.  No "contextual congruence" leaf is invented;
+  // the existing theorem premise is grafted into each needed branch.
+  function eqvRepClassFormationTemplate(source, hit) {
+    const {eta, xi, before, after} = hit.eqvRep;
+    const occupied = new Set(mathTokens(source).filter(token => BINDER_VAR.test(token)));
+    let witness = ['h', 'k', 'm', 'H', 'K', 'Z']
+      .find(variable => !occupied.has(variable));
+    if (!witness) {
+      let i = 0;
+      do { witness = `z_{${i++}}`; } while (occupied.has(witness));
+    }
+    const specification = condition =>
+      `\\forall_S ${xi} (${xi}\\in ${witness}\\leftrightarrow ${condition})`;
+    const whole = condition =>
+      `\\exists ${eta}\\,\\forall_S ${xi} (${xi}\\in ${eta}\\leftrightarrow ${condition})`;
+    const oldSpec = specification(before);
+    const newSpec = specification(after);
+    const oldWhole = whole(before);
+    const newWhole = whole(after);
+    const equivFirst = freshenTheoremLabels(source, hit.premiseSources[0]);
+    const equivSecond = freshenTheoremLabels(source + equivFirst, hit.premiseSources[0]);
+    const originalExistence = hit.premiseSources[1];
+    // One connected tree, with four locally fresh discharge numbers.
+    let derivation = String.raw`
+${originalExistence}
+    \AxiomC{}
+    \RightLabel{@@PE_LOCAL_e1@@}
+    \UnaryInfC{\(${oldSpec}\)}
+    \AxiomC{}
+    \RightLabel{@@PE_LOCAL_e2@@}
+    \UnaryInfC{\(\Set(${xi})\)}
+    \RightLabel{\(\forall_S\)-E}
+    \BinaryInfC{\(${xi}\in ${witness}\leftrightarrow ${before}\)}
+    \AxiomC{}
+    \RightLabel{@@PE_LOCAL_e3@@}
+    \UnaryInfC{\(${xi}\in ${witness}\)}
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(${before}\)}
+${equivFirst}
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(${after}\)}
+    \RightLabel{\(\to\)-I, @@PE_LOCAL_e3@@}
+    \UnaryInfC{\(${xi}\in ${witness}\to ${after}\)}
+${equivSecond}
+    \AxiomC{}
+    \RightLabel{@@PE_LOCAL_e4@@}
+    \UnaryInfC{\(${after}\)}
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(${before}\)}
+    \AxiomC{}
+    \RightLabel{@@PE_LOCAL_e1@@}
+    \UnaryInfC{\(${oldSpec}\)}
+    \AxiomC{}
+    \RightLabel{@@PE_LOCAL_e2@@}
+    \UnaryInfC{\(\Set(${xi})\)}
+    \RightLabel{\(\forall_S\)-E}
+    \BinaryInfC{\(${xi}\in ${witness}\leftrightarrow ${before}\)}
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{\(${xi}\in ${witness}\)}
+    \RightLabel{\(\to\)-I, @@PE_LOCAL_e4@@}
+    \UnaryInfC{\(${after}\to ${xi}\in ${witness}\)}
+    \RightLabel{\(\leftrightarrow\)-I}
+    \BinaryInfC{\(${xi}\in ${witness}\leftrightarrow ${after}\)}
+    \RightLabel{\(\forall_S\)-I, @@PE_LOCAL_e2@@}
+    \UnaryInfC{\(${newSpec}\)}
+    \RightLabel{\(\exists\)-I}
+    \UnaryInfC{\(${newWhole}\)}
+    \RightLabel{\(\exists\)-E, @@PE_LOCAL_e1@@}
+    \BinaryInfC{\(${newWhole}\)}
+`;
+    derivation = freshenLocalDischarges(source, derivation,
+      ['e1', 'e2', 'e3', 'e4']);
+    if (derivation.includes('@@PE_LOCAL_'))
+      throw new Error('Unresolved Eqv-Rep assumption marker');
+    return derivation;
+  }
+
   function expandOnce(source, id, rules, propositions) {
     const hit = allApplications(source, rules, propositions).find(item => item.id === id);
     if (!hit) return null;
@@ -218,6 +296,10 @@
       if (/@@PE_(?:PREMISE|LOCAL)_/.test(replacement)) {
         throw new Error('Unresolved placeholder in proposition proof');
       }
+      return source.slice(0, hit.start) + replacement + source.slice(hit.end);
+    }
+    if (hit.rule.kind === 'eqv-rep') {
+      const replacement = eqvRepClassFormationTemplate(source, hit);
       return source.slice(0, hit.start) + replacement + source.slice(hit.end);
     }
     if (hit.rule.kind === 'forall-i-star') {

@@ -149,7 +149,7 @@
         .replace(/\\mathrm(?=[A-Za-z])/g, '')
         .split(',')[0];
     }
-    const DEP_PURE_LOGIC = /^(?:\\(?:forall|exists|land|lor|leftrightarrow|to|neg|bot|top|equiv)(?:_S)?(?:-[IE]\*?)?|=-(?:I|E)|CR|RAA)$/;
+    const DEP_PURE_LOGIC = /^(?:\\(?:forall|exists|land|lor|leftrightarrow|to|neg|bot|top|equiv)(?:_S)?(?:-[IE]\*?)?|=-(?:I|E)|CR|RAA|Eqv-Rep)$/;
     function extractDependencies(tex) {
       const direct = new Set();
       const issues = new Set();
