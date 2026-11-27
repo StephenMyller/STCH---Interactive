@@ -123,11 +123,25 @@ jobs:
           os: alpine
           run: |
             set -eo pipefail
+            # Diagnostic only: this measures shell commands, not Docker startup/pull time.
+            timing_start=$SECONDS
+            timing_previous=$SECONDS
+            mark() {
+              echo "TIMING $1: $((SECONDS - timing_previous))s (shell total: $((SECONDS - timing_start))s)"
+              timing_previous=$SECONDS
+            }
+            echo 'TIMING: starting commands inside the TeX Live container'
+
             apk add --no-cache poppler-utils ghostscript
+            mark 'apk package installation'
             pdflatex -interaction=nonstopmode -halt-on-error main.tex > skeleton-pdf.log 2>&1 || { tail -100 skeleton-pdf.log; exit 1; }
+            mark 'pdflatex'
             lwarpmk html1 > skeleton-first.log 2>&1 || { tail -100 skeleton-first.log; exit 1; }
+            mark 'Lwarp html1 first pass'
             lwarpmk html1 > skeleton-second.log 2>&1 || { tail -100 skeleton-second.log; exit 1; }
+            mark 'Lwarp html1 second pass'
             lwarpmk limages > skeleton-images.log 2>&1 || { tail -100 skeleton-images.log; exit 1; }
+            mark 'Lwarp limages'
             for attempt in $(seq 1 60); do
               ready=true
               for svg in main-images/*.svg; do
@@ -136,13 +150,18 @@ jobs:
               [ "$ready" = true ] && break
               sleep 1
             done
+            mark 'SVG readiness wait'
             for svg in main-images/*.svg; do
               if [ ! -s "$svg" ] || ! grep -q '</svg>' "$svg"; then
                 echo "Incomplete SVG: $svg"; exit 1
               fi
             done
+            mark 'SVG integrity check'
             lwarpmk html > skeleton-final.log 2>&1 || { tail -100 skeleton-final.log; exit 1; }
+            mark 'Lwarp final html'
             test -s index.html || { echo 'Missing skeleton index.html'; exit 1; }
+            mark 'Final index.html check'
+            echo "TIMING SHELL TOTAL: $((SECONDS - timing_start))s"
 
       - name: Check scaffold and make generated HTML writable
         run: |
