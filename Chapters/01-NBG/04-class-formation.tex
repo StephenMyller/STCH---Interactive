@@ -1,77 +1,67 @@
-
 \subsection{Axiom of Class Formation}
 
 \nbgpara{1}{}
-Extensionality establishes that a membership specification
-can determine at most one class. It does not, however,
-guarantee that any such class exists. The Axiom of Class
-Formation addresses this question by guaranteeing the
-existence of classes specified by certain membership
-conditions.
+The Axiom of Extensionality established that a membership condition can determine at most one class. We have therefore settled the question of uniqueness, but not of existence: even when no two classes could satisfy a specification, it does not follow that any class does. We now ask under what circumstances a class satisfying a given membership condition is guaranteed to exist.
 
 \nbgpara{2}{}
-We consider specifications of the form
+More precisely, we seek classes \(\eta\) characterized by specifications of the form
 \[
-\forall_S\xi
-\bigl(\xi\in\eta\leftrightarrow\varphi\bigr),
+\forall_S\xi\bigl(\xi\in\eta\leftrightarrow\varphi\bigr).
 \]
-where \(\varphi\) determines which sets belong to
-\(\eta\). The essential restriction on \(\varphi\) is
-\emph{predicativity}: defining conditions may quantify
-over sets, but unrestricted quantification over classes
-is not permitted.
+Here, the condition \(\varphi\) determines which sets belong to the class. But the Axiom of Class Formation does not admit every condition indiscriminately. Its crucial restriction is called \emph{predicativity}: a defining condition may quantify over sets, but it may not quantify unrestrictedly over classes. The restricted quantifiers introduced in the preceding section allow us to express this distinction.
 
 \begin{definition}[Predicative Membership Conditions]
-A membership condition is \emph{predicative} if it belongs
-to the permitted predicative syntax, possibly after the
-application of justified predicative reductions.
+A membership condition \(\varphi\) is \textit{predicative} if it can be expressed without quantifying over classes.
 \end{definition}
 
 \nbgpara{2.1}{}
-For example, the conditions
+This does not prevent \(\varphi\) from \textit{referring} to particular classes. Consider, for example,
 \[
-\xi\notin A
-\qquad\text{and}\qquad
-\forall_S y\,(y\in\xi\to y\in A)
+\varphi = x\notin A.
 \]
-are predicative. The class \(A\) occurs as a
-\emph{parameter}: it may be any class, including a proper
-class, but is not itself quantified over.
-
-By contrast,
-\[
-\forall B\,(\xi\in B\to B=A)
-\]
-is not directly admissible, since its unrestricted
-quantifier ranges over all classes.
+Here, \(x\) is the object whose possible membership in the class to be formed is being described, while \(A\) is a parameter: a given class that we keep fixed as \(x\) varies. Different choices of \(A\) may give rise to different membership conditions. The condition is predicative because it is simply the negation of an atomic formula. In particular, it does not quantify over classes.
 
 \nbgpara{2.2}{}
-Defined notation requires some care. For example,
-subclasshood is defined using unrestricted quantification,
-but it admits the equivalent formulation
+More elaborate conditions are also permitted. For example,
+\[
+\varphi = \forall_S y\,(y\in x\to y\in A)
+\]
+states that every set belonging to \(x\) also belongs to \(A\). This condition is predicative because its only quantifier ranges over sets. The fact that \(x\) and \(A\) may themselves be proper classes is irrelevant.
+
+Similarly,
+\[
+\varphi = \exists_S y\,(x\in y\land y\in A)
+\]
+states that \(x\) belongs to some set that is itself a member of \(A\). Again, the condition is predicative: it uses a restricted quantifier and combines atomic formulas by a logical connective.
+
+\nbgpara{2.3}{}
+By contrast, consider
+\[
+\forall B\,(x\in B\to B=A).
+\]
+This condition says that every class containing \(x\) must be identical to \(A\). It is not core predicative, because \(\forall B\) ranges over all classes, including proper classes.
+
+The same problem arises with
+\[
+\exists B\,(x\in B\land B\neq A),
+\]
+which asserts the existence of a class other than \(A\) containing \(x\). Here, the unrestricted existential quantifier makes the condition non-predicative as written.
+
+\nbgpara{2.4}{}
+There is one complication concerning defined notation. Although subclasshood is defined using an unrestricted quantifier (Definition~\ref{def:subclass}), it can equivalently be expressed as
 \[
 A\subseteq B
-\quad\leftrightarrow\quad
-\forall_S x\,(x\in A\to x\in B),
+\quad\text{iff}\quad
+\forall_S x(x\in A\to x\in B),
 \]
-because only sets can belong to classes.
-Consequently, subclasshood may occur in predicative
-conditions.
-
-The distinction between formulas admitted directly by
-Class Formation and those admitted through justified
-predicative reductions is developed precisely in
-\hyperref[sec:technical-class-formation]
-{Appendix~\ref*{sec:technical-class-formation}}.
+since only sets can belong to classes such as \(A\) and \(B\). Thus, subclasshood may occur in predicative conditions. More generally, defined notation is admissible whenever an equivalent predicative formulation has been justified. The precise treatment of such expressions, including their relation to the original axiom schema, is given in \hyperref[sec:technical-class-formation]{Appendix~\ref*{sec:technical-class-formation}}.
 
 \nbgpara{3}{}
-We can now state our second set-theoretic axiom.
+With the admissibility requirement in place, we can state our second set-theoretic axiom.
 
 \begin{axiom}[\textbf{\hspace{-0.12cm}Class Formation (Schema)}]
 \label{ax:class-formation}
-Let \(\varphi\) be a core predicative membership condition.
-Let \(\xi\) and \(\eta\) be distinct variables, and suppose
-that \(\eta\) does not occur free in \(\varphi\). Then
+Let \(\varphi\) be a predicative membership condition. Let \(\xi\) and \(\eta\) be distinct variables, and suppose that \(\eta\) does not occur free in \(\varphi\). Then
 \[
 \exists\eta\,
 \forall_S\xi
@@ -83,33 +73,19 @@ that \(\eta\) does not occur free in \(\varphi\). Then
 \]
 \end{axiom}
 
-Thus, every condition admitted by the schema determines
-a class whose members are precisely the sets satisfying
-that condition.
-
-Notice that the existential quantifier is unrestricted:
-the class whose existence is asserted need not itself
-be a set. Only the universal quantifier is restricted,
-since classes can have only sets as members.
+The meaning is straightforward: for every admissible predicative condition \(\varphi\), there exists a class whose members are precisely the sets satisfying \(\varphi\).
 
 \nbgpara{3.1}{}
-The term \emph{schema} indicates that this is a family
-of axioms, one for each core predicative condition.
-Class Formation statements involving further justified
-predicative notation are derived theorems rather than
-additional axiom instances.
-
-Since membership in a class implies sethood, a restricted
-membership specification is equivalent to the corresponding
-unrestricted specification with sethood explicitly included
-in the condition. This follows from the rules of restricted
-quantification and elementary propositional reasoning;
-the equivalence is established formally in
-Metatheorem~\ref{meta:restricted-unrestricted-class-formulation}.
+Notice especially the difference between the two quantifiers in the axiom. The existential quantifier \(\exists\eta\) is unrestricted: it asserts that a \emph{class} exists. The universal quantifier \(\forall_S\xi\), on the other hand, ranges only over sets, since these are the only objects that can be members of classes.
 
 \nbgpara{3.2}{}
-In Gentzen derivations, a direct instance of Class
-Formation may be introduced without premises:
+The axiom therefore does not say that every predicative condition determines a \textit{set}. It says that the condition determines a \textit{class}, which may or may not itself be a set.
+
+\nbgpara{3.3}{}
+The word \textit{schema} deserves some explanation. Strictly speaking, Class Formation is not a single formula of our language. Rather, it describes a family of axioms, one for each condition admitted directly by the schema. Statements involving further predicative notation follow from these axioms as theorems. The precise distinction is explained in \hyperref[sec:technical-class-formation]{Appendix~\ref*{sec:technical-class-formation}}.
+
+\nbgpara{3.4}{}
+In Gentzen derivations, a direct instance of Class Formation may be introduced without premises:
 
 \begin{prooftree}
     \AxiomC{}
@@ -126,15 +102,12 @@ Formation may be introduced without premises:
 \end{prooftree}
 
 \nbgpara{4}{}
-Combining Class Formation with the uniqueness of class
-specifications established earlier yields the following
-result.
+We have already established that a membership condition determines at most one class. The Axiom of Class Formation now guarantees that every predicative condition determines a class. Together, these results yield unique existence.
 
 \begin{proposition}[Existence and Uniqueness of Predicatively Specified Classes]
 \label{prop:existence-uniqueness-class-formation}
-Let \(\varphi(x)\) be a condition admitted directly
-by the Class Formation Schema, and let \(A\) be a
-variable that does not occur free in \(\varphi(x)\).
+Let \(\varphi(x)\) be a predicative condition on \(x\), and let
+\(A\) be a variable that does not occur free in \(\varphi(x)\).
 Then there exists exactly one class \(A\) satisfying
 \[
 \forall_S x
@@ -144,8 +117,7 @@ Then there exists exactly one class \(A\) satisfying
 
 \begin{proof}
 Existence follows from the Axiom of Class Formation.
-Uniqueness follows from
-Proposition~\ref{prop:uniqueness-class-specification}.
+Uniqueness follows from Proposition~\ref{prop:uniqueness-class-specification}.
 Applying Unique Existence Introduction gives the result.
 
 \begin{formalderivation}[0rem][prop:existence-uniqueness-class-formation]
@@ -198,8 +170,4 @@ Applying Unique Existence Introduction gives the result.
 \end{prooftree}
 \end{explorerderivation}
 
-Predicativity restricts the conditions for which Class
-Formation guarantees existence. It imposes no corresponding
-restriction on uniqueness: Extensionality ensures that any
-membership specification can be satisfied by at most one
-class, whether or not its defining condition is predicative.
+Notice that predicativity is required for existence, but not for uniqueness. Extensionality guarantees that \textit{any} membership specification determines at most one class, whether or not Class Formation guarantees its existence.
