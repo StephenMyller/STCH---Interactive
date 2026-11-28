@@ -336,8 +336,8 @@ as required.
     }
 %
     \AxiomC{}
-    \RightLabel{MT \ \ref{meta:equivalence-of-predicative-reductions}}
-    \UnaryInfC{\(\varphi^\ast\leftrightarrow\varphi\)}
+    \RightLabel{M\ref{meta:equivalence-of-predicative-reductions}}
+    \UnaryInfC{\(\varphi\leftrightarrow\varphi^\ast\)}
 %
     \RightLabel{Eqv-Rep}
     \BinaryInfC{
@@ -349,6 +349,128 @@ as required.
 
 
 The resulting formulas are \emph{derived instances of Class Formation}. They are theorems obtained from the original schema, not additional axiom instances. Predicative reduction thus enlarges the notation available in membership specifications without enlarging the axioms of NBG.
+
+
+
+\nbgpara{6}{Existence of Predicatively Specified Classes} 
+
+Combining the preceding results, we obtain an unrestricted formulation of Class Formation by Predicative Reduction. This does not extend the range of conditions for which class existence is guaranteed; rather, it expresses the same existence claim using an unrestricted universal quantifier and an explicit sethood condition. The resulting formulation will be particularly useful in the development of class-builder notation, where it corresponds directly to the definition of a class term's realization.
+
+\begin{corollary}[Unrestricted Form of Class Formation by Predicative Reduction]
+\label{meta:existence-of-predicatively-specified-classes}
+Let \(\varphi\) be a predicative extended formula, and let
+\(\xi\) and \(\eta\) be distinct variables such that \(\eta\)
+does not occur free in \(\varphi\). Then
+\[
+\vdash
+\exists\eta\,\forall\xi
+\bigl(
+\xi\in\eta
+\leftrightarrow
+(\Set(\xi)\land\varphi)
+\bigr).
+\]
+\end{corollary}
+
+\begin{proof}
+By Metatheorem~\ref{meta:class-formation-by-predicative-reduction},
+the condition \(\varphi\) determines a class through the
+restricted membership specification:
+\[
+\vdash
+\exists\eta\,\forall_S\xi
+\bigl(
+\xi\in\eta\leftrightarrow\varphi
+\bigr).
+\]
+
+By Metatheorem~\ref{meta:restricted-unrestricted-class-formulation},
+a class satisfies this restricted specification if and only
+if it satisfies
+\[
+\forall\xi
+\bigl(
+\xi\in\eta
+\leftrightarrow
+(\Set(\xi)\land\varphi)
+\bigr).
+\]
+
+Consequently, any class whose existence is guaranteed by
+the first metatheorem also satisfies the unrestricted
+specification. Hence
+\[
+\vdash
+\exists\eta\,\forall\xi
+\bigl(
+\xi\in\eta
+\leftrightarrow
+(\Set(\xi)\land\varphi)
+\bigr),
+\]
+as required.
+\end{proof}
+
+\begin{explorerderivation}{meta:existence-of-predicatively-specified-classes}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{MT\ref{meta:class-formation-by-predicative-reduction}}
+    \UnaryInfC{
+        \(\exists\eta\,\forall_S\xi
+        (\xi\in\eta\leftrightarrow\varphi)\)
+    }
+%
+    \AxiomC{}
+    \RightLabel{\(1\)}
+    \UnaryInfC{
+        \(\forall_S\xi
+        (\xi\in h\leftrightarrow\varphi)\)
+    }
+%
+    \AxiomC{}
+    \RightLabel{MT\ref{meta:restricted-unrestricted-class-formulation}}
+    \UnaryInfC{
+        \(\forall_S\xi
+        (\xi\in h\leftrightarrow\varphi)
+        \leftrightarrow
+        \forall\xi
+        (\xi\in h\leftrightarrow
+        (\Set(\xi)\land\varphi))\)
+    }
+%
+    \RightLabel{\(\leftrightarrow\)-E}
+    \BinaryInfC{
+        \(\forall\xi
+        (\xi\in h\leftrightarrow
+        (\Set(\xi)\land\varphi))\)
+    }
+%
+    \RightLabel{\(\exists\)-I}
+    \UnaryInfC{
+        \(\exists\eta\,\forall\xi
+        (\xi\in\eta\leftrightarrow
+        (\Set(\xi)\land\varphi))\)
+    }
+%
+    \RightLabel{\(\exists\)-E, 1}
+    \BinaryInfC{
+        \(\exists\eta\,\forall\xi
+        (\xi\in\eta\leftrightarrow
+        (\Set(\xi)\land\varphi))\)
+    }
+\end{prooftree}
+\end{explorerderivation}
+
+The theorem asserts existence only. Uniqueness follows
+independently from
+Proposition~\ref{prop:uniqueness-class-specification},
+by Extensionality: any two classes satisfying the same
+membership specification are identical. In particular,
+predicativity is needed to invoke the present existence
+theorem, but not to establish the uniqueness of a class
+already satisfying a given specification.
+
+
 
 \nbgpara{6}{Predicativity of Basic Defined Notation}
 
@@ -426,5 +548,3 @@ We may therefore assign
 as the predicative reduction of \(\xi\subseteq\eta\), with \(\zeta\) chosen fresh for the surrounding formula.
 
 Consequently, subclasshood may occur in predicative membership conditions. By Metatheorem~\ref{meta:class-formation-by-predicative-reduction}, the corresponding Class Formation statements follow from the original schema whenever the remaining defined notation is likewise admissible.
-
-Finally, combining Class Formation by Predicative Reduction with Metatheorem~\ref{meta:restricted-unrestricted-class-formulation} gives the existence of a class whose members are exactly the sets satisfying any predicative condition. Its uniqueness follows from the general uniqueness of class specifications established using Extensionality. Predicativity is therefore required for existence, but not for uniqueness.
