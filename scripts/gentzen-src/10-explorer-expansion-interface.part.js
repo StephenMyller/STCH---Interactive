@@ -280,6 +280,21 @@
     function visibleDependencies(ids) {
       return dependencySort(ids).filter(id => hasVisibleDependency(id));
     }
+    // Proofs about syntax or derivations may be justified by prose
+    // metatheory rather than a single Gentzen tree. Such a proof is a
+    // legitimate, explicitly declared endpoint, not a missing index. It
+    // does not imply that every particular reduction sequence has had its
+    // own dependencies enumerated.
+    function appendJustificationNote(container, node) {
+      if (node.justification !== 'metatheoretical') return;
+      const note = document.createElement('small');
+      note.className = 'pe-dependency-metatheoretical';
+      note.textContent = 'Metatheoretical proof · see text';
+      note.style.display = 'block';
+      note.style.opacity = '0.72';
+      note.style.marginTop = '0.15em';
+      container.append(note);
+    }
     function renderDependencyBranch(id, ancestors = new Set(), depth = 0) {
       const node = dependencyRecord(id);
       const fragment = document.createDocumentFragment();
@@ -314,6 +329,7 @@
         const summary = document.createElement('summary');
         summary.append(dependencyLink(node, label));
         details.append(summary);
+        appendJustificationNote(details, node);
         const sublist = document.createElement('ul');
         const next = new Set(ancestors); next.add(id);
         for (const child of children) sublist.append(renderDependencyBranch(child, next, depth + 1));
@@ -326,6 +342,7 @@
         li.append(details);
       } else {
         li.append(dependencyLink(node, label));
+        appendJustificationNote(li, node);
         li.className = node.kind === 'axiom' ? 'pe-dependency-axiom' : '';
       }
       fragment.append(li); return fragment;
@@ -344,7 +361,9 @@
       const explanation = document.createElement('p');
       explanation.textContent = 'Axioms used by this authored proof, including through earlier results. ' +
         'Definitions and logical rules are omitted. These are the axioms used by the chosen proof, ' +
-        'not necessarily the fewest axioms from which the theorem can be proved.';
+        'not necessarily the fewest axioms from which the theorem can be proved. ' +
+        'Explicitly marked metatheoretical proofs are linked to their prose ' +
+        'justifications; dependencies of particular instances may require separate indexing.';
       help.append(helpToggle, explanation);
       header.append(title, help); sidebar.append(header);
       const summary = document.createElement('div');
