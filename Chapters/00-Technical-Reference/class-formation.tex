@@ -244,6 +244,7 @@ Predicative reduction must be distinguished from primitive expansion. Primitive 
 A provable equivalence alone does not automatically enlarge the permitted syntax. A reduction must be assigned and justified, with the stated restrictions on variables and dependencies. In particular, unrestricted quantification over classes cannot be made admissible merely by concealing it within a new abbreviation.
 
 
+% proof-explorer-justification: meta:equivalence-of-predicative-reductions; kind=metatheoretical
 \begin{metatheorem}[Equivalence of Predicative Reductions]
 \label{meta:equivalence-of-predicative-reductions}
 Let \(\varphi^\ast\) be obtained from an admitted extended formula
@@ -328,15 +329,15 @@ as required.
 \begin{explorerderivation}{meta:class-formation-by-predicative-reduction}
 \begin{prooftree}
     \AxiomC{}
-    \RightLabel{MT\ref{meta:equivalence-of-predicative-reductions}}
-    \UnaryInfC{\(\varphi^\ast\leftrightarrow\varphi\)}
-%
-    \AxiomC{}
     \RightLabel{\(\mathrm{A}_2\)}
     \UnaryInfC{
         \(\exists\eta\,\forall_S\xi
         (\xi\in\eta\leftrightarrow\varphi^\ast)\)
     }
+%
+    \AxiomC{}
+    \RightLabel{MT \ \ref{meta:equivalence-of-predicative-reductions}}
+    \UnaryInfC{\(\varphi^\ast\leftrightarrow\varphi\)}
 %
     \RightLabel{Eqv-Rep}
     \BinaryInfC{
@@ -406,7 +407,7 @@ Conversely, suppose that
 \zeta\in\xi\to\zeta\in\eta
 \bigr).
 \]
-Let \(a\) be arbitrary and assume \(a\in\xi\). By Set-I, \(\Set(a)\). Restricted universal elimination therefore yields
+Let \(a\) be arbitrary and assume \(a\in\xi\). Then, $a$ is a set. Restricted universal elimination therefore yields
 \[
 a\in\xi\to a\in\eta,
 \]
