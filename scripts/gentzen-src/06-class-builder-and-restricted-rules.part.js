@@ -255,6 +255,54 @@
     return bareMath(conclusion);
   }
 
+  // The eigenvariable condition concerns FREE occurrences in still-open
+  // assumptions, not every textual mention of the variable. In particular,
+  // \forall_S x (...x...) does not contain a free x. This lightweight scope
+  // scan is only for matching authored restricted introductions; it is not a
+  // general formula validator. Unrecognized syntax conservatively fails.
+  function restrictedHasFreeVariable(formula, variable) {
+    const tokens = forallStarTokens(formula);
+    const opening = {'(': ')', '[': ']', '{': '}', '\\{': '\\}'};
+    const closings = new Set(Object.values(opening));
+    const stack = [];
+    const enclosing = [];
+    const matching = new Map();
+    for (let i = 0; i < tokens.length; ++i) {
+      enclosing[i] = stack.length ? stack[stack.length - 1].at : null;
+      if (opening[tokens[i]]) stack.push({at: i, close: opening[tokens[i]]});
+      else if (closings.has(tokens[i])) {
+        const last = stack.pop();
+        if (!last || last.close !== tokens[i]) return null;
+        matching.set(last.at, i);
+      }
+    }
+    if (stack.length) return null;
+
+    const binderIndices = new Set();
+    const boundRanges = [];
+    for (let i = 0; i < tokens.length; ++i) {
+      if (!['\\forall', '\\exists', '\\forall_S', '\\exists_S', '\\Unique'].includes(tokens[i])) continue;
+      let j = i + 1;
+      if (tokens[i] === '\\exists' && tokens[j] === '!') j++;
+      if (!BINDER_VAR.test(tokens[j] || '')) return null;
+      binderIndices.add(j);
+      if (tokens[j] !== variable) continue;
+      const scopeAt = j + 1;
+      // A parenthesized matrix ends at its matching delimiter. Otherwise
+      // the matrix continues to the end of the enclosing formula group.
+      const end = matching.has(scopeAt)
+        ? matching.get(scopeAt) + 1
+        : enclosing[i] !== null ? matching.get(enclosing[i]) : tokens.length;
+      if (end === undefined || end <= scopeAt) return null;
+      boundRanges.push([scopeAt, end]);
+    }
+    for (let i = 0; i < tokens.length; ++i) {
+      if (tokens[i] !== variable || binderIndices.has(i)) continue;
+      if (!boundRanges.some(([a, b]) => a <= i && i < b)) return true;
+    }
+    return false;
+  }
+
   function matchRestrictedApplication(rule, branches, conclusion, labelInfo, source) {
     const mode = rule.mode;
     const arity = mode === 'forall-i' ? 1 : 2;
@@ -264,7 +312,8 @@
       if (!leaves?.some(leaf => leaf.tag === tag)) return false;
       return leaves.every(leaf => {
         if (leaf.tag === tag) return formulaKey(leaf.formula) === formulaKey(expected);
-        return !appearsVariable(leaf.formula, witness);
+        // A quantified occurrence is not an open eigenvariable occurrence.
+        return restrictedHasFreeVariable(leaf.formula, witness) === false;
       });
     };
     for (const order of orders) {
@@ -291,11 +340,15 @@
         const branchSource = source.slice(first.start, first.end);
         if (/\\(?:vdots|cdots|ldots)\b/.test(branchSource) ||
             tagIsDischargedWithin(branchSource, labelInfo.tag)) continue;
-        const leaves = openAssumptions(branchSource);
+        // This reconstructs the UNDISCHARGED assumptions at the root of
+        // the premise. Counting historical leaves would incorrectly reject
+        // inner assumptions already discharged by ->-I or other rules.
+        const leaves = forallStarDependencies(branchSource);
         const possible = leaves?.filter(leaf => leaf.tag === labelInfo.tag).map(leaf => setVariable(leaf.formula));
         const witness = possible?.[0];
         if (!witness || possible.some(item => item !== witness) ||
-            appearsVariable(q.body, witness)) continue;
+            (witness !== q.binder &&
+             restrictedHasFreeVariable(q.body, witness) !== false)) continue;
         const instance = instantiatedMatrix(q.body, q.binder, witness);
         if (instance === null || formulaKey(instance) !== formulaKey(first.formula) ||
             !check(labelInfo.tag, leaves, `\\(\\Set(${witness})\\)`, witness)) continue;
