@@ -69,7 +69,7 @@ Let \(T\) be a class term and let \(A\) be a variable. We define
 \[
 \Real_T(A)
 \defequiv
-\forall\zeta
+\forall_S\zeta
 \bigl(
 \zeta\in A
 \leftrightarrow
@@ -85,7 +85,7 @@ For our preceding example,
 \[
 \Real_T(B)
 \defequiv
-\forall y
+\forall_S y
 \bigl(
 y\in B
 \leftrightarrow
@@ -136,9 +136,16 @@ By the Class-Term Extension Metatheorem (\ref{meta:class-term-extension}), every
 \UnaryInfC{\(\Real_T(h)\)}
 \RightLabel{D\ref{def:realization-of-class-term}}
 \dashedLine
-\UnaryInfC{\(\forall u(u\in h\leftrightarrow\Cond_T(u))\)}
-\RightLabel{\(\forall\)-E}
-\UnaryInfC{\(a\in h\leftrightarrow\Cond_T(a)\)}
+\UnaryInfC{\(\forall_S u(u\in h\leftrightarrow\Cond_T(u))\)}
+\AxiomC{}
+\RightLabel{\(3\)}
+\UnaryInfC{\(\Real_T(h)\land a\in h\)}
+\RightLabel{\(\land\)-E}
+\UnaryInfC{\(a\in h\)}
+\RightLabel{Set-I}
+\UnaryInfC{\(\Set(a)\)}
+\RightLabel{\(\forall_S\)-E}
+\BinaryInfC{\(a\in h\leftrightarrow\Cond_T(a)\)}
 \AxiomC{}
 \RightLabel{\(3\)}
 \UnaryInfC{\(\Real_T(h)\land a\in h\)}
@@ -161,9 +168,17 @@ By the Class-Term Extension Metatheorem (\ref{meta:class-term-extension}), every
 \UnaryInfC{\(\Real_T(h)\)}
 \RightLabel{D\ref{def:realization-of-class-term}}
 \dashedLine
-\UnaryInfC{\(\forall u(u\in h\leftrightarrow\Cond_T(u))\)}
-\RightLabel{\(\forall\)-E}
-\UnaryInfC{\(a\in h\leftrightarrow\Cond_T(a)\)}
+\UnaryInfC{\(\forall_S u(u\in h\leftrightarrow\Cond_T(u))\)}
+\AxiomC{}
+\RightLabel{\(2\)}
+\UnaryInfC{\(\Cond_T(a)\)}
+\RightLabel{D\ref{def:canonical-membership-condition}}
+\dashedLine
+\UnaryInfC{\(\Set(a)\land\varphi[a/\xi]\)}
+\RightLabel{\(\land\)-E}
+\UnaryInfC{\(\Set(a)\)}
+\RightLabel{\(\forall_S\)-E}
+\BinaryInfC{\(a\in h\leftrightarrow\Cond_T(a)\)}
 \AxiomC{}
 \RightLabel{\(2\)}
 \UnaryInfC{\(\Cond_T(a)\)}
@@ -333,6 +348,7 @@ The Identity Law similarly licenses two rules.
 \end{prooftree}
 \end{derivedrule}
 
+% proof-explorer-expansion: rule:class-builder-identity-intro; kind=builder; mode=identity-i
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}
@@ -359,6 +375,7 @@ The Identity Law similarly licenses two rules.
 \end{prooftree}
 \end{derivedrule}
 
+% proof-explorer-expansion: rule:class-builder-identity-elim; kind=builder; mode=identity-e
 \begin{formalderivation}
 \begin{prooftree}
     \AxiomC{}

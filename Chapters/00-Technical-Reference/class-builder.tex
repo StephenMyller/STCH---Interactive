@@ -251,7 +251,7 @@ variable \(\alpha\) not occurring in \(T\) and distinct from
 \[
 \Real_T(\eta)
 \defequiv
-\forall\alpha\bigl(
+\forall_S\alpha\bigl(
 \alpha\in\eta
 \leftrightarrow
 \operatorname{Cond}_T(\alpha)
@@ -262,9 +262,30 @@ corresponding general class term.
 \end{definition}
 
 Thus \(\Real_T(\eta)\) expresses that \(\eta\) has precisely the
-members specified by \(T\). The symbol \(\Real,\) like
-\(\operatorname{Cond}\), is merely a metalinguistic abbreviation.
+members specified by \(T\). Quantification over sets suffices:
+every member of a class is a set, so agreement on set members
+completely determines a class's membership. The symbol \(\Real\),
+like \(\operatorname{Cond}\), is merely a metalinguistic abbreviation.
 Different legitimate choices of \(\alpha\) yield alphabetic variants.
+
+For \(T=\{\xi\mid\varphi\}\), the realization condition has a
+useful equivalent form. With \(\alpha\) fresh for \(T\) and
+\(\eta\), and all substitutions capture-avoiding,
+\[
+\vdash
+\forall_S\alpha\bigl(
+\alpha\in\eta\leftrightarrow\varphi[\alpha/\xi]
+\bigr)
+\leftrightarrow
+\Real_T(\eta).
+\]
+Indeed, under the hypothesis \(\Set(\alpha)\), the formulas
+\(\varphi[\alpha/\xi]\) and
+\(\Set(\alpha)\land\varphi[\alpha/\xi]\) are equivalent by
+propositional logic. Consequently, adjoining the sethood conjunct
+does not change a restricted membership specification. This
+observation uses neither Class Formation nor the existence of
+realizations.
 
 We have not asserted that any realization exists. That assertion will
 take the form
@@ -349,12 +370,14 @@ are not thereby licensed. Their extensions, where wanted, will be
 treated later.
 
 Primitive expansion must be distinguished from predicative reduction.
-Contextual elimination employs unrestricted quantifiers, both in
-\(\Real_T(\eta)\) and in the existential formula introduced at each
-step. It therefore establishes a way to remove class terms from
-formulas, not a way to admit formulas containing them as predicative
-conditions for further Class Formation instances. That second task
-will require independently justified predicative reductions.
+Contextual elimination introduces an unrestricted existential
+quantifier for each realization witness. Although \(\Real_T(\eta)\)
+uses restricted universal quantification, its primitive expansion
+also contains an unrestricted universal quantifier. Thus contextual
+elimination establishes a way to remove class terms from formulas,
+not a way to admit formulas containing them as predicative conditions
+for further Class Formation instances. That second task will require
+independently justified predicative reductions.
 
 \nbgpara{8}{Syntactic Properties of Contextual Elimination}
 
@@ -528,12 +551,11 @@ member, \(\Real_T^{+}(h)\) characterizes an entire class:
 it says that \(h\) has exactly those sets as members which
 satisfy the membership condition associated with \(T\).
 It thus extends the idea behind \(\Real_T(h)\) to arbitrary
-extended terms. For class terms, it expresses the same
-realization condition using restricted quantification;
-for variables, it expresses that \(h\) has exactly the
-same members as \(T\). In either case, it specifies what
-it means for \(h\) to represent \(T\), without asserting
-that such a representative exists.
+extended terms. For class terms, \(\Real_T^+(h)\) coincides
+with \(\Real_T(h)\) by definition; for variables, it expresses
+that \(h\) has exactly the same members as \(T\). In either case,
+it specifies what it means for \(h\) to represent \(T\), without
+asserting that such a representative exists.
 
 Two elementary observations will be used throughout. For every
 admitted extended term \(T\),
@@ -639,31 +661,35 @@ Class Formation by Predicative Reduction now yields
 \bigl(\alpha\in\eta\leftrightarrow
 \varphi[\alpha/\xi]\bigr).
 \]
-By the equivalence between restricted and unrestricted membership
-specifications, this implies
-\[
-\vdash\exists\eta\,\forall\alpha
-\bigl(\alpha\in\eta\leftrightarrow
-(\Set(\alpha)\land\varphi[\alpha/\xi])\bigr).
-\]
-The formula within the unrestricted specification is precisely
-\(\operatorname{Cond}_T(\alpha)\). Hence
+For every set \(\alpha\), the condition
+\(\varphi[\alpha/\xi]\) is equivalent to
+\(\Set(\alpha)\land\varphi[\alpha/\xi]\). By the elementary
+equivalence of restricted membership specifications established
+above, the condition inside this existential statement is
+therefore equivalent to \(\Real_T(\eta)\). As \(\eta\) is
+fresh for \(T\), the equivalence can be used under the
+existential quantifier, giving directly
 \[
 \vdash\exists\eta\,\Real_T(\eta).
 \]
+No conversion to an unrestricted membership specification is needed.
 
-If both \(\Real_T(\eta)\) and \(\Real_T(\zeta)\) hold, the two
-realization specifications imply
+If both \(\Real_T(\eta)\) and \(\Real_T(\zeta)\) hold, then
+for every set \(\alpha\) each realization condition identifies
+membership with the same canonical condition. Consequently,
 \[
-\forall\alpha\bigl(
+\forall_S\alpha\bigl(
 \alpha\in\eta\leftrightarrow\alpha\in\zeta
 \bigr).
 \]
-Extensionality gives \(\eta=\zeta\). Bounded class terms require
-no separate argument, since they are abbreviations of general
-class terms. Since \(T\) was arbitrary, existence and uniqueness
-have now been established for every new term of rank \(n+1\),
-before any new atomic reduction is assigned.
+This suffices for Extensionality: if any object belongs to one of
+the two classes, it must be a set, and the displayed equivalence
+therefore determines its membership in the other class. Hence
+\(\eta=\zeta\). Bounded class terms require no separate argument,
+since they are abbreviations of general class terms. Since \(T\)
+was arbitrary, existence and uniqueness have now been established
+for every new term of rank \(n+1\), before any new atomic
+reduction is assigned.
 
 \medskip
 \noindent\emph{Membership and Identity with Variable Arguments.}
@@ -676,11 +702,13 @@ By contextual elimination,
 \quad\defequiv\quad
 \exists h\bigl(\Real_T(h)\land\zeta\in h\bigr).
 \]
-The realization specification entails
-\(\zeta\in h\leftrightarrow\operatorname{Cond}_T(\zeta)\).
-Conversely, a realization exists, and its membership specification
-supplies \(\zeta\in h\) whenever
-\(\operatorname{Cond}_T(\zeta)\) holds. Therefore
+If \(\zeta\in h\), Set-I gives \(\Set(\zeta)\), so restricted
+universal elimination from \(\Real_T(h)\) yields
+\(\operatorname{Cond}_T(\zeta)\). Conversely,
+\(\operatorname{Cond}_T(\zeta)\) includes \(\Set(\zeta)\);
+restricted universal elimination therefore gives
+\(\zeta\in h\). Since a realization exists, these two
+implications establish
 \[
 \vdash\zeta\in T\leftrightarrow \Cond_T^{+}(\zeta).
 \tag{M}
@@ -694,13 +722,17 @@ Similarly,
 \quad\defequiv\quad
 \exists h\bigl(\Real_T(h)\land\zeta=h\bigr).
 \]
-Identity elimination gives one direction of
+If the contextual expansion holds, its witness \(h\) satisfies
+\(\Real_T(h)\) and \(\zeta=h\). Identity elimination transfers
+the restricted realization condition to \(\zeta\). Conversely,
+from \(\Real_T(\zeta)\), choose \(h=\zeta\) using identity
+reflexivity and existential introduction. Thus
 \[
-\vdash\zeta=T\leftrightarrow\Real_T(\zeta),
+\vdash\zeta=T\leftrightarrow\Real_T(\zeta).
 \tag{I}
 \]
-and identity reflexivity and existential introduction give the
-other. Both equivalences use only variable-based logical rules.
+Both equivalences use only variable-based logical rules and the
+existence of a realization; uniqueness is not needed here.
 They will be stated separately as the fundamental laws in the next
 part of the section; they are not additional assumptions here.
 
@@ -731,16 +763,16 @@ S\in T
 When \(T\) is a variable, \(\Cond_T^{+}(h)\) is simply \(h\in T\), so the
 same equivalence holds.
 
-Since \(\Cond_S^+(a)\to\Set(a)\), the sethood restriction
-can be removed from the realization specification without changing
-its meaning. Thus the restricted and unrestricted realization
-conditions are equivalent:
+Because \(S\) is a class term, the definitions of
+\(\Real_S(h)\) and \(\Real_S^+(h)\) coincide: both are the
+restricted specification
 \[
-\vdash
-\Real_S(h)\leftrightarrow\Real^+_S(h).
+\forall_S a\bigl(a\in h\leftrightarrow\Cond_S^+(a)\bigr).
 \]
-Also \(\vdash \Cond_T^{+}(h)\to\Set(h)\). Thus the unrestricted
-existential quantifier may be restricted to sets, yielding
+No conversion of realization conditions is required. Moreover,
+\(\vdash\Cond_T^+(h)\to\Set(h)\), whether \(T\) is a variable
+or a class term. We may therefore restrict the existential
+quantifier over \(h\) to sets, yielding
 \[
 \vdash
 S\in T
@@ -779,13 +811,12 @@ and the other is a class term \(T\). By \((\mathrm{I})\),
 \vdash
 \zeta=T\leftrightarrow\Real_T(\zeta).
 \]
-The realization condition says that \(\zeta\) and \(T\) have
-exactly the same members. Since \(\Cond_T^{+}(a)\to\Set(a)\), its
-unrestricted membership specification is equivalent to
+The realization condition is, by definition, the restricted
+membership specification
 \[
 \forall_S a\bigl(a\in\zeta\leftrightarrow \Cond_T^{+}(a)\bigr).
 \]
-This is the right-hand side of \((\mathrm{E})\), because
+This is precisely the right-hand side of \((\mathrm{E})\), because
 \(\Cond_\zeta^+(a)\) is \(a\in\zeta\). The case with the class term on
 the left follows by symmetry of identity, using the corresponding
 contextual expansion.
@@ -810,9 +841,9 @@ condition for \(S\) give
 \[
 a\in h\leftrightarrow \Cond_T^{+}(a).
 \]
-For an object that is not a set, both sides are false: membership
-implies sethood, and so does \(\Cond_T^{+}(a)\). Hence the equivalence holds
-for every object, which is precisely \(\Real_T(h)\).
+This restricted specification is already exactly
+\(\Real_T(h)\); no argument about proper classes, and no
+conversion to unrestricted quantification, is needed.
 Existential introduction gives the displayed existential formula,
 and thereby \(S=T\). This establishes \((\mathrm{E})\) without
 using a general substitution principle or Class-Builder Congruence.
@@ -971,7 +1002,7 @@ In particular, choosing \(\alpha\) fresh for the displayed formula,
 \vdash
 \zeta=\{\xi\mid\varphi\}
 \leftrightarrow
-\forall\alpha\left(
+\forall_S\alpha\left(
 \alpha\in\zeta
 \leftrightarrow
 \bigl(\Set(\alpha)\land\varphi[\alpha/\xi]\bigr)
@@ -982,14 +1013,17 @@ In particular, choosing \(\alpha\) fresh for the displayed formula,
 \begin{proof}
 This is equivalence \((\mathrm{I})\) established in the proof of
 Metatheorem~\ref{meta:class-term-extension}. The displayed
-specification is the definition of \(\Real_T(\zeta)\) expanded.
+restricted specification is the definition of
+\(\Real_T(\zeta)\) expanded.
 \end{proof}
 
 The two laws serve different purposes. The Membership Law determines
 which objects belong to the class denoted by a builder expression.
 The Identity Law determines when an arbitrary class is that class.
-Both are justified using the original variable-based rules,
-Class Formation, and Extensionality.
+Their derivations use the original variable-based rules and the
+existence of realizations supplied by Class Formation. Neither law
+requires the uniqueness of realizations; Extensionality is used
+separately to establish that uniqueness.
 
 We shall not yet extract rules permitting arbitrary extended terms
 to be substituted into these laws. In particular, an expression such
@@ -1184,8 +1218,8 @@ extended term \(T\). Recall that
 where \(\alpha\) is fresh for \(T\) and \(\eta\).
 
 For a variable \(x\), this condition specifies a class with exactly
-the members of \(x\); for a class term \(T\), it specifies its
-realization using restricted quantification. More precisely,
+the members of \(x\); for a class term \(T\), it is precisely the
+realization condition introduced earlier. More precisely,
 \[
 \vdash\Real_x^+(\eta)\leftrightarrow\eta=x,
 \qquad
@@ -1194,9 +1228,12 @@ realization using restricted quantification. More precisely,
 \tag{R}
 \]
 The first equivalence follows by Extensionality and the primitive
-identity rules, since only sets can be class members. The second
-follows from the Restricted and Unrestricted Membership Specifications
-Metatheorem, because \(\Cond_T^+(\alpha)\) implies \(\Set(\alpha)\).
+identity rules, since only sets can be class members. For a class
+term \(T\), the two formulas in the second equivalence are
+alphabetic variants by definition: both abbreviate
+\(\forall_S\alpha(\alpha\in\eta\leftrightarrow\Cond_T(\alpha))\).
+Thus no appeal to the Restricted and Unrestricted Membership
+Specifications Metatheorem is involved.
 
 For every admitted extended term \(T\), if \(\eta\) is fresh for \(T\),
 \[
@@ -1815,7 +1852,9 @@ Both membership conditions imply \(\Set(\alpha)\).
 Consequently, their biconditional holds automatically
 when \(\alpha\) is not a set, and the restriction
 on the universal quantifier may be removed. This
-establishes the second law.
+establishes the second law. Here the unrestricted formulation
+is an equivalent characterization of identity, not a different
+realization condition or an additional Class Formation principle.
 \end{proof}
 
 The generalized laws extend the familiar use of the four
@@ -2236,8 +2275,12 @@ and
 \leftrightarrow
 (\Real_T(\zeta))^\circ.
 \]
-The four rules follow by the original
-biconditional-elimination rule.
+Biconditional Elimination supplies the corresponding
+membership or identity conditions. The membership-introduction
+rule additionally uses Conjunction Introduction to combine its
+two premises, while membership elimination uses Conjunction
+Elimination to extract the defining condition. The identity
+rules require no such additional step.
 
 Other derived rules are handled by unfolding
 their previously justified derivations.
@@ -2271,11 +2314,13 @@ as required.
 The technical justification is now complete. Class terms
 may be used as ordinary mathematical terms within the
 admitted syntax, and the four fundamental class-builder
-rules may be employed directly in deductions. Their
-admissibility rests on the existence and uniqueness of
-realizations, the justified predicative reductions, and
-the representation and substitution results established
-above. Neither the notation nor its associated rules
+rules may be employed directly in deductions. The four
+basic rules rely on the existence of realizations and
+their defining membership conditions;
+uniqueness is required for the subsequent generalized
+representation and substitution principles. Together
+with the justified predicative reductions, these results
+show that neither the notation nor its associated rules
 enlarges the underlying theory.
 
 
