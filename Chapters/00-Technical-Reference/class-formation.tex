@@ -35,65 +35,46 @@ Each permissible choice of \(\varphi\) therefore determines an axiom instance. T
 
 Any additional variables occurring free in \(\varphi\) serve as parameters. Their values may be arbitrary classes, including proper classes.
 
-\nbgpara{3}{Restricted and Unrestricted Membership Specifications}
+\nbgpara{3}{Equivalent Membership Specifications}
 
-The restriction to sets in a membership specification can also be expressed within an unrestricted universal quantifier, provided that sethood is included in the defining condition.
+Because only sets can belong to classes, a membership specification
+may equivalently quantify over sets or quantify over all classes while
+explicitly requiring sethood. The following equivalence concerns the
+specification of an already given class; it does not introduce another
+form of the Class Formation axiom.
 
 \begin{metatheorem}[Restricted and Unrestricted Membership Specifications]
 \label{meta:restricted-unrestricted-class-formulation}
-Let \(\varphi\) be an extended formula, and let \(\xi\) and \(\eta\) be distinct variables such that \(\eta\) does not occur free in \(\varphi\). All substitutions below are capture-avoiding. Then
+Let \(\varphi\) be an extended formula, and let \(\xi\) and \(\eta\)
+be distinct variables such that \(\eta\) does not occur free in
+\(\varphi\). All substitutions below are capture-avoiding. Then
 \[
 \vdash
 \forall_S\xi
-\bigl(
-\xi\in\eta\leftrightarrow\varphi
-\bigr)
+\bigl(\xi\in\eta\leftrightarrow\varphi\bigr)
 \leftrightarrow
 \forall\xi
-\bigl(
-\xi\in\eta
-\leftrightarrow
-(\Set(\xi)\land\varphi)
-\bigr).
+\bigl(\xi\in\eta\leftrightarrow(\Set(\xi)\land\varphi)\bigr).
 \]
 \end{metatheorem}
 
 \begin{proof}
-Choose a variable \(\zeta\) fresh for the displayed formulas and distinct from \(\xi\) and \(\eta\).
+Suppose first that the restricted specification holds. For an
+arbitrary object \(\zeta\), membership \(\zeta\in\eta\) implies
+\(\Set(\zeta)\), and restricted universal elimination then yields
+\(\varphi[\zeta/\xi]\). Conversely, if
+\(\Set(\zeta)\land\varphi[\zeta/\xi]\), the same restricted
+specification implies \(\zeta\in\eta\). Thus the unrestricted
+specification holds.
 
-Suppose first that \(\forall_S\xi
-\bigl(
-\xi\in\eta\leftrightarrow\varphi
-\bigr).\) If \(\zeta\in\eta\), then we know $\zeta$ must be a set, and restricted universal elimination yields \(\varphi[\zeta/\xi]\). Conversely, if \(\Set(\zeta)\land\varphi[\zeta/\xi]\), restricted universal elimination gives \(
-\zeta\in\eta
-\leftrightarrow
-\varphi[\zeta/\xi],
-\) from which \(\zeta\in\eta\) follows. Hence \(\zeta\in\eta
-\leftrightarrow
-\bigl(
-\Set(\zeta)\land\varphi[\zeta/\xi]
-\bigr).\) Since \(\zeta\) was arbitrary, universal generalization establishes the unrestricted specification.
-
-Next, suppose that \(
-\forall\xi
-\bigl(
-\xi\in\eta
-\leftrightarrow
-(\Set(\xi)\land\varphi)
-\bigr).\) Assume \(\Set(\zeta)\). Ordinary universal elimination gives \(\zeta\in\eta
-\leftrightarrow
-\bigl(
-\Set(\zeta)\land\varphi[\zeta/\xi]
-\bigr).\) Under the assumption \(\Set(\zeta)\), by using propositional reasoning, this is equivalent to \(
-\zeta\in\eta
-\leftrightarrow
-\varphi[\zeta/\xi]
-\)
-Restricted universal introduction therefore establishes the restricted specification.
-
-The two implications yield the required equivalence.
+Conversely, suppose the unrestricted specification holds. For an
+arbitrary set \(\zeta\), its instance reads
+\(\zeta\in\eta\leftrightarrow
+(\Set(\zeta)\land\varphi[\zeta/\xi])\).
+Since \(\Set(\zeta)\) holds, this is equivalent to
+\(\zeta\in\eta\leftrightarrow\varphi[\zeta/\xi]\).
+Restricted universal introduction gives the desired specification.
 \end{proof}
-
 
 \begin{explorerderivation}{meta:restricted-unrestricted-class-formulation}
 \begin{prooftree}
@@ -198,17 +179,10 @@ The two implications yield the required equivalence.
 \end{explorerderivation}
 
 
-In particular, the Class Formation Schema also yields
-\[
-\vdash
-\exists\eta\,\forall\xi
-\bigl(
-\xi\in\eta
-\leftrightarrow
-(\Set(\xi)\land\varphi)
-\bigr)
-\]
-for every core predicative \(\varphi\) satisfying the schema's side conditions.
+Consequently, a Class Formation instance may also be expressed using
+the equivalent unrestricted membership specification. This is a
+derived reformulation, not an additional axiom instance. In what
+follows, restricted specifications remain the primary form.
 
 \nbgpara{4}{Predicative Reduction}
 
@@ -350,127 +324,10 @@ as required.
 
 The resulting formulas are \emph{derived instances of Class Formation}. They are theorems obtained from the original schema, not additional axiom instances. Predicative reduction thus enlarges the notation available in membership specifications without enlarging the axioms of NBG.
 
-
-
-\nbgpara{6}{Existence of Predicatively Specified Classes} 
-
-Combining the preceding results, we obtain an unrestricted formulation of Class Formation by Predicative Reduction. This does not extend the range of conditions for which class existence is guaranteed; rather, it expresses the same existence claim using an unrestricted universal quantifier and an explicit sethood condition. The resulting formulation will be particularly useful in the development of class-builder notation, where it corresponds directly to the definition of a class term's realization.
-
-\begin{corollary}[Unrestricted Form of Class Formation by Predicative Reduction]
-\label{meta:existence-of-predicatively-specified-classes}
-Let \(\varphi\) be a predicative extended formula, and let
-\(\xi\) and \(\eta\) be distinct variables such that \(\eta\)
-does not occur free in \(\varphi\). Then
-\[
-\vdash
-\exists\eta\,\forall\xi
-\bigl(
-\xi\in\eta
-\leftrightarrow
-(\Set(\xi)\land\varphi)
-\bigr).
-\]
-\end{corollary}
-
-\begin{proof}
-By Metatheorem~\ref{meta:class-formation-by-predicative-reduction},
-the condition \(\varphi\) determines a class through the
-restricted membership specification:
-\[
-\vdash
-\exists\eta\,\forall_S\xi
-\bigl(
-\xi\in\eta\leftrightarrow\varphi
-\bigr).
-\]
-
-By Metatheorem~\ref{meta:restricted-unrestricted-class-formulation},
-a class satisfies this restricted specification if and only
-if it satisfies
-\[
-\forall\xi
-\bigl(
-\xi\in\eta
-\leftrightarrow
-(\Set(\xi)\land\varphi)
-\bigr).
-\]
-
-Consequently, any class whose existence is guaranteed by
-the first metatheorem also satisfies the unrestricted
-specification. Hence
-\[
-\vdash
-\exists\eta\,\forall\xi
-\bigl(
-\xi\in\eta
-\leftrightarrow
-(\Set(\xi)\land\varphi)
-\bigr),
-\]
-as required.
-\end{proof}
-
-\begin{explorerderivation}{meta:existence-of-predicatively-specified-classes}
-\begin{prooftree}
-    \AxiomC{}
-    \RightLabel{MT\ref{meta:class-formation-by-predicative-reduction}}
-    \UnaryInfC{
-        \(\exists\eta\,\forall_S\xi
-        (\xi\in\eta\leftrightarrow\varphi)\)
-    }
-%
-    \AxiomC{}
-    \RightLabel{\(1\)}
-    \UnaryInfC{
-        \(\forall_S\xi
-        (\xi\in h\leftrightarrow\varphi)\)
-    }
-%
-    \AxiomC{}
-    \RightLabel{MT\ref{meta:restricted-unrestricted-class-formulation}}
-    \UnaryInfC{
-        \(\forall_S\xi
-        (\xi\in h\leftrightarrow\varphi)
-        \leftrightarrow
-        \forall\xi
-        (\xi\in h\leftrightarrow
-        (\Set(\xi)\land\varphi))\)
-    }
-%
-    \RightLabel{\(\leftrightarrow\)-E}
-    \BinaryInfC{
-        \(\forall\xi
-        (\xi\in h\leftrightarrow
-        (\Set(\xi)\land\varphi))\)
-    }
-%
-    \RightLabel{\(\exists\)-I}
-    \UnaryInfC{
-        \(\exists\eta\,\forall\xi
-        (\xi\in\eta\leftrightarrow
-        (\Set(\xi)\land\varphi))\)
-    }
-%
-    \RightLabel{\(\exists\)-E, 1}
-    \BinaryInfC{
-        \(\exists\eta\,\forall\xi
-        (\xi\in\eta\leftrightarrow
-        (\Set(\xi)\land\varphi))\)
-    }
-\end{prooftree}
-\end{explorerderivation}
-
-The theorem asserts existence only. Uniqueness follows
-independently from
-Proposition~\ref{prop:uniqueness-class-specification},
-by Extensionality: any two classes satisfying the same
-membership specification are identical. In particular,
-predicativity is needed to invoke the present existence
-theorem, but not to establish the uniqueness of a class
-already satisfying a given specification.
-
-
+The uniqueness of a class satisfying any given membership specification
+follows independently from Extensionality. Thus predicativity is a
+condition for applying the present existence theorem, not for proving
+uniqueness once a realizing class has been given.
 
 \nbgpara{6}{Predicativity of Basic Defined Notation}
 
