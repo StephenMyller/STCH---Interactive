@@ -115,7 +115,53 @@
     const rewritten = rewrite(body);
     return rewritten && builderJoin(rewritten);
   }
+  // Recognize a concrete identity A=T or realization Real_T(A), where
+  // T is either the explicitly written builder or the author's schematic T.
+  // Deliberately do not infer that an arbitrary variable denotes a class term.
+  function identityTerm(tokens) {
+    if (tokens.length === 1 && tokens[0] === 'T') return 'T';
+    const builder = parseGeneralBuilder(tokens);
+    return builder ? builder.term : null;
+  }
+  function parseBuilderIdentity(formula) {
+    const tokens = builderStripGrouping(builderTokens(formula));
+    if (tokens.length < 3 || !BINDER_VAR.test(tokens[0]) || tokens[1] !== '=') return null;
+    const term = identityTerm(tokens.slice(2));
+    return term && {witness: tokens[0], term};
+  }
+  function parseBuilderRealization(formula) {
+    const tokens = builderStripGrouping(builderTokens(formula));
+    if (tokens.length < 6 || tokens[0] !== '\\Real' || tokens[1] !== '_') return null;
+    let i = 2, subscript;
+    if (tokens[i] === '{') {
+      let depth = 1, start = ++i;
+      for (; i < tokens.length && depth; i++) {
+        if (tokens[i] === '{') depth++;
+        else if (tokens[i] === '}') depth--;
+      }
+      if (depth !== 0) return null;
+      subscript = tokens.slice(start, i - 1);
+    } else {
+      subscript = [tokens[i++]];
+    }
+    const term = identityTerm(subscript);
+    if (!term || tokens[i] !== '(' || !BINDER_VAR.test(tokens[i+1] || '') ||
+        tokens[i+2] !== ')' || tokens.length !== i+3) return null;
+    return {witness: tokens[i+1], term};
+  }
+  function sameBuilderIdentityData(left, right) {
+    return !!left && !!right && left.witness === right.witness &&
+      builderFormulaKey(left.term) === builderFormulaKey(right.term);
+  }
+
   function matchBuilderApplication(rule, branches, conclusion) {
+    if (rule.mode === 'identity-i' || rule.mode === 'identity-e') {
+      if (branches.length !== 1) return null;
+      const identity = parseBuilderIdentity(rule.mode === 'identity-i' ? conclusion : branches[0].formula);
+      const realization = parseBuilderRealization(rule.mode === 'identity-i' ? branches[0].formula : conclusion);
+      return sameBuilderIdentityData(identity, realization)
+        ? {bindings: {}, order: [0], builder: identity} : null;
+    }
     const isIntro = rule.mode === 'membership-i';
     if (!['membership-i', 'membership-e'].includes(rule.mode) ||
         branches.length !== (isIntro ? 2 : 1)) return null;
@@ -449,6 +495,16 @@
     const mode = hit.rule.mode;
     const definition = hit.rule.definitionLabel;
     const law = hit.rule.lawLabel;
+    if (mode === 'identity-i' || mode === 'identity-e') {
+      if (!law?.startsWith('P')) {
+        throw new Error('Class-builder identity rule has no numbered Identity Law citation');
+      }
+      const realization = `\\Real_{${term}}(${witness})`;
+      const equivalence = `\\(${witness}=${term}\\leftrightarrow ${realization}\\)`;
+      return `\\AxiomC{}\n\\RightLabel{${law}}\n\\UnaryInfC{${equivalence}}\n` +
+        `@@PE_PREMISE_0@@\n\\RightLabel{\\(\\leftrightarrow\\)-E}\n` +
+        `\\BinaryInfC{${hit.originalConclusion}}`;
+    }
     if (!definition?.startsWith('D') || !law?.startsWith('P')) {
       throw new Error('Class-builder rule has missing numbered justification citations');
     }

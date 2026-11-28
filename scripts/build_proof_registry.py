@@ -328,8 +328,8 @@ def annotation(raw: str, location: str):
         if tag or eigen or vars_ or fresh or options.get("locals"):
             error(f"{location}: restricted annotations require only kind=restricted and mode=...")
     elif kind == "builder":
-        if mode not in ("membership-i", "membership-e"):
-            error(f"{location}: class-builder rule needs mode=membership-i/membership-e")
+        if mode not in ("membership-i", "membership-e", "identity-i", "identity-e"):
+            error(f"{location}: class-builder rule needs mode=membership-i/membership-e/identity-i/identity-e")
         if tag or eigen or vars_ or fresh or options.get("locals"):
             error(f"{location}: builder annotations require only kind=builder and mode=...")
     elif kind == "unique":
@@ -744,38 +744,65 @@ def proof_prop_variants(tree: str, location: str):
 
 
 def builder_schema(tree: str, mode: str, location: str):
-    """A narrow, variable-argument schema for the two membership rules.
+    """Class-builder rule schemata with variable arguments.
 
-    Their defining formula is a formula-valued metavariable. Matching it
-    requires the client-side class-builder parser, not the ordinary unifier.
+    Membership has a formula-valued defining condition, so the client must
+    instantiate it. Identity uses the already defined Real_T(A) predicate
+    and may have an entire admitted builder expression as the T argument.
     """
     root, _ = parse_tree(tree, location)
+    is_membership = mode.startswith("membership-")
     arity = 2 if mode == "membership-i" else 1
     if len(root["children"]) != arity or any(node["children"] for node in root["children"]):
         error(f"{location}: builder {mode} must have {arity} direct premise(s)")
     label = label_key(root["label"])
-    expected = 'I' if mode == 'membership-i' else 'E'
-    if (r'\mathrm{CB}' not in label or r'\in' not in label or
+    expected = 'I' if mode.endswith('-i') else 'E'
+    operator = r'\in' if is_membership else '='
+    if (r'\mathrm{CB}' not in label or operator not in label or
             (r'\text{-' + expected + '}' not in label)):
-        error(f"{location}: incorrect CB membership label {root['label']!r}")
-    # The authored schema must use the general builder syntax explicitly;
-    # otherwise this special matcher could be attached to an unrelated rule.
+        error(f"{location}: incorrect CB label {root['label']!r}")
     all_formulas = [root['formula']] + [node['formula'] for node in root['children']]
-    if not any(r'\{' in formula and r'\mid' in formula for formula in all_formulas):
-        error(f"{location}: class-builder schema must contain a general class term")
-    if mode == 'membership-i' and not any(r'\Set' in formula for formula in all_formulas):
-        error(f"{location}: membership-I must require a sethood premise")
-    return [node["formula"] for node in root["children"]], root["formula"], root["label"]
+    if is_membership:
+        if not any(r'\{' in formula and r'\mid' in formula for formula in all_formulas):
+            error(f"{location}: class-builder membership schema must contain a general class term")
+        if mode == 'membership-i' and not any(r'\Set' in formula for formula in all_formulas):
+            error(f"{location}: membership-I must require a sethood premise")
+    else:
+        # The exact concrete identity application is checked in JS, which
+        # accepts only a class-builder term or the declared schematic T.
+        if not any(r'\Real_T(' in formula for formula in all_formulas):
+            error(f"{location}: identity rule requires Real_T(A) as premise or conclusion")
+        if not any('A=T' in canon(formula) for formula in all_formulas):
+            error(f"{location}: identity rule requires A=T as premise or conclusion")
+    return [node['formula'] for node in root['children']], root['formula'], root['label']
 
 
 def builder_justification(tree: str, mode: str, location: str):
-    """Register the *authored* proof and extract its two numbered citations.
+    """Extract exact numbered citations from the authored justification.
 
-    The T/Cond_T abbreviations in its last line differ from the literal
-    class-builder expression in the rule schema. Runtime instantiation
-    replaces those metalinguistic abbreviations with their concrete terms.
+    Membership needs the membership law and definition of Cond_T.
+    Identity needs only the Identity Law; its Real_T specification
+    is kept abstract, so changing the realization quantifier does not
+    require changing either derived-rule expansion.
     """
     root, _ = parse_tree(tree, location)
+    labels = [cmd['arg'] for cmd in commands(tree) if cmd['op'] in ('RightLabel', 'RL')]
+    if not any(r'\leftrightarrow' in (label or '') and '-E' in label for label in labels):
+        error(f"{location}: builder justification must use biconditional elimination")
+
+    def citation(prefix):
+        matches = [label for label in labels if re.search(
+            rf'^\s*{prefix}\s*\\ref\s*\{{[^{{}}]+\}}', label or '')]
+        if len(matches) != 1:
+            error(f"{location}: builder proof requires exactly one {prefix}\\ref citation")
+        return matches[0].strip()
+
+    if mode.startswith('identity-'):
+        expected = r'A=T' if mode == 'identity-i' else r'\Real_T(A)'
+        if expected not in canon(root['formula']):
+            error(f"{location}: identity rule justification has wrong conclusion")
+        return None, citation('P')
+
     if mode == 'membership-i' and not (r'\in T' in root['formula'] or r'\in\{' in root['formula']):
         error(f"{location}: membership-I justification must conclude membership in T")
     if mode == 'membership-e' and not any(
@@ -783,16 +810,8 @@ def builder_justification(tree: str, mode: str, location: str):
         if cmd['op'] in ('AxiomC', 'UnaryInfC', 'BinaryInfC') and cmd['arg']
     ):
         error(f"{location}: membership-E justification must use membership in T")
-    labels = [cmd['arg'] for cmd in commands(tree) if cmd['op'] in ('RightLabel', 'RL')]
-    required = (r'\land', r'\leftrightarrow')
-    if any(not any(fragment in (label or '') for label in labels) for fragment in required):
-        error(f"{location}: justification needs conjunction and biconditional inference")
-    def citation(prefix):
-        matches = [label for label in labels if re.search(
-            rf'^\s*{prefix}\s*\\ref\s*\{{[^{{}}]+\}}', label or '')]
-        if len(matches) != 1:
-            error(f"{location}: builder proof requires exactly one {prefix}\\ref citation")
-        return matches[0].strip()
+    if not any(r'\land' in (label or '') for label in labels):
+        error(f"{location}: membership justification needs conjunction inference")
     return citation('D'), citation('P')
 
 
@@ -1490,7 +1509,8 @@ def main():
                 premises=schema['premises'], conclusion=schema['conclusion'],
                 template=resolve_label(expansion['tree'], targets, expansion['location']),
                 kind='builder', mode=expansion['mode'], locals=[],
-                definitionLabel=resolve_label(definition, targets, expansion['location']),
+                definitionLabel=(resolve_label(definition, targets, expansion['location'])
+                                 if definition else None),
                 lawLabel=resolve_label(law, targets, expansion['location'])
             )
             continue
