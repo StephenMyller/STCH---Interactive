@@ -1029,7 +1029,11 @@ _RESULT_LABEL = re.compile(r'\\label\s*\{([^{}]+)\}')
 # metatheorems: unannotated prose-only results remain unresolved.
 _METATHEORY_ANNOTATION = re.compile(
     r'^[ \t]*%[ \t]*proof-explorer-justification:[ \t]*'
-    r'(meta:[A-Za-z0-9_:.\-]+)[ \t]*;[ \t]*kind=metatheoretical[ \t]*$', re.M)
+    r'(meta:[A-Za-z0-9_:.\-]+)[ \t]*;[ \t]*kind[ \t]*=[ \t]*metatheoretical[ \t]*\r?$', re.M)
+# Catch likely authoring mistakes instead of silently publishing an unindexed
+# result. The ordinary result-label and proof-existence checks still apply.
+_METATHEORY_LINE = re.compile(
+    r'^[ \t]*%[ \t]*proof-explorer-justification:[^\r\n]*(?:\r)?$', re.M)
 
 _PROOF_ENV = re.compile(r'\\begin\s*\{proof\}(?:\[[^\]]*\])?(.*?)\\end\s*\{proof\}', re.S)
 _FORMAL_ENV = re.compile(r'\\begin\s*\{formalderivation\}(?:\[[^\]]*\]){0,2}(.*?)\\end\s*\{formalderivation\}', re.S)
@@ -1218,7 +1222,13 @@ def dependency_index(tex_paths: list[Path], targets: dict, registered_rules: dic
     # an unproved axiom. Any cited earlier results remain graph edges.
     metatheoretical = {}
     for path, source in documents:
-        for marker in _METATHEORY_ANNOTATION.finditer(source):
+        recognized = {m.start(): m for m in _METATHEORY_ANNOTATION.finditer(source)}
+        for line in _METATHEORY_LINE.finditer(source):
+            if line.start() not in recognized:
+                error(f'{path}: malformed proof-explorer-justification annotation: '
+                      f'{line.group(0)!r}; expected '
+                      '% proof-explorer-justification: meta:your-result-id; kind=metatheoretical')
+        for marker in recognized.values():
             result_id = marker.group(1)
             if result_id in metatheoretical:
                 error(f'Duplicate metatheoretical justification: {result_id}')
@@ -1534,6 +1544,101 @@ def main():
             entry["eigen"] = expansion["eigen"]
         registry[key] = entry
 
+    # Register Conjunction Congruence from its existing §17 Gentzen proof.
+    # The source tree proves the corresponding implication; one final
+    # application of ->E turns that theorem into the unary derived rule.
+    con_source = ROOT / "Chapters" / "00-Technical-Reference" / "rules.tex"
+    if con_source.exists():
+        source = con_source.read_text(encoding="utf-8")
+        heading = re.search(r"\\nbgparar\{Conjunction Congruence\}", source)
+        if heading:
+            tail = source[heading.end():]
+            next_heading = re.search(r"\\nbgparar\{", tail)
+            con_section = tail[:next_heading.start()] if next_heading else tail
+            con_trees = TREE.findall(con_section)
+            if len(con_trees) != 2:
+                error("Conjunction Congruence: expected schematic rule and theorem proof")
+            theorem_tree = con_trees[1].strip()
+            theorem_root, _ = parse_tree(theorem_tree, "Conjunction Congruence")
+            expected = (r"\((\varphi\leftrightarrow\psi)\to"
+                        r"((\chi\land\varphi)\leftrightarrow(\chi\land\psi))\)")
+            if canon(theorem_root["formula"]) != canon(expected):
+                error("Conjunction Congruence: theorem proof has unexpected conclusion")
+            # Verify the two conjunction-introduction applications have
+            # premises in the primitive rule's required order.
+            def check_conjunction_intro(node):
+                count = 0
+                if label_key(node.get("label")) == r"\land-I":
+                    if len(node["children"]) != 2:
+                        error("Conjunction Congruence: invalid conjunction introduction")
+                    lhs, rhs = node["children"]
+                    target = canon(node["formula"])
+                    valid = (
+                        target == canon(r"\(\chi\land\psi\)") and
+                        canon(lhs["formula"]) == canon(r"\(\chi\)") and
+                        canon(rhs["formula"]) == canon(r"\(\psi\)")
+                    ) or (
+                        target == canon(r"\(\chi\land\varphi\)") and
+                        canon(lhs["formula"]) == canon(r"\(\chi\)") and
+                        canon(rhs["formula"]) == canon(r"\(\varphi\)")
+                    )
+                    if not valid:
+                        error("Conjunction Congruence: misplaced premises in conjunction introduction; use the corrected §17 proof")
+                    count = 1
+                return count + sum(check_conjunction_intro(child) for child in node["children"])
+            if check_conjunction_intro(theorem_root) != 2:
+                error("Conjunction Congruence: expected two conjunction introductions")
+
+            # Mirror the same verified proof to handle the additional conjunct
+            # on the right. Reorder both conjunctions and their introduction branches.
+            def right_conjunct_formula(formula):
+                return (formula.replace(r"\chi\land\varphi", r"\varphi\land\chi")
+                               .replace(r"\chi\land\psi", r"\psi\land\chi"))
+
+            def right_conjunct_proof(node):
+                children = list(node["children"])
+                if label_key(node.get("label")) == r"\land-I":
+                    children.reverse()
+                if not children:
+                    return r"\AxiomC{" + right_conjunct_formula(node["formula"]) + "}"
+                tree = "\n".join(right_conjunct_proof(child) for child in children)
+                if node.get("label"):
+                    tree += "\n" + r"\RightLabel{" + node["label"] + "}"
+                rule = {1: "UnaryInfC", 2: "BinaryInfC"}.get(len(children))
+                if not rule:
+                    error("Conjunction Congruence: unsupported branch count")
+                return tree + "\n" + "\\" + rule + "{" + right_conjunct_formula(node["formula"]) + "}"
+            application = (theorem_tree + "\n" +
+                r"\AxiomC{\(P\leftrightarrow Q\)}" + "\n" +
+                r"\RightLabel{\(\to\)-E}" + "\n" +
+                r"\BinaryInfC{\((S\land P)\leftrightarrow(S\land Q)\)}")
+            con_premise = r"\(P\leftrightarrow Q\)"
+            con_conclusion = r"\((S\land P)\leftrightarrow(S\land Q)\)"
+            con_template = proof_template(application, [con_premise],
+                                          con_conclusion, "Conjunction Congruence")
+            # Rename only the schematic metavariables in the theorem proof.
+            for old, new in ((r"\varphi", " P"), (r"\psi", " Q"), (r"\chi", " S")):
+                con_template = con_template.replace(old, new)
+            con_template = freshen_local_template_labels(
+                con_template, ["1", "2", "3"], "Conjunction Congruence")
+            con_conclusion_right = r"\((P\land S)\leftrightarrow(Q\land S)\)"
+            application_right = (right_conjunct_proof(theorem_root) + "\n" +
+                r"\AxiomC{\(P\leftrightarrow Q\)}" + "\n" +
+                r"\RightLabel{\(\to\)-E}" + "\n" +
+                r"\BinaryInfC{" + con_conclusion_right + "}")
+            con_template_right = proof_template(application_right, [con_premise],
+                con_conclusion_right, "Conjunction Congruence (right conjunct)")
+            for old, new in ((r"\varphi", " P"), (r"\psi", " Q"), (r"\chi", " S")):
+                con_template_right = con_template_right.replace(old, new)
+            con_template_right = freshen_local_template_labels(
+                con_template_right, ["1", "2", "3"], "Conjunction Congruence (right conjunct)")
+            registry["rule:and-con"] = dict(
+                id="rule:and-con", label=r"\(\land\)-Con",
+                vars=["P", "Q", "S"], fresh=[],
+                premises=[con_premise], conclusion=con_conclusion,
+                template=con_template, templateRight=con_template_right,
+                kind="and-con", locals=["1", "2", "3"])
+
     for i, entry in enumerate(registry.values()):
         for other in list(registry.values())[:i]:
             if label_key(entry['label']) == label_key(other['label']) and not (
@@ -1542,6 +1647,9 @@ def main():
                 error("Multiple unrelated registered rules have the same inference label")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     dependencies = dependency_index(tex_paths, targets, registry)
+    if "rule:and-con" in registry:
+        dependencies["rules"]["rule:and-con"] = {
+            "id": "rule:and-con", "requires": [], "issues": []}
     OUT.write_text(
         json.dumps({"version": 7, "rules": registry, "propositions": propositions,
                     "dependencies": dependencies}, indent=2, ensure_ascii=False) + "\n",
