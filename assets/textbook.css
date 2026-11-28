@@ -627,22 +627,13 @@ mjx-container[jax="SVG"]:has(
     overflow: visible;
 }
 
-/* MathJax in theorem numbering inherits the number's color. */
-main.bodycontainer .amsthmnumberplain mjx-container {
+/* Enumerated lists */
+ul.enumerate li .listmarker {
+    float: left;
+    min-width: 1.8em;
     color: inherit !important;
 }
 
-/* Enumerated lists: align numbers with their text */
-ul.enumerate > li > p:first-child,
-ol.enumerate > li > p:first-child {
-    display: inline;
+ul.enumerate li p:first-of-type {
     margin-top: 0;
-}
-
-/* Use ordinary text color for list numbers */
-ul.enumerate > li::marker,
-ol.enumerate > li::marker,
-ul.enumerate > li > .itemlabel,
-ol.enumerate > li > .itemlabel {
-    color: inherit;
 }
