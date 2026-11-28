@@ -21,7 +21,7 @@ For example,
 \]
 denotes the class of all sets that do not belong to \(A\). The class itself is uniquely determined once the parameter \(A\) has been fixed.
 
-We may use class terms wherever we would ordinarily use a variable denoting a class, including in membership and identity statements. Their introduction does not enlarge the collection of objects recognized by NBG: Class Formation and Extensionality have already established the existence and uniqueness of the classes they denote.
+We may use class terms wherever we would ordinarily use a variable denoting a class, including in membership and identity statements. Their introduction does not enlarge the collection of objects recognized by NBG: Class Formation provides the required existence, and Extensionality guarantees uniqueness. The technical appendix establishes these claims separately for all admitted class terms.
 
 \nbgpara{2}{Membership Conditions}
 
@@ -109,14 +109,26 @@ Let \(T\) be an admitted class term and \(\zeta\) a variable. Whenever the indic
 \end{proposition}
 
 \begin{proof}
-By the Class-Term Extension Metatheorem (\ref{meta:class-term-extension}), every admitted class term has a realization. Contextual elimination interprets membership in \(T\) using such a realization, whose membership condition is exactly \(\Cond_T(\zeta)\). The two implications follow using the realization condition and the ordinary logical rules.
+The two directions use contextual elimination differently. If \(\zeta\in T\), then some realization of \(T\) contains \(\zeta\). Because membership implies sethood, the restricted realization condition gives \(\Cond_T(\zeta)\). Conversely, if \(\Cond_T(\zeta)\) holds, the existence of a realization supplied by Metatheorem~\ref{meta:class-term-extension} allows us to choose a class containing \(\zeta\); contextual elimination then yields \(\zeta\in T\). Only this second direction requires the independent existence result.
 \end{proof}
 
 \begin{formalderivation}[0rem][prop:class-builder-membership-law]
 \begin{prooftree}
-\AxiomC{}
-\RightLabel{M\ref{meta:membership-law-for-class-terms}}
-\UnaryInfC{\(\zeta\in T\leftrightarrow\Cond_T(\zeta)\)}
+    \AxiomC{\(a\in T\)}
+    \RightLabel{D\ref{def:contextual-elimination}}
+    \dashedLine
+    \UnaryInfC{\(\exists h(\Real_T(h)\land a\in h)\)}
+    \RightLabel{\(\vdots\)}
+    \UnaryInfC{\(\Cond_T(a)\)}
+\end{prooftree}
+\medskip
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{M\ref{meta:class-term-extension}}
+    \UnaryInfC{\(\exists h\,\Real_T(h)\)}
+    \AxiomC{\(\Cond_T(a)\)}
+    \RightLabel{\(\vdots\)}
+    \BinaryInfC{\(a\in T\)}
 \end{prooftree}
 \end{formalderivation}
 
@@ -215,14 +227,31 @@ A=T\leftrightarrow\Real_T(A).
 \end{proposition}
 
 \begin{proof}
-By contextual elimination, \(A=T\) means that \(A\) is identical to a realization of \(T\). This is equivalent to \(A\) itself satisfying the realization condition, by the ordinary identity rules. The existence and uniqueness of realizations are justified by the Class-Term Extension Metatheorem (\ref{meta:class-term-extension}).
+By contextual elimination, \(A=T\) means that \(A\) is identical to some realization of \(T\). Identity elimination then shows that \(A\) itself satisfies \(\Real_T(A)\). Conversely, if \(A\) realizes \(T\), then the identity \(A=A\) supplies the witness for the contextual interpretation of \(A=T\). Neither direction requires a separate existence or uniqueness theorem.
 \end{proof}
 
 \begin{formalderivation}[0rem][prop:class-builder-identity-law]
 \begin{prooftree}
-\AxiomC{}
-\RightLabel{M\ref{meta:identity-law-for-class-terms}}
-\UnaryInfC{\(A=T\leftrightarrow\Real_T(A)\)}
+    \AxiomC{\(A=T\)}
+    \RightLabel{D\ref{def:contextual-elimination}}
+    \dashedLine
+    \UnaryInfC{\(\exists h(\Real_T(h)\land A=h)\)}
+    \RightLabel{\(\vdots\)}
+    \UnaryInfC{\(\Real_T(A)\)}
+\end{prooftree}
+\medskip
+\begin{prooftree}
+    \AxiomC{\(\Real_T(A)\)}
+    \AxiomC{}
+    \RightLabel{\(=\)-I}
+    \UnaryInfC{\(A=A\)}
+    \RightLabel{\(\land\)-I}
+    \BinaryInfC{\(\Real_T(A)\land A=A\)}
+    \RightLabel{\(\exists\)-I}
+    \UnaryInfC{\(\exists h(\Real_T(h)\land A=h)\)}
+    \RightLabel{D\ref{def:contextual-elimination}}
+    \dashedLine
+    \UnaryInfC{\(A=T\)}
 \end{prooftree}
 \end{formalderivation}
 

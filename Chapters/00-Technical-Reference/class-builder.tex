@@ -32,11 +32,11 @@ of the classes introduced at each new stage.
 
 We begin by specifying the extended syntax and its elimination
 procedure. The central Class-Term Extension Metatheorem then
-establishes the existence and uniqueness of realizations,
-together with the predicative reductions needed to admit
-further class terms. From these results we derive the
-fundamental Membership and Identity Laws and Class-Builder
-Congruence. We subsequently justify substitution of arbitrary
+establishes the existence of realizations, together with the
+predicative reductions needed to admit further class terms.
+Uniqueness of realizations follows separately from Extensionality.
+From these results we derive the fundamental Membership and
+Identity Laws and Class-Builder Congruence. We subsequently justify substitution of arbitrary
 extended terms and the corresponding extensions of the
 logical inference rules.
 
@@ -581,23 +581,17 @@ predicative reductions must already have been justified. The
 existence of realizations and the availability of new reductions
 must therefore be established in that order at each rank.
 
+% proof-explorer-justification: meta:class-term-extension; kind=metatheoretical
 \begin{metatheorem}[Class-Term Extension]
 \label{meta:class-term-extension}
 The stagewise extension by general and bounded class terms is
 legitimate at every finite builder rank. More precisely:
 \begin{enumerate}
-\item \emph{Existence and Uniqueness of Realizations.}
+\item \emph{Existence of Realizations.}
 For every admitted class term \(T\), and every variable \(\eta\)
 not occurring free in \(T\),
 \[
 \vdash\exists\eta\,\Real_T(\eta).
-\]
-Furthermore, for distinct variables \(\eta\) and \(\zeta\) for
-which the realization conditions are defined,
-\[
-\vdash
-\bigl(\Real_T(\eta)\land\Real_T(\zeta)\bigr)
-\to\eta=\zeta.
 \]
 
 \item \emph{Predicative Reductions of Atomic Formulas.}
@@ -636,7 +630,7 @@ class terms of rank at most \(n\). We establish the results at rank
 \(n+1\).
 
 \medskip
-\noindent\emph{Existence and Uniqueness.}
+\noindent\emph{Existence of Realizations.}
 Let
 \[
 T=\{\xi\mid\varphi\}
@@ -655,7 +649,8 @@ necessary. Thus \(\varphi[\alpha/\xi]\) is predicative. This uses
 only the syntactic substitution properties established earlier, not
 substitution of arbitrary extended terms.
 
-Class Formation by Predicative Reduction now yields
+Metatheorem~\ref{meta:class-formation-by-predicative-reduction}
+(Class Formation by Predicative Reduction) now yields
 \[
 \vdash\exists\eta\,\forall_S\alpha
 \bigl(\alpha\in\eta\leftrightarrow
@@ -673,23 +668,10 @@ existential quantifier, giving directly
 \vdash\exists\eta\,\Real_T(\eta).
 \]
 No conversion to an unrestricted membership specification is needed.
-
-If both \(\Real_T(\eta)\) and \(\Real_T(\zeta)\) hold, then
-for every set \(\alpha\) each realization condition identifies
-membership with the same canonical condition. Consequently,
-\[
-\forall_S\alpha\bigl(
-\alpha\in\eta\leftrightarrow\alpha\in\zeta
-\bigr).
-\]
-This suffices for Extensionality: if any object belongs to one of
-the two classes, it must be a set, and the displayed equivalence
-therefore determines its membership in the other class. Hence
-\(\eta=\zeta\). Bounded class terms require no separate argument,
-since they are abbreviations of general class terms. Since \(T\)
-was arbitrary, existence and uniqueness have now been established
-for every new term of rank \(n+1\), before any new atomic
-reduction is assigned.
+Bounded class terms require no separate argument, since they are
+abbreviations of general class terms. Since \(T\) was arbitrary,
+existence has now been established for every new term of rank
+\(n+1\), before any new atomic reduction is assigned.
 
 \medskip
 \noindent\emph{Membership and Identity with Variable Arguments.}
@@ -873,6 +855,46 @@ for forming terms at subsequent ranks. The induction step is
 complete, and the two assertions hold at every finite rank.
 \end{proof}
 
+The stagewise construction has now established existence of
+realizations and the reductions needed to form further class terms.
+Uniqueness is a separate matter: once a realization condition is
+fixed, Extensionality determines at most one class satisfying it.
+This argument does not require Class Formation.
+
+% proof-explorer-justification: meta:uniqueness-of-class-term-realizations; kind=metatheoretical
+\begin{metatheorem}[Uniqueness of Class-Term Realizations]
+\label{meta:uniqueness-of-class-term-realizations}
+Let \(T\) be an admitted class term, and let \(\eta\) and \(\zeta\)
+be distinct variables for which both realization conditions are
+defined. Then
+\[
+\vdash
+\bigl(\Real_T(\eta)\land\Real_T(\zeta)\bigr)
+\to\eta=\zeta.
+\]
+\end{metatheorem}
+
+\begin{proof}
+Suppose that \(\Real_T(\eta)\) and \(\Real_T(\zeta)\) hold.
+Choose \(a\) fresh for \(T\), \(\eta\), and \(\zeta\).
+For every set \(a\), the two realization conditions give
+\[
+a\in\eta\leftrightarrow\Cond_T(a)
+\qquad\text{and}\qquad
+a\in\zeta\leftrightarrow\Cond_T(a).
+\]
+Consequently,
+\[
+\forall_S a\bigl(a\in\eta\leftrightarrow a\in\zeta\bigr).
+\]
+Since membership in either class implies sethood, the two classes
+agree on all their members, not merely on those explicitly covered
+by the restricted quantifier. Extensionality
+(Axiom~\ref{ax:extensionality}) therefore gives \(\eta=\zeta\).
+Discharging the assumptions establishes the implication.
+No appeal to the existence of a realization is required.
+\end{proof}
+
 \nbgpara{3}{Predicative Admissibility}
 
 The preceding metatheorem supplies reductions for atomic formulas.
@@ -928,9 +950,10 @@ which the proof of that reduction depends.
 \end{proof}
 
 The Class-Term Extension Metatheorem establishes the existence of
-uniquely determined classes for all admitted class terms. The
-Predicative Admissibility Metatheorem establishes that such terms may
-occur in further predicative defining conditions, subject to the
+realizations for all admitted class terms. Metatheorem~\ref{meta:uniqueness-of-class-term-realizations}
+then shows that each admitted class term has at most one realization.
+The Predicative Admissibility Metatheorem establishes that such terms
+may occur in further predicative defining conditions, subject to the
 stagewise formation clauses. Together with the syntactic results
 proved in the preceding part, these facts justify the extension of
 class-forming notation. They do not yet justify arbitrary
@@ -945,9 +968,11 @@ question will be treated separately below.
 \nbgpara{1}{Membership and Identity}
 
 The Class-Term Extension Metatheorem establishes that every admitted
-class term has a unique realization. It also justifies the atomic
-predicative reductions associated with membership and identity. We can
-now extract the fundamental laws governing general class terms.
+class term has a realization and justifies the atomic predicative
+reductions associated with membership and identity. The separate
+Uniqueness of Class-Term Realizations Metatheorem establishes that
+no second, distinct class can realize the same term. We can now
+extract the fundamental laws governing general class terms.
 These are derived results: they do not add axioms or inference rules
 to the underlying system.
 
@@ -1251,9 +1276,11 @@ Moreover, for distinct representative variables \(\eta\) and
 \tag{R2}
 \]
 For variables, these statements follow from \((\mathrm{R})\)
-and the primitive identity rules; for class terms, they follow
-from \((\mathrm{R})\) and the existence and uniqueness part of
-Metatheorem~\ref{meta:class-term-extension}.
+and the primitive identity rules. For class terms, \((\mathrm{R1})\)
+follows from \((\mathrm{R})\) and the existence assertion of
+Metatheorem~\ref{meta:class-term-extension}, while \((\mathrm{R2})\)
+follows from \((\mathrm{R})\) and
+Metatheorem~\ref{meta:uniqueness-of-class-term-realizations}.
 
 \begin{metatheorem}[Representation of Atomic Formulas]
 \label{meta:representation-of-atomic-formulas}
