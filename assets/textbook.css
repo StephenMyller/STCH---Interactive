@@ -631,3 +631,18 @@ mjx-container[jax="SVG"]:has(
 main.bodycontainer .amsthmnumberplain mjx-container {
     color: inherit !important;
 }
+
+/* Enumerated lists: align numbers with their text */
+ul.enumerate > li > p:first-child,
+ol.enumerate > li > p:first-child {
+    display: inline;
+    margin-top: 0;
+}
+
+/* Use ordinary text color for list numbers */
+ul.enumerate > li::marker,
+ol.enumerate > li::marker,
+ul.enumerate > li > .itemlabel,
+ol.enumerate > li > .itemlabel {
+    color: inherit;
+}
